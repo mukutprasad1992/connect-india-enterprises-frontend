@@ -10,7 +10,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState<string>("");
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success"); // Fix: Restrict to valid values
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
 
   const handleForgotPassword = async () => {
     try {
@@ -70,7 +70,7 @@ const ForgotPassword = () => {
                 Forgot Password
               </Typography>
               <Typography variant="body2" textAlign="center" mb={3}>
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </Typography>
               <CustomTextField
                 fullWidth
@@ -78,7 +78,7 @@ const ForgotPassword = () => {
                 variant="outlined"
                 size="small"
                 value={email}
-                onChange={(e: { target: { value: SetStateAction<string>; }; }) => setEmail(e.target.value)} // Fix: Ensure 'e' is defined
+                onChange={(e: { target: { value: SetStateAction<string> } }) => setEmail(e.target.value)}
               />
               <Button variant="contained" color="primary" fullWidth sx={{ mt: 3 }} onClick={handleForgotPassword}>
                 Send Reset Link
