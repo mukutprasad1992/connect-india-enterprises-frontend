@@ -1,6 +1,7 @@
-import { useMediaQuery, Box, Drawer, List, ListItem, ListItemText, Divider } from "@mui/material";
+import { useMediaQuery, Box, Drawer } from "@mui/material";
 import SidebarItems from "./SidebarItems";
 import { Upgrade } from "./Updrade";
+import { Sidebar, Logo } from "react-mui-sidebar";
 
 interface ItemType {
   isMobileSidebarOpen: boolean;
@@ -16,7 +17,7 @@ const MSidebar = ({
   toggleMobileSidebar,
 }: ItemType) => {
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
-  const sidebarWidth = 270;
+  const sidebarWidth = "270px";
 
   const scrollbarStyles = {
     "&::-webkit-scrollbar": {
@@ -28,23 +29,6 @@ const MSidebar = ({
     },
   };
 
-  const CustomLogo = () => (
-    <Box sx={{ px: 2, py: 3, textAlign: "center" }}>
-      <img src="/images/logos/logo-transparent.svg" alt="Logo" width="150" />
-    </Box>
-  );
-
-  const SidebarContent = () => (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <CustomLogo />
-      <Box sx={{ flex: 1, overflowY: "auto", ...scrollbarStyles }}>
-        <SidebarItems toggleMobileSidebar={toggleMobileSidebar} />
-      </Box>
-      <Divider />
-      <Upgrade />
-    </Box>
-  );
-
   if (lgUp) {
     return (
       <Box sx={{ width: sidebarWidth, flexShrink: 0 }}>
@@ -53,14 +37,25 @@ const MSidebar = ({
           open={isSidebarOpen}
           variant="permanent"
           PaperProps={{
-            sx: {
-              width: sidebarWidth,
-              boxSizing: "border-box",
-              ...scrollbarStyles,
-            },
+            sx: { boxSizing: "border-box", ...scrollbarStyles },
           }}
         >
-          <SidebarContent />
+          <Box sx={{ height: "100%" }}>
+            <Sidebar
+              width={"270px"}
+              collapsewidth="80px"
+              open={isSidebarOpen}
+              themeColor="#5d87ff"
+              themeSecondaryColor="#49beff"
+              showProfile={false}
+            >
+              <Logo img="/images/logos/logo-transparent.svg" />
+              <Box>
+                <SidebarItems toggleMobileSidebar={toggleMobileSidebar} />
+                <Upgrade />
+              </Box>
+            </Sidebar>
+          </Box>
         </Drawer>
       </Box>
     );
@@ -74,13 +69,27 @@ const MSidebar = ({
       variant="temporary"
       PaperProps={{
         sx: {
-          width: sidebarWidth,
           boxShadow: (theme) => theme.shadows[8],
           ...scrollbarStyles,
         },
       }}
     >
-      <SidebarContent />
+      <Box px={2}>
+        <Sidebar
+          width={"270px"}
+          collapsewidth="80px"
+          isCollapse={false}
+          mode="light"
+          direction="ltr"
+          themeColor="#5d87ff"
+          themeSecondaryColor="#49beff"
+          showProfile={false}
+        >
+          <Logo img="/images/logos/logo-transparent.svg" />
+          <SidebarItems toggleMobileSidebar={toggleMobileSidebar} />
+          <Upgrade />
+        </Sidebar>
+      </Box>
     </Drawer>
   );
 };
