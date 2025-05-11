@@ -579,20 +579,15 @@ const Investment = () => {
   const handleEditButton = (formDataInvestment: any) => {
     setIsEdit(true);
     setSelectedId(formDataInvestment.id);
-    const selectedInvestment = allInvestment.find((formDataInvestment: any) => formDataInvestment.id === formDataInvestment.id);
-    setAmount(formDataInvestment.amount);
-    setComment(formDataInvestment.comment);
-    setFromTime(
-      formDataInvestment.fromTime ? dayjs(formDataInvestment.fromTime, "HH:mm:ss") : null
-    );
-    setToTime(
-      formDataInvestment.toTime ? dayjs(formDataInvestment.toTime, "HH:mm:ss") : null
-    );
-    const selectedDuration = durations.find((d: any) => d.value === formDataInvestment.duration) || null;
-    setOthers(selectedDuration);
+    setAmount(formDataInvestment.amount || "");
+    setComment(formDataInvestment.comment || "");
+    setFromTime(dayjs(formDataInvestment.fromTime, "hh:mm A"));
+    setToTime(dayjs(formDataInvestment.toTime, "hh:mm A"));
+    setOthers({ value: formDataInvestment.duration });
     setInvestmentType(formDataInvestment.type);
     setOpenAddInvestmentDialog(true);
   };
+  
   const handleDeleteButton = (id: any) => {
     setSelectedId(id);
     setOpenDeleteInvestmentDialog(true);
