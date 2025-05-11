@@ -39,7 +39,7 @@ import DashboardCard from "../../components/shared/DashboardCard";
 import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
-import PolicyDialog from "../AI/aiAssitancePolicy/page"
+//import PolicyDialog from "../AI/aiAssitancePolicy/page"
 import React from "react";
 
 const durations = [

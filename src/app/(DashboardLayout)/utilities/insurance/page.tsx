@@ -35,7 +35,7 @@ import DashboardCard from "../../components/shared/DashboardCard";
 import { useRouter } from 'next/navigation';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import InsuranceDialogDialog from '../AI/aiAssistantInsurance/page';
+//import InsuranceDialogDialog from '../AI/aiAssistantInsurance/page';
 import React from "react";
 
 const durations = [

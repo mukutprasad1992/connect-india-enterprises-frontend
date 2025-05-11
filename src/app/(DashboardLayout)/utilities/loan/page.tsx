@@ -39,7 +39,7 @@ import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x
 
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
-import LoanDialog from "../AI/aiSssistanceLoan/page"
+//import LoanDialog from "../AI/aiSssistanceLoan/page"
 import React from "react";
 
 const durations = [
