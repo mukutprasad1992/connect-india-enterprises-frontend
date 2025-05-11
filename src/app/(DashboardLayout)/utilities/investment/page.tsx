@@ -38,7 +38,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
-//import InvestmentDialog from '../AI/AiAssistantInvestment/page';
 import React from "react";
 
 const durations = [
