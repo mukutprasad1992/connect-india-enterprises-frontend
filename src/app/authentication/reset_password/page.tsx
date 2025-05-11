@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -186,4 +186,11 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+// Wrap the ResetPassword component with Suspense
+const ResetPasswordWithSuspense = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ResetPassword />
+  </Suspense>
+);
+
+export default ResetPasswordWithSuspense;
