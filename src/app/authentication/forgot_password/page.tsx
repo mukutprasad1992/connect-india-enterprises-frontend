@@ -11,10 +11,10 @@ const ForgotPassword = () => {
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const handleForgotPassword = async () => {
     try {
-      const response = await fetch("http://localhost:4000/auth/forgotPassword", {
+      const response = await fetch(`${BASE_URL}/auth/forgotPassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

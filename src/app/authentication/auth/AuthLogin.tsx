@@ -35,7 +35,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
     "success"
   );
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const handleEmailChange = (e: any) => {
     setEmail(e.target.value);
   };
@@ -72,7 +72,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       setLoading(true);
 
       try {
-        const response = await axios.post("http://localhost:4000/auth/login", {
+        const response = await axios.post(`${BASE_URL}/auth/login`, {
           email,
           password,
         });

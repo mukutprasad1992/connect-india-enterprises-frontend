@@ -57,7 +57,7 @@ const AuthRegister = ({ title, subtitle, subtext }: RegisterType) => {
         setForm({ ...form, [id]: value });
         handleBlur(e);
     };
-
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
     const handleBlur = (e: any) => {
         const { id, value } = e.target;
         let tempErrors = { ...errors };
@@ -100,7 +100,7 @@ const AuthRegister = ({ title, subtitle, subtext }: RegisterType) => {
         try {
             setLoading(true);
             setRegisterErrorMessage(false)
-            const response = await fetch('http://localhost:4000/user/register', {
+            const response = await fetch(`${BASE_URL}/user/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

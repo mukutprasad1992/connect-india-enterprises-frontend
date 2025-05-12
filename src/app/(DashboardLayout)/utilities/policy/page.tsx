@@ -86,6 +86,7 @@ const Policy = () => {
   const handleOpen = (event: any) => {
     setAnchorEl(event.currentTarget);
   };
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const getToken = () => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem('accessToken');
@@ -157,7 +158,7 @@ const Policy = () => {
   const fetchAllPolicyData = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`http://localhost:4000/serviceType/getServiceTypeByServiceId/${2}`, {
+      const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${2}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -191,7 +192,7 @@ const Policy = () => {
     try {
       setLoading(true)
       const response = await axios.get(
-        `http://localhost:4000/serviceSubType/getServiceSubTypeByServiceId/${2}`,
+        `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${2}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -256,7 +257,7 @@ const Policy = () => {
       setPolicyErrorMessage(false);
       setLoading(true)
       const response = await axios.post(
-        "http://localhost:4000/serviceType/createServiceType",
+        `${BASE_URL}/serviceType/createServiceType`,
         policyPayload,
         {
           headers: {
@@ -315,7 +316,7 @@ const Policy = () => {
       setPolicyErrorMessage(false)
       setLoading(true)
       const response = await axios.put(
-        `http://localhost:4000/serviceType/updateServiceTypeById/${selectedId}`,
+        `${BASE_URL}/serviceType/updateServiceTypeById/${selectedId}`,
         UpdatePolicyPayload,
         {
           headers: {
@@ -349,7 +350,7 @@ const Policy = () => {
     setPolicyErrorMessage(false)
     setLoading(true)
     try {
-      await axios.delete(`http://localhost:4000/serviceType/deleteServiceTypeById/${selectedId}`, {
+      await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

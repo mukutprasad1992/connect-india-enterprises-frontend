@@ -90,7 +90,7 @@ const Investment = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const displayTimeRange =
     fromTime && toTime
       ? `${dayjs(fromTime).format("hh:mm A")} - ${dayjs(toTime).format(
@@ -154,7 +154,7 @@ const Investment = () => {
   const fetchAllInvestmentData = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`http://localhost:4000/serviceType/getServiceTypeByServiceId/${1}`, {
+      const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${1}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -188,7 +188,7 @@ const Investment = () => {
     try {
       setLoading(true)
       const response = await axios.get(
-        `http://localhost:4000/serviceSubType/getServiceSubTypeByServiceId/${1}`,
+        `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${1}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -251,7 +251,7 @@ const Investment = () => {
       setInvestmentErrorMessage(false)
       setLoading(true)
       const response = await axios.post(
-        "http://localhost:4000/serviceType/createServiceType",
+        `${BASE_URL}/serviceType/createServiceType`,
         investmentPayload,
         {
           headers: {
@@ -306,7 +306,7 @@ const Investment = () => {
       setInvestmentErrorMessage(false)
       setLoading(true)
       const response = await axios.put(
-        `http://localhost:4000/serviceType/updateServiceTypeById/${selectedId}`,
+        `${BASE_URL}/serviceType/updateServiceTypeById/${selectedId}`,
         UpdateInvestmentPayload,
         {
           headers: {
@@ -340,7 +340,7 @@ const Investment = () => {
     }
     setLoading(true)
     try {
-      await axios.delete(`http://localhost:4000/serviceType/deleteServiceTypeById/${selectedId}`, {
+      await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -588,7 +588,7 @@ const Investment = () => {
     setInvestmentType(formDataInvestment.type);
     setOpenAddInvestmentDialog(true);
   };
-  
+
   const handleDeleteButton = (id: any) => {
     setSelectedId(id);
     setOpenDeleteInvestmentDialog(true);

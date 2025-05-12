@@ -97,6 +97,7 @@ const Collaborator = () => {
     address: "",
     status: "",
   });
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const emailRegex = /^[^\s@]+@([^\s@.]+\.)+[a-zA-Z]{2,}$/;
   const getToken = () => {
     if (typeof window !== "undefined") {
@@ -220,7 +221,7 @@ const Collaborator = () => {
       setLoading(true);
 
       const response = await axios.put(
-        `http://localhost:4000/user/updateUserStatusById/${vendorId}`,
+        `${BASE_URL}/user/updateUserStatusById/${vendorId}`,
         { status },
         {
           headers: {
@@ -299,7 +300,7 @@ const Collaborator = () => {
         return;
       }
       if (!isEdit) {
-        const response = await axios.post("http://localhost:4000/user/register", vendorPayload, {
+        const response = await axios.post(`${BASE_URL}/user/register`, vendorPayload, {
           headers: {
             "Content-Type": "application/json",
           },
@@ -315,7 +316,7 @@ const Collaborator = () => {
           setLoading(false);
         }
       } else {
-        const response = await axios.put(`http://localhost:4000/user/updateUser/${selectedId}`, vendorPayload, {
+        const response = await axios.put(`${BASE_URL}/user/updateUser/${selectedId}`, vendorPayload, {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
@@ -358,7 +359,7 @@ const Collaborator = () => {
         if (!token) {
           return;
         }
-        const response = await axios.get('http://localhost:4000/user/getAllVendor', {
+        const response = await axios.get(`${BASE_URL}/user/getAllVendor`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -72,7 +72,7 @@ const Notification = () => {
     };
 
     const handleClose = () => setAnchorEl(null);
-
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
     const handleNotificationClick = async (notification: any) => {
         setSelectedNotification(notification);
         await updateIsRead(notification.id);
@@ -90,9 +90,9 @@ const Notification = () => {
 
         try {
             let url = '';
-            if (roleId === 1) url = `http://localhost:4000/notification/getAllAdminNotification`;
-            else if (roleId === 2) url = `http://localhost:4000/notification/getNotificationsByVendorId/${userId}`;
-            else if (roleId === 3) url = `http://localhost:4000/notification/getNotificationsByUserId/${userId}`;
+            if (roleId === 1) url = `${BASE_URL}/notification/getAllAdminNotification`;
+            else if (roleId === 2) url = `${BASE_URL}/notification/getNotificationsByVendorId/${userId}`;
+            else if (roleId === 3) url = `${BASE_URL}/notification/getNotificationsByUserId/${userId}`;
             else return;
 
             const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -108,7 +108,7 @@ const Notification = () => {
         if (!token) return console.error('No token found.');
 
         try {
-            const res = await axios.put(`http://localhost:4000/notification/updateisRead/${id}`, null, {
+            const res = await axios.put(`${BASE_URL}/notification/updateisRead/${id}`, null, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.status === 200) {

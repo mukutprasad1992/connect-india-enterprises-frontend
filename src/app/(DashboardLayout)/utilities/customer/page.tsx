@@ -60,6 +60,7 @@ const User = () => {
     phone: '',
     pincode: '',
   });
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const getRoleId = () => {
     if (typeof window !== "undefined") {
       const storedRole = localStorage.getItem("roleId");
@@ -160,7 +161,7 @@ const User = () => {
     else {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:4000/customer/getCustomerByVendor", {
+        const response = await axios.get(`${BASE_URL}/customer/getCustomerByVendor`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -188,7 +189,7 @@ const User = () => {
       } else {
         try {
           setLoading(true);
-          const response = await axios.get("http://localhost:4000/customer/getAllCustomer", {
+          const response = await axios.get(`${BASE_URL}/customer/getAllCustomer`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -228,7 +229,7 @@ const User = () => {
       setCustomerErrorMessage(false)
       setLoading(true);
       const response = await axios.post(
-        'http://localhost:4000/customers/createCustomer',
+        `${BASE_URL}/customers/createCustomer`,
         addPayload,
         {
           headers: {
@@ -300,7 +301,7 @@ const User = () => {
       setCustomerErrorMessage(false)
       setLoading(true);
       const response = await axios.put(
-        `http://localhost:4000/customers/updateCustomer/${addFormData.id}`,
+        `${BASE_URL}/customers/updateCustomer/${addFormData.id}`,
         updatePayload,
         {
           headers: {
