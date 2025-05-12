@@ -4,9 +4,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Static export configuration
-  output: 'export',
-  distDir: 'build', // Optional: Specify custom build directory
 };
 
 module.exports = nextConfig;
