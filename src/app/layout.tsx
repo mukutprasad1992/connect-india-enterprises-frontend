@@ -1,7 +1,5 @@
-// app/layout.tsx
 import { ReactNode } from "react";
-import ClientWrapper from "../app/(DashboardLayout)/components/ClientWrapper";
-
+import ClientWrapper from "./ClientWrapper";
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
