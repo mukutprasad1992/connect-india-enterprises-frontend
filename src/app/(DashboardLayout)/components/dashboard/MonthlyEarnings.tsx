@@ -33,7 +33,7 @@ const MonthlyEarnings = ({ title }: { title: string }) => {
   const secondarylight = "#f5fcff";
   const errorlight = "#fdede8";
   const router = useRouter();
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const [amounts, setAmounts] = useState<{ [key: string]: number }>({
     Investment: 0,
     Policy: 0,
@@ -68,9 +68,9 @@ const MonthlyEarnings = ({ title }: { title: string }) => {
           try {
             let url = "";
             if (roleId === "1") {
-              url = `http://localhost:4000/serviceType/getTotalAmountServiceType/${id}`;
+              url = `${BASE_URL}/serviceType/getTotalAmountServiceType/${id}`;
             } else {
-              url = `http://localhost:4000/serviceType/getTotalAmountByUserIdServiceTypeById/${id}`;
+              url = `${BASE_URL}/serviceType/getTotalAmountByUserIdServiceTypeById/${id}`;
             }
 
             const response = await axios.get(url, {
