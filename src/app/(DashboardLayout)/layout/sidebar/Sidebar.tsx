@@ -1,7 +1,7 @@
 import { useMediaQuery, Box, Drawer } from "@mui/material";
 import SidebarItems from "./SidebarItems";
 import { Upgrade } from "./Updrade";
-import { Sidebar, Logo } from "react-mui-sidebar";
+import Image from "next/image";
 
 interface ItemType {
   isMobileSidebarOpen: boolean;
@@ -29,6 +29,33 @@ const MSidebar = ({
     },
   };
 
+  const SidebarContent = () => (
+    <Box
+      sx={{
+        height: "100%",
+        width: sidebarWidth,
+        display: "flex",
+        flexDirection: "column",
+        px: 2,
+        py: 3,
+        ...scrollbarStyles,
+      }}
+    >
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+        <Image
+          src="/images/logos/logo-transparent.svg"
+          alt="Logo"
+          width={150}
+          height={40}
+        />
+      </Box>
+      <SidebarItems toggleMobileSidebar={toggleMobileSidebar} />
+      <Box mt="auto">
+        <Upgrade />
+      </Box>
+    </Box>
+  );
+
   if (lgUp) {
     return (
       <Box sx={{ width: sidebarWidth, flexShrink: 0 }}>
@@ -40,22 +67,7 @@ const MSidebar = ({
             sx: { boxSizing: "border-box", ...scrollbarStyles },
           }}
         >
-          <Box sx={{ height: "100%" }}>
-            <Sidebar
-              width={"270px"}
-              collapsewidth="80px"
-              open={isSidebarOpen}
-              themeColor="#5d87ff"
-              themeSecondaryColor="#49beff"
-              showProfile={false}
-            >
-              <Logo img="/images/logos/logo-transparent.svg" />
-              <Box>
-                <SidebarItems toggleMobileSidebar={toggleMobileSidebar} />
-                <Upgrade />
-              </Box>
-            </Sidebar>
-          </Box>
+          <SidebarContent />
         </Drawer>
       </Box>
     );
@@ -74,22 +86,7 @@ const MSidebar = ({
         },
       }}
     >
-      <Box px={2}>
-        <Sidebar
-          width={"270px"}
-          collapsewidth="80px"
-          isCollapse={false}
-          mode="light"
-          direction="ltr"
-          themeColor="#5d87ff"
-          themeSecondaryColor="#49beff"
-          showProfile={false}
-        >
-          <Logo img="/images/logos/logo-transparent.svg" />
-          <SidebarItems toggleMobileSidebar={toggleMobileSidebar} />
-          <Upgrade />
-        </Sidebar>
-      </Box>
+      <SidebarContent />
     </Drawer>
   );
 };
