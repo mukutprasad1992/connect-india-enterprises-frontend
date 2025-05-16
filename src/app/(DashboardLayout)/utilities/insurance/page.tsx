@@ -203,11 +203,11 @@ const Insurance = () => {
         setLoading(false)
       } else {
         setLoading(false)
-        console.error("Failed to fetch investment options:", response.data);
+        console.error("Failed to fetch  insurance options:", response.data);
       }
     } catch (error) {
       setLoading(false)
-      console.error("Error fetching investment options:", error);
+      console.error("Error fetching  insurance options:", error);
     }
   };
   useEffect(() => {
@@ -292,7 +292,7 @@ const Insurance = () => {
 
   const editInsurance = async () => {
     try {
-      const UpdateInvestmentPayload = {
+      const UpdateInsurancePayload = {
         amount,
         comment,
         fromTime: fromTime ? dayjs(fromTime).format("hh:mm ss") : null,
@@ -304,8 +304,8 @@ const Insurance = () => {
       setInsuranceErrorMessage(false)
       setLoading(true)
       const response = await axios.put(
-        `${BASE_URL}/serviceType/updateServiceTypeById/${selectedId}`,
-        UpdateInvestmentPayload,
+        `http://localhost:4000/serviceType/updateServiceTypeById/${selectedId}`,
+        UpdateInsurancePayload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -345,7 +345,7 @@ const Insurance = () => {
 
   const deleteInsurance = async () => {
     if (!selectedId) {
-      console.error("No investment selected for deletion.");
+      console.error("No  insurance selected for deletion.");
       return;
     }
     setInsuranceErrorMessage(false)
@@ -357,14 +357,14 @@ const Insurance = () => {
         },
       });
       setInsuranceUpdated(prev => !prev);
-      setInsurances((prevAllInvestment: any[]) => {
-        const updatedAllInvestment = prevAllInvestment
-          .filter((investment) => investment.id !== selectedId)
-          .map((investment, index) => ({
-            ...investment,
+      setInsurances((prevAllInsurance: any[]) => {
+        const updatedAllInsurance = prevAllInsurance
+          .filter((insurance) => insurance.id !== selectedId)
+          .map((insurance, index) => ({
+            ...insurance,
           }));
 
-        return updatedAllInvestment;
+        return updatedAllInsurance;
       });
       setLoading(false)
       console.log(`Insurance with ID ${selectedId} deleted successfully.`);
@@ -399,7 +399,7 @@ const Insurance = () => {
 
   const validateAmount = () => {
     if (!amount.trim()) {
-      setAmountError("Investment amount is required.");
+      setAmountError(" insurance amount is required.");
     } else if (!/^\d+$/.test(amount)) {
       setAmountError("Only numeric values are allowed.");
     } else {
@@ -407,9 +407,9 @@ const Insurance = () => {
     }
   };
 
-  const validateInvestmentType = () => {
+  const validateInsuranceType = () => {
     if (!insuranceType) {
-      setInsuranceTypeError("Investment type is required.");
+      setInsuranceTypeError("Insurance type is required.");
     } else {
       setInsuranceTypeError("");
     }
@@ -417,7 +417,7 @@ const Insurance = () => {
 
   const validateOthers = () => {
     if (!others) {
-      setDurationError("Duration of investment is required.");
+      setDurationError("Duration of insurance is required.");
     } else {
       setDurationError("");
     }
@@ -444,17 +444,17 @@ const Insurance = () => {
     let isValid = true;
 
     if (!amount.trim()) {
-      setAmountError("Investment amount is required");
+      setAmountError("Insurance amount is required");
       isValid = false;
     }
 
     if (!insuranceType) {
-      setInsuranceTypeError("Investment type is required");
+      setInsuranceTypeError("Insurance type is required");
       isValid = false;
     }
 
     if (!others) {
-      setDurationError("Duration of investment is required");
+      setDurationError("Duration of  insurance is required");
       isValid = false;
     }
 
@@ -640,9 +640,25 @@ const Insurance = () => {
     setIsEdit(false);
     setOpenAddInsuranceDialog(true)
   };
+
+  let getStatusColor = (status: any) => {
+    switch (status) {
+      case "Pending":
+        return "#ffeb3b";
+      case "In Progress":
+        return "#ffa726";
+      case "Approved":
+        return "#4caf50";
+      case "Rejected":
+        return "#ff5252";
+      default:
+        return "#ffeb3b";
+    }
+  };
+
   return (
     <>
-      <PageContainer title="Insurance" description="this is Insurance page">
+      <PageContainer title="Insurance" description="this is insurance page">
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -767,7 +783,7 @@ const Insurance = () => {
                       {...params}
                       label={
                         <span>
-                          Insurance Type <span style={{ color: "red" }}>*</span>
+                          Insurance type <span style={{ color: "red" }}>*</span>
                         </span>
                       }
                       variant="outlined"
@@ -796,7 +812,7 @@ const Insurance = () => {
                         label=
                         {
                           <span>
-                            Duration of investment{" "}
+                            Duration of insurance{" "}
                             <span style={{ color: "red" }}>*</span>
                           </span>
                         }
@@ -960,23 +976,36 @@ const Insurance = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Investment Details</DialogTitle>
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Insurance Details</DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2}>
+          <Grid container spacing={0.1}>
             {selectedRow &&
-              Object.entries(selectedRow).map(([key, value]) => (
-                <React.Fragment key={key}>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {key}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2">{String(value)}</Typography>
-                  </Grid>
-                </React.Fragment>
-              ))}
+              Object.entries(selectedRow).map(([key, value]) => {
+                const isStatus = key.toLowerCase() === "status";
+                const statusColor = isStatus ? getStatusColor(value) : undefined;
+
+                return (
+                  <React.Fragment key={key}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2">
+                        <Box component="span" sx={{ fontWeight: 'bold' }}>
+                          {key}:
+                        </Box>{' '}
+                        <Box
+                          component="span"
+                          sx={{
+                            fontWeight: 'normal',
+                            color: isStatus ? statusColor : 'inherit',
+                          }}
+                        >
+                          {String(value)}
+                        </Box>
+                      </Typography>
+                    </Grid>
+                  </React.Fragment>
+                );
+              })}
           </Grid>
         </DialogContent>
         <DialogActions>

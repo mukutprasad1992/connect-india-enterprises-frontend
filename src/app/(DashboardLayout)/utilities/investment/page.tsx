@@ -764,7 +764,7 @@ const Investment = () => {
                       {...params}
                       label={
                         <span>
-                          Investment Type <span style={{ color: "red" }}>*</span>
+                          Investment type <span style={{ color: "red" }}>*</span>
                         </span>
                       }
                       variant="outlined"
@@ -962,31 +962,31 @@ const Investment = () => {
           </DialogActions>
         </Dialog>
       </PageContainer >
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
         <DialogTitle>Investment Details</DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2}>
+          <Grid container spacing={0.1}>
             {selectedRow &&
-              Object.entries(selectedRow).map(([key, value]) => {
+              Object.entries(selectedRow).map(([key, value], index) => {
                 const isStatus = key.toLowerCase() === "status";
                 const statusColor = isStatus ? getStatusColor(value) : undefined;
 
                 return (
                   <React.Fragment key={key}>
                     <Grid item xs={6}>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {key}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: isStatus ? 'bold' : 'normal',
-                          color: isStatus ? statusColor : 'inherit',
-                        }}
-                      >
-                        {String(value)}
+                      <Typography variant="body2">
+                        <Box component="span" sx={{ fontWeight: 'bold' }}>
+                          {key}:
+                        </Box>{' '}
+                        <Box
+                          component="span"
+                          sx={{
+                            fontWeight: 'normal',
+                            color: isStatus ? statusColor : 'inherit',
+                          }}
+                        >
+                          {String(value)}
+                        </Box>
                       </Typography>
                     </Grid>
                   </React.Fragment>
@@ -998,6 +998,7 @@ const Investment = () => {
           <Button onClick={handleCloseViewDialog}>Close</Button>
         </DialogActions>
       </Dialog>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
