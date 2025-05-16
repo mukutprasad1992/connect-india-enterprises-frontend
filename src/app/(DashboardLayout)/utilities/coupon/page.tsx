@@ -96,7 +96,7 @@ const VoucherTable: React.FC = () => {
     validityTo: "",
     status: "",
   });
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const getToken = () => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem('accessToken');
@@ -236,7 +236,7 @@ const VoucherTable: React.FC = () => {
       setLoading(true);
       try {
         const response = await axios.delete(
-          `http://localhost:4000/voucher/deleteVoucherById/${selectedId}`,
+          `${BASE_URL}/voucher/deleteVoucherById/${selectedId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -292,7 +292,7 @@ const VoucherTable: React.FC = () => {
       };
       try {
         const response = await axios.put(
-          `http://localhost:4000/voucher/updateVoucherStatusById/${selectedId}`,
+          `${BASE_URL}/voucher/updateVoucherStatusById/${selectedId}`,
           payload,
           {
             headers: {
@@ -386,7 +386,7 @@ const VoucherTable: React.FC = () => {
         status: "Enable",
       };
       const response = await axios.post(
-        "http://localhost:4000/voucher/createVoucher",
+        `${BASE_URL}/voucher/createVoucher`,
         payload,
         {
           headers: {
@@ -464,7 +464,7 @@ const VoucherTable: React.FC = () => {
       };
 
       const response = await axios.put(
-        `http://localhost:4000/voucher/updateVoucherById/${formData.id}`,
+        `${BASE_URL}/voucher/updateVoucherById/${formData.id}`,
         payload,
         {
           headers: {
@@ -717,7 +717,7 @@ const VoucherTable: React.FC = () => {
       return;
     }
     try {
-      const response = await axios.get("http://localhost:4000/voucher/getAllVouchers", {
+      const response = await axios.get(`${BASE_URL}/voucher/getAllVouchers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -748,7 +748,7 @@ const VoucherTable: React.FC = () => {
         return;
       }
       setLoading(true);
-      const response = await axios.get(`http://localhost:4000/voucher/getAllVoucherByVendor`, {
+      const response = await axios.get(`${BASE_URL}/voucher/getAllVoucherByVendor`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -779,7 +779,7 @@ const VoucherTable: React.FC = () => {
     }
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:4000/user/getAllVendor", {
+      const response = await axios.get(`${BASE_URL}/user/getAllVendor`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -804,7 +804,7 @@ const VoucherTable: React.FC = () => {
     const selectedVendorId = formData.vendorName.value;
     try {
       const response = await axios.get(
-        `http://localhost:4000/customer/getAllCustomerByVendorId/${selectedVendorId}`,
+        `${BASE_URL}/customer/getAllCustomerByVendorId/${selectedVendorId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

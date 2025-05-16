@@ -39,7 +39,7 @@ import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x
 
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
-import LoanDialog from "../AI/aiSssistanceLoan/page"
+//import LoanDialog from "../AI/aiSssistanceLoan/page"
 import React from "react";
 
 const durations = [
@@ -91,7 +91,7 @@ const Loan = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const displayTimeRange =
     fromTime && toTime
       ? `${dayjs(fromTime).format("hh:mm A")} - ${dayjs(toTime).format(
@@ -162,7 +162,7 @@ const Loan = () => {
   const fetchLoansData = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`http://localhost:4000/serviceType/getServiceTypeByServiceId/${4}`, {
+      const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${4}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -196,7 +196,7 @@ const Loan = () => {
     try {
       setLoading(true)
       const response = await axios.get(
-        `http://localhost:4000/serviceSubType/getServiceSubTypeByServiceId/${4}`,
+        `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${4}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -259,7 +259,7 @@ const Loan = () => {
       setLoanErrorMessage(false)
       setLoading(true)
       const response = await axios.post(
-        "http://localhost:4000/serviceType/createServiceType",
+        `${BASE_URL}/serviceType/createServiceType`,
         loanPayload,
         {
           headers: {
@@ -313,7 +313,7 @@ const Loan = () => {
       setLoanErrorMessage(false)
       setLoading(true)
       const response = await axios.put(
-        `http://localhost:4000/serviceType/updateServiceTypeById/${selectedId}`,
+        `${BASE_URL}/serviceType/updateServiceTypeById/${selectedId}`,
         UpdateLoanPayload,
         {
           headers: {
@@ -347,7 +347,7 @@ const Loan = () => {
     }
     setLoading(true)
     try {
-      await axios.delete(`http://localhost:4000/serviceType/deleteServiceTypeById/${selectedId}`, {
+      await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

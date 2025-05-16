@@ -19,6 +19,7 @@ const PieChartPage = () => {
     const [itemNb, setItemNb] = useState(5);
     const [skipAnimation, setSkipAnimation] = useState(false);
     const router = useRouter();
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
     const [amounts, setAmounts] = useState<{ [key: string]: number }>({
         Investment: 0,
         Policy: 0,
@@ -58,8 +59,8 @@ const PieChartPage = () => {
                 const requests = Object.entries(categoryIds).map(async ([category, id]) => {
                     try {
                         const url = roleId === "1"
-                            ? `http://localhost:4000/serviceType/getTotalAmountServiceType/${id}`
-                            : `http://localhost:4000/serviceType/getTotalAmountByUserIdServiceTypeById/${id}`;
+                            ? `${BASE_URL}/serviceType/getTotalAmountServiceType/${id}`
+                            : `${BASE_URL}/serviceType/getTotalAmountByUserIdServiceTypeById/${id}`;
 
                         const response = await axios.get(url, {
                             headers: { Authorization: `Bearer ${token}` },

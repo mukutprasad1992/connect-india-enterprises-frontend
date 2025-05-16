@@ -35,7 +35,7 @@ import DashboardCard from "../../components/shared/DashboardCard";
 import { useRouter } from 'next/navigation';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import InsuranceDialogDialog from '../AI/aiAssistantInsurance/page';
+//import InsuranceDialogDialog from '../AI/aiAssistantInsurance/page';
 import React from "react";
 
 const durations = [
@@ -82,7 +82,7 @@ const Insurance = () => {
   const handleOpen = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorEl(event.currentTarget);
   };
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   const displayTimeRange =
     fromTime && toTime
       ? `${dayjs(fromTime).format("hh:mm A")} - ${dayjs(toTime).format(
@@ -151,7 +151,7 @@ const Insurance = () => {
     setInsuranceErrorMessage(false);
     setLoading(true)
     try {
-      const response = await axios.get(`http://localhost:4000/serviceType/getServiceTypeByServiceId/${3}`, {
+      const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${3}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -186,7 +186,7 @@ const Insurance = () => {
       setInsuranceErrorMessage(false);
       setLoading(true)
       const response = await axios.get(
-        `http://localhost:4000/serviceSubType/getServiceSubTypeByServiceId/${3}`,
+        `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${3}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -249,7 +249,7 @@ const Insurance = () => {
       setInsuranceErrorMessage(false)
       setLoading(true)
       const response = await axios.post(
-        "http://localhost:4000/serviceType/createServiceType",
+        `${BASE_URL}/serviceType/createServiceType`,
         insurancePayload,
         {
           headers: {
@@ -351,7 +351,7 @@ const Insurance = () => {
     setInsuranceErrorMessage(false)
     setLoading(true)
     try {
-      await axios.delete(`http://localhost:4000/serviceType/deleteServiceTypeById/${selectedId}`, {
+      await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

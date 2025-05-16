@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -30,7 +30,7 @@ const ResetPassword = () => {
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
   useEffect(() => {
     const urlToken = searchParams.get("token");
     setToken(urlToken);
@@ -72,7 +72,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:4000/auth/resetPassword", {
+      const response = await axios.post(`${BASE_URL}/auth/resetPassword`, {
         token,
         newPassword,
       });
@@ -186,4 +186,11 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+// Wrap the ResetPassword component with Suspense
+const ResetPasswordWithSuspense = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ResetPassword />
+  </Suspense>
+);
+
+export default ResetPasswordWithSuspense;

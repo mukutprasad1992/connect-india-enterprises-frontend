@@ -42,6 +42,7 @@ const InquiryPage = () => {
             return token;
         }
     }
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
     const token = getToken();
     const getRoleId = () => {
         if (typeof window !== "undefined") {
@@ -75,7 +76,7 @@ const InquiryPage = () => {
     const fetchInquiries = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get(`http://localhost:4000/serviceType/getAllServiceType`, {
+            const response = await axios.get(`${BASE_URL}/serviceType/getAllServiceType`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -133,16 +134,16 @@ const InquiryPage = () => {
             } else if (action === 'reject') {
                 newStatus = "Rejected";
             } else if (action === 'in progress') {
-                // Toggle between "In Progress" and "Pending"
+
                 if (currentStatus === "In Progress") {
-                    newStatus = "Pending"; // If current status is "In Progress", move to "Pending"
+                    newStatus = "Pending";
                 } else {
-                    newStatus = "In Progress"; // If current status is "Pending", move to "In Progress"
+                    newStatus = "In Progress";
                 }
             }
 
             const response = await axios.put(
-                `http://localhost:4000/serviceType/updateStatus/${id}`,
+                `${BASE_URL}/serviceType/updateStatus/${id}`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
