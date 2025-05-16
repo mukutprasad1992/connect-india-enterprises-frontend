@@ -1026,7 +1026,7 @@ const VoucherTable: React.FC = () => {
                       {...params}
                       label={
                         <span>
-                          Customer Name <span style={{ color: "red" }}> *</span>
+                          Customer name <span style={{ color: "red" }}> *</span>
                         </span>
                       }
                       variant="outlined"

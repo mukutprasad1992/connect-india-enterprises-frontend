@@ -213,11 +213,11 @@ const Loan = () => {
         setLoading(false)
       } else {
         setLoading(false)
-        console.error("Failed to fetch investment options:", response.data);
+        console.error("Failed to loan options:", response.data);
       }
     } catch (error) {
       setLoading(false)
-      console.error("Error fetching investment options:", error);
+      console.error("Error fetching loan options:", error);
     }
   };
   useEffect(() => {
@@ -283,7 +283,7 @@ const Loan = () => {
     } catch (error: any) {
       setLoading(false)
       setLoanErrorMessage(error.response.data.message)
-      console.error("Error during investment creation:", error);
+      console.error("Error during loan creation:", error);
       if (error.response) {
         setLoading(false)
         setLoanErrorMessage(error.response.data.message)
@@ -324,7 +324,7 @@ const Loan = () => {
       );
 
       if (response.data.status) {
-        console.log("Investment updated successfully:", response.data);
+        console.log("Loan updated successfully:", response.data);
         handleCloseAddLoanDialog();
         fetchLoansData();
         setLoanUpdated(prev => !prev);
@@ -337,12 +337,12 @@ const Loan = () => {
     } catch (error: any) {
       setLoading(false)
       setLoanErrorMessage(error.response.data.message)
-      console.error("Error updating investment:", error);
+      console.error("Error updating loan:", error);
     }
   };
   const deleteLoan = async () => {
     if (!selectedId) {
-      console.error("No investment selected for deletion.");
+      console.error("No loan selected for deletion.");
       return;
     }
     setLoading(true)
@@ -353,20 +353,20 @@ const Loan = () => {
         },
       });
       setLoanUpdated(prev => !prev);
-      setLoans((prevAllInvestment: any[]) => {
-        const updatedAllInvestment = prevAllInvestment
-          .filter((investment) => investment.id !== selectedId)
-          .map((investment, index) => ({
-            ...investment,
+      setLoans((prevAllLoan: any[]) => {
+        const updatedAllLoan = prevAllLoan
+          .filter((loan) => loan.id !== selectedId)
+          .map((loan, index) => ({
+            ...loan,
           }));
 
-        return updatedAllInvestment;
+        return updatedAllLoan;
       });
       setLoading(false)
-      console.log(`Investment with ID ${selectedId} deleted successfully.`);
+      console.log(`Loan with ID ${selectedId} deleted successfully.`);
     } catch (error) {
       setLoading(false)
-      console.error("Error deleting investment:", error);
+      console.error("Error deleting loan:", error);
     }
     setOpenDeleteLoanDialog(false);
   };
@@ -380,7 +380,7 @@ const Loan = () => {
 
   const validateAmount = () => {
     if (!amount.trim()) {
-      setAmountError("Investment amount is required.");
+      setAmountError("Loan amount is required.");
     } else if (!/^\d+$/.test(amount)) {
       setAmountError("Only numeric values are allowed.");
     } else {
@@ -390,7 +390,7 @@ const Loan = () => {
 
   const validateLoanType = () => {
     if (!loanType) {
-      setLoanTypeError("Investment type is required.");
+      setLoanTypeError("Loan type is required.");
     } else {
       setLoanTypeError("");
     }
@@ -398,7 +398,7 @@ const Loan = () => {
 
   const validateOthers = () => {
     if (!others) {
-      setDurationError("Duration of investment is required.");
+      setDurationError("Duration of loan is required.");
     } else {
       setDurationError("");
     }
@@ -428,19 +428,19 @@ const Loan = () => {
     let isValid = true;
 
     if (!amount.trim()) {
-      setAmountError("Investment amount is required");
+      setAmountError("Loan amount is required");
 
       isValid = false;
     }
 
     if (!loanType) {
-      setLoanTypeError("Investment type is required");
+      setLoanTypeError("Loan type is required");
 
       isValid = false;
     }
 
     if (!others) {
-      setDurationError("Duration of investment is required");
+      setDurationError("Duration of loan is required");
 
       isValid = false;
     }
@@ -628,6 +628,22 @@ const Loan = () => {
     setIsEdit(false);
     setOpenAddLoanDialog(true);
   };
+
+  let getStatusColor = (status: any) => {
+    switch (status) {
+      case "Pending":
+        return "#ffeb3b";
+      case "In Progress":
+        return "#ffa726";
+      case "Approved":
+        return "#4caf50";
+      case "Rejected":
+        return "#ff5252";
+      default:
+        return "#ffeb3b";
+    }
+  };
+
   return (
     <>
       {loading && (
@@ -781,7 +797,7 @@ const Loan = () => {
                       {...params}
                       label={
                         <span>
-                          Investment Type <span style={{ color: "red" }}>*</span>
+                          Loan type <span style={{ color: "red" }}>*</span>
                         </span>
                       }
                       variant="outlined"
@@ -810,7 +826,7 @@ const Loan = () => {
                         label=
                         {
                           <span>
-                            Duration of investment{" "}
+                            Duration of loan{" "}
                             <span style={{ color: "red" }}>*</span>
                           </span>
                         }
@@ -974,29 +990,43 @@ const Loan = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Investment Details</DialogTitle>
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Loan Details</DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2}>
+          <Grid container spacing={0.1}>
             {selectedRow &&
-              Object.entries(selectedRow).map(([key, value]) => (
-                <React.Fragment key={key}>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {key}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2">{String(value)}</Typography>
-                  </Grid>
-                </React.Fragment>
-              ))}
+              Object.entries(selectedRow).map(([key, value]) => {
+                const isStatus = key.toLowerCase() === "status";
+                const statusColor = isStatus ? getStatusColor(value) : undefined;
+
+                return (
+                  <React.Fragment key={key}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2">
+                        <Box component="span" sx={{ fontWeight: 'bold' }}>
+                          {key}:
+                        </Box>{' '}
+                        <Box
+                          component="span"
+                          sx={{
+                            fontWeight: 'normal',
+                            color: isStatus ? statusColor : 'inherit',
+                          }}
+                        >
+                          {String(value)}
+                        </Box>
+                      </Typography>
+                    </Grid>
+                  </React.Fragment>
+                );
+              })}
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseViewDialog}>Close</Button>
         </DialogActions>
       </Dialog>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

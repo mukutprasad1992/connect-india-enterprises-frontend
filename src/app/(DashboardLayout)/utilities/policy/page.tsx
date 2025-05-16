@@ -615,6 +615,22 @@ const Policy = () => {
     setIsEdit(false);
     setOpenAddPolicyDialog(true);
   };
+
+  let getStatusColor = (status: any) => {
+    switch (status) {
+      case "Pending":
+        return "#ffeb3b";
+      case "In Progress":
+        return "#ffa726";
+      case "Approved":
+        return "#4caf50";
+      case "Rejected":
+        return "#ff5252";
+      default:
+        return "#ffeb3b";
+    }
+  };
+
   return (
     <>
       {loading && (
@@ -767,7 +783,7 @@ const Policy = () => {
                       {...params}
                       label={
                         <span>
-                          Investment Type <span style={{ color: "red" }}>*</span>
+                          Policy type <span style={{ color: "red" }}>*</span>
                         </span>
                       }
                       variant="outlined"
@@ -796,7 +812,7 @@ const Policy = () => {
                         label=
                         {
                           <span>
-                            Duration of investment{" "}
+                            Duration of Policy{" "}
                             <span style={{ color: "red" }}>*</span>
                           </span>
                         }
@@ -962,29 +978,43 @@ const Policy = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Investment Details</DialogTitle>
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
+        <DialogTitle>Policy Details</DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2}>
+          <Grid container>
             {selectedRow &&
-              Object.entries(selectedRow).map(([key, value]) => (
-                <React.Fragment key={key}>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {key}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2">{String(value)}</Typography>
-                  </Grid>
-                </React.Fragment>
-              ))}
+              Object.entries(selectedRow).map(([key, value]) => {
+                const isStatus = key.toLowerCase() === "status";
+                const statusColor = isStatus ? getStatusColor(value) : undefined;
+
+                return (
+                  <React.Fragment key={key}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2">
+                        <Box component="span" sx={{ fontWeight: 'bold' }}>
+                          {key}:
+                        </Box>{' '}
+                        <Box
+                          component="span"
+                          sx={{
+                            fontWeight: 'normal',
+                            color: isStatus ? statusColor : 'inherit',
+                          }}
+                        >
+                          {String(value)}
+                        </Box>
+                      </Typography>
+                    </Grid>
+                  </React.Fragment>
+                );
+              })}
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseViewDialog}>Close</Button>
         </DialogActions>
       </Dialog>
+
       <Snackbar
         open={snackbarOpen}
 
