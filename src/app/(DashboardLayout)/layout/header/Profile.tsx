@@ -10,28 +10,29 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  CircularProgress
+  CircularProgress,
+  Typography
 } from "@mui/material";
 
 import { IconListCheck, IconMail, IconUser } from "@tabler/icons-react";
+import { Person } from "@mui/icons-material";
 
 const Profile = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const roleId = typeof window !== 'undefined' ? Number(localStorage.getItem('roleId')) : null;
+  const user = typeof window !== 'undefined'
+    ? JSON.parse(localStorage.getItem('user') || '{}')
+    : null;
+  const profileImageURL = user?.profileImageURL || '/images/profile/user-1.jpg';
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
   };
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
-  const getToken = () => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem('accessToken');
-      return token;
-    }
-  }
-  const token = getToken();
   useEffect(() => {
     if (!token) {
       router.replace("/authentication/login");
@@ -47,11 +48,17 @@ const Profile = () => {
     handleClose2();
     router.push("/authentication/login");
   };
-
+  const handleProfileClick = () => {
+    if (roleId === 2) {
+      router.push('/utilities/profile');
+    }
+    else {
+      router.push('/utilities/profile');
+    }
+  };
 
   return (
     <Box>
-
       <IconButton
         size="large"
         aria-label="show 11 new notifications"
@@ -59,21 +66,22 @@ const Profile = () => {
         aria-controls="msgs-menu"
         aria-haspopup="true"
         sx={{
-          ...(typeof anchorEl2 === "object" && {
-            color: "primary.main",
+          ...(typeof anchorEl2 === 'object' && {
+            color: 'primary.main',
           }),
         }}
         onClick={handleClick2}
       >
         <Avatar
-          src="/images/profile/user-1.jpg"
-          alt="image"
+          src={profileImageURL}
+          alt="User"
           sx={{
             width: 35,
             height: 35,
           }}
         />
       </IconButton>
+
       {/* ------------------------------------------- */}
       {/* Message Dropdown */}
       {/* ------------------------------------------- */}
@@ -91,13 +99,17 @@ const Profile = () => {
           },
         }}
       >
-        {/* <MenuItem>
+        <Box display="flex" alignItems="center" px={2} py={1}>
+          <Person sx={{ color: 'brown', mr: 2 }} />
+          <Typography>{`${user.firstName} ${user.lastName}`}</Typography>
+        </Box>
+        <MenuItem onClick={handleProfileClick}>
           <ListItemIcon>
-            <IconUser width={20} />
+            <IconUser fontSize="small" />
           </ListItemIcon>
           <ListItemText>My Profile</ListItemText>
         </MenuItem>
-        <MenuItem>
+        {/* <MenuItem>
           <ListItemIcon>
             <IconMail width={20} />
           </ListItemIcon>

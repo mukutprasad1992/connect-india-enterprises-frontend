@@ -89,13 +89,7 @@ const Notification = () => {
         if (!token) return console.error('No token found.');
 
         try {
-            let url = '';
-            if (roleId === 1) url = `${BASE_URL}/notification/getAllAdminNotification`;
-            else if (roleId === 2) url = `${BASE_URL}/notification/getNotificationsByVendorId/${userId}`;
-            else if (roleId === 3) url = `${BASE_URL}/notification/getNotificationsByUserId/${userId}`;
-            else return;
-
-            const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await axios.get(`${BASE_URL}/notification/getAllUserNotification`, { headers: { Authorization: `Bearer ${token}` } });
             const data = res.data.result || [];
             setNotifications(data);
             setUnreadCount(data.filter((n: any) => n.isRead === 0).length);
