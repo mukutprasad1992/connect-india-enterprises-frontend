@@ -35,6 +35,7 @@ interface ProfileData {
     vendorCode: string;
     pinCode: string;
     profileImageURL: string;
+    profileImageKey: string
     dateOfBirth: string;
     mobileNo: string;
 }
@@ -129,7 +130,8 @@ const ProfilePage: React.FC = () => {
         setImage(file);
 
         if (!BASE_URL || !token) {
-            alert('Cannot upload image: Missing token or base URL');
+            localStorage.clear();
+            router.push('/authentication/login');
             return;
         }
 
@@ -145,12 +147,20 @@ const ProfilePage: React.FC = () => {
                     'Content-Type': 'multipart/form-data',
                 },
             });
+            if (res.data.status === true) {
+                setSnackbarOpen(true);
+                const imageUrl = res.data.result.url;
+                const profileImageKey = res.data.result.key
+                setValue('profileImageURL', imageUrl);
+                setValue('profileImageKey', profileImageKey);
+                setSnackbarMessage(res.data.message)
+            } else {
 
-            const imageUrl = res.data.imageUrl;
-            setValue('profileImageURL', imageUrl);
-        } catch (error) {
-            console.error('Image upload failed:', error);
-            alert('Image upload failed');
+            }
+        } catch (error: any) {
+
+            setSnackbarOpen(true);
+            setSnackbarMessage(error.data.error)
         }
     };
 
@@ -158,8 +168,8 @@ const ProfilePage: React.FC = () => {
         if (!validateFields(data)) return;
         setLoading(true);
         if (!BASE_URL || !token) {
-            alert('Cannot update profile: Missing token or base URL');
-            setLoading(false);
+            localStorage.clear();
+            router.push('/authentication/login');
             return;
         }
         try {
@@ -169,6 +179,7 @@ const ProfilePage: React.FC = () => {
                 address: data.address,
                 dateOfBirth: data.dateOfBirth,
                 profileImageURL: data.profileImageURL,
+                profileImageKey: data.profileImageKey,
                 mobileNo: data.mobileNo,
                 pinCode: data.pinCode,
             };
@@ -214,11 +225,16 @@ const ProfilePage: React.FC = () => {
                                     name="profileImageURL"
                                     control={control}
                                     render={({ field }) => (
-                                        <Avatar src={field.value || '/images/profile/user-1.jpg'} sx={{ width: 150, height: 150 }} />
+                                        <Avatar
+                                            src={field.value || '/images/profile/user-1.jpg'}
+                                            variant="square"
+                                            sx={{ width: 150, height: 150, borderRadius: 3, border: 1 }}
+                                        />
                                     )}
                                 />
-                                <IconButton color="primary" component="label" sx={{ mt: 1 }}>
-                                    <EditIcon />
+                                <IconButton color="primary" component="label" sx={{ mt: 1, fontSize: 12 }}>
+                                    Upload image
+                                    <EditIcon sx={{ fontSize: 20 }} />
                                     <input type="file" accept="image/*" hidden onChange={handleImageChange} />
                                 </IconButton>
                             </Box>

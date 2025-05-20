@@ -49,12 +49,7 @@ const Profile = () => {
     router.push("/authentication/login");
   };
   const handleProfileClick = () => {
-    if (roleId === 2) {
-      router.push('/utilities/profile');
-    }
-    else {
-      router.push('/utilities/profile');
-    }
+    router.push('/utilities/profile');
   };
 
   return (
@@ -81,10 +76,6 @@ const Profile = () => {
           }}
         />
       </IconButton>
-
-      {/* ------------------------------------------- */}
-      {/* Message Dropdown */}
-      {/* ------------------------------------------- */}
       <Menu
         id="msgs-menu"
         anchorEl={anchorEl2}
@@ -101,7 +92,7 @@ const Profile = () => {
       >
         <Box display="flex" alignItems="center" px={2} py={1}>
           <Person sx={{ color: 'brown', mr: 2 }} />
-          <Typography>{`${user.firstName} ${user.lastName}`}</Typography>
+          <Typography>{`${user.firstName || ''} ${user.lastName || ''}`}</Typography>
         </Box>
         <MenuItem onClick={handleProfileClick}>
           <ListItemIcon>
@@ -109,12 +100,6 @@ const Profile = () => {
           </ListItemIcon>
           <ListItemText>My Profile</ListItemText>
         </MenuItem>
-        {/* <MenuItem>
-          <ListItemIcon>
-            <IconMail width={20} />
-          </ListItemIcon>
-          <ListItemText>My Account</ListItemText>
-        </MenuItem> */}
         <Box mt={1} py={1} px={2}>
           <Button
             href="/authentication/login"
