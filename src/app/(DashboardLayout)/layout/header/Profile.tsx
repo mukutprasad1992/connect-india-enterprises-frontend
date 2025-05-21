@@ -15,7 +15,7 @@ import {
 import { IconUser } from "@tabler/icons-react";
 import { Person, VpnKey } from "@mui/icons-material";
 import axios from "axios";
-import ChangePasswordDialog from "../../../authentication/changePassword/page";
+import ChangePasswordDialog from "../../components/changePassword/changePassword";
 
 interface ProfileData {
   firstName: string;
@@ -136,8 +136,6 @@ const Profile = () => {
           </Button>
         </Box>
       </Menu>
-
-      {/* 🔐 Password change dialog */}
       <ChangePasswordDialog open={openDialog} onClose={() => setOpenDialog(false)} />
     </Box>
   );
