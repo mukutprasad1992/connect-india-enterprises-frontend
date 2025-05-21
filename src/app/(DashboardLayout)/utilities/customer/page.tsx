@@ -21,6 +21,7 @@ import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer } 
 import EditIcon from "@mui/icons-material/Edit";
 import DashboardCard from "../../components/shared/DashboardCard";
 import AddIcon from "@mui/icons-material/Add";
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
@@ -44,6 +45,8 @@ const User = () => {
   const [customerErrorMessage, setCustomerErrorMessage] = useState(false);
   const [customerUpdated, setCustomerUpdated] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [openViewDialog, setOpenViewDialog] = useState(false);
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
   const [addError, setAddError] = useState({
     name: '',
@@ -151,40 +154,40 @@ const User = () => {
     return isValid;
   };
 
-  const fetchAllVendorCustomers = async () => {
-    if (roleId !== 2) {
-      return;
-    }
-    if (!token) {
-      return;
-    }
-    else {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${BASE_URL}/customer/getCustomerByVendor`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  // const fetchAllVendorCustomers = async () => {
+  //   if (roleId !== 2) {
+  //     return;
+  //   }
+  //   if (!token) {
+  //     return;
+  //   }
+  //   else {
+  //     try {
+  //       setLoading(true);
+  //       const response = await axios.get(`${BASE_URL}/customer/getCustomerByVendor`, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
 
-        if (response?.data?.status && response?.data?.data) {
-          setRows(response.data.data);
-        }
+  //       if (response?.data?.status && response?.data?.data) {
+  //         setRows(response.data.data);
+  //       }
 
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-        console.error("Error fetching customers:", error);
-      }
-    }
-  };
-  useEffect(() => {
-    fetchAllVendorCustomers();
-  }, [roleId, token, customerUpdated]);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       setLoading(false);
+  //       console.error("Error fetching customers:", error);
+  //     }
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchAllVendorCustomers();
+  // }, [roleId, token, customerUpdated]);
 
   useEffect(() => {
     const fetchAllCustomers = async () => {
-      if (roleId !== 1 || !token) {
+      if (!roleId || !token) {
         return;
       } else {
         try {
@@ -395,6 +398,11 @@ const User = () => {
       pincode: '',
     });
   };
+  const handleViewButton = (row: any) => {
+    setSelectedRow(row);
+    setOpenViewDialog(true);
+  };
+
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
     { field: "name", headerName: "Name", width: 150 },
@@ -402,26 +410,26 @@ const User = () => {
     { field: "phone", headerName: "Phone", width: 120 },
     { field: "address", headerName: "Address", width: 200 },
     { field: "pincode", headerName: "Pin Code", width: 100 },
-    ...(roleId === 2
-      ? [
-        {
-          field: "actions",
-          headerName: "Actions",
-          width: 100,
-          minWidth: 100,
-          renderCell: (params: any) => (
-            <IconButton
-              color="primary"
-              size="small"
-              onClick={() => handleEditButton(params.row)}
-            >
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 120,
+      renderCell: (params: any) => (
+        <>
+          <IconButton color="secondary" size="small" onClick={() => handleViewButton(params.row)}>
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+          {roleId === 2 && (
+            <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
               <EditIcon fontSize="small" />
             </IconButton>
-          ),
-        },
-      ]
-      : []),
+          )}
+        </>
+      ),
+    },
   ];
+
+
 
   const handleCloseCustomerSuccessSnackbar = () => {
     setOpenCustomerSuccessSnackbar(false);
@@ -739,6 +747,24 @@ const User = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
+      <Dialog open={openViewDialog} onClose={() => setOpenViewDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>User Details</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={1}>
+            {selectedRow &&
+              Object.entries(selectedRow).map(([key, value], index) => (
+                <Grid item xs={6} sm={6} key={index}>
+                  <Typography variant="caption" color="textSecondary">
+                    <strong> {key}:</strong> {String(value)}
+                  </Typography>
+                </Grid>
+              ))}
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenViewDialog(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={openCustomerSuccessSnackbar}
         autoHideDuration={3000}

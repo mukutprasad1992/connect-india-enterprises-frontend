@@ -13,6 +13,7 @@ import {
   Button,
   Snackbar,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
@@ -26,7 +27,7 @@ const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
-
+  const [loading, setLoading] = useState<boolean>(false);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string>("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
@@ -70,21 +71,23 @@ const ResetPassword = () => {
       setSnackbarOpen(true);
       return;
     }
-
+    setLoading(true)
     try {
       const response = await axios.post(`${BASE_URL}/auth/resetPassword`, {
         token,
         newPassword,
       });
-
+      setLoading(false)
       setSnackbarMessage("Password reset successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
       setTimeout(() => {
+        setLoading(false)
         router.push("/authentication/login");
       }, 2000);
     } catch (error: any) {
+      setLoading(false)
       const message = error?.response?.data?.message || "Failed to reset password.";
       setSnackbarMessage(message);
       setSnackbarSeverity("error");
@@ -143,7 +146,7 @@ const ResetPassword = () => {
                 </Box>
                 <Box mt={3}>
                   <Typography variant="subtitle1" fontWeight={600} component="label" htmlFor="confirm-password" mb="5px">
-                    Confirm Password
+                    Reset Password
                   </Typography>
                   <CustomTextField
                     variant="outlined"
@@ -157,8 +160,19 @@ const ResetPassword = () => {
                   />
                 </Box>
                 <Box mt={3}>
-                  <Button color="primary" variant="contained" size="large" fullWidth type="submit">
-                    Reset Password
+                  <Button
+                    color="primary"
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <CircularProgress size={24} sx={{ color: "#fff" }} />
+                    ) : ("Reset Password"
+                    )}
+
                   </Button>
                 </Box>
               </Stack>
@@ -171,7 +185,6 @@ const ResetPassword = () => {
           </Grid>
         </Grid>
       </Box>
-
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
@@ -185,8 +198,6 @@ const ResetPassword = () => {
     </PageContainer>
   );
 };
-
-// Wrap the ResetPassword component with Suspense
 const ResetPasswordWithSuspense = () => (
   <Suspense fallback={<div>Loading...</div>}>
     <ResetPassword />

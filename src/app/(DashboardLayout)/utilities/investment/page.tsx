@@ -457,7 +457,7 @@ const Investment = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "Id", flex: 0.12 },
+    { field: "id", headerName: "ID", flex: 0.12 },
     { field: "type", headerName: "Type", flex: 0.12 },
     { field: "amount", headerName: "Amount", flex: 0.12 },
     {
