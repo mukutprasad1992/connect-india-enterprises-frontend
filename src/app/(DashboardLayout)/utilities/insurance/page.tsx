@@ -20,7 +20,6 @@ import {
   Snackbar,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import ProductPerformance from "@/app/(DashboardLayout)/components/dashboard/ProductPerformance";
 import { SetStateAction, useEffect, useState } from "react";
 import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -498,7 +497,7 @@ const Insurance = () => {
     return `${hourNum}:${minutes} ${amPm}`;
   };
   const columns = [
-    { field: "id", headerName: "Id", flex: 0.12 },
+    { field: "id", headerName: "ID", flex: 0.12 },
     { field: "type", headerName: "Type", flex: 0.12 },
     { field: "amount", headerName: "Amount", flex: 0.12 },
     {

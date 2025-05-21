@@ -12,8 +12,8 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
     const isAuthPage = [
         "/authentication/register",
         "/authentication/login",
-        "/authentication/forgot_password",
-        "/authentication/reset_password",
+        "/authentication/forgotPassword",
+        "/authentication/resetPassword",
     ].includes(pathname);
 
     return (

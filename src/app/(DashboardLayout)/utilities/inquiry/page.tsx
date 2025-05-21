@@ -170,7 +170,7 @@ const InquiryPage = () => {
     };
 
     const columns = [
-        { field: "id", headerName: "Id", flex: 0.02 },
+        { field: "id", headerName: "ID", flex: 0.02 },
         { field: "email", headerName: "Email", flex: 0.08 },
         { field: "mobileNo", headerName: "Mobile No", flex: 0.08 },
         { field: "type", headerName: "Type", flex: 0.12 },

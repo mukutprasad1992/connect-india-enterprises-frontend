@@ -1,6 +1,6 @@
+'use client';
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Avatar,
   Box,
@@ -10,109 +10,135 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  CircularProgress,
   Typography
 } from "@mui/material";
+import { IconUser } from "@tabler/icons-react";
+import { Person, VpnKey } from "@mui/icons-material";
+import axios from "axios";
+import ChangePasswordDialog from "../../../authentication/changePassword/page";
 
-import { IconListCheck, IconMail, IconUser } from "@tabler/icons-react";
-import { Person } from "@mui/icons-material";
+interface ProfileData {
+  firstName: string;
+  lastName: string;
+  profileImageURL: string;
+}
 
 const Profile = () => {
-  const [anchorEl2, setAnchorEl2] = useState(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [profile, setProfile] = useState<ProfileData>({
+    firstName: '',
+    lastName: '',
+    profileImageURL: '/images/profile/user-1.jpg',
+  });
+
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  const roleId = typeof window !== 'undefined' ? Number(localStorage.getItem('roleId')) : null;
-  const user = typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('user') || '{}')
-    : null;
-  const profileImageURL = user?.profileImageURL || '/images/profile/user-1.jpg';
-  const handleClick2 = (event: any) => {
-    setAnchorEl2(event.currentTarget);
+
+  const handleClick = (event: any) => {
+    fetchProfile();
+    setAnchorEl(event.currentTarget);
   };
-  const handleClose2 = () => {
-    setAnchorEl2(null);
+
+  const handleClose = () => {
+    setAnchorEl(null);
   };
-  useEffect(() => {
-    if (!token) {
-      router.replace("/authentication/login");
-    } else {
-      setLoading(false);
-    }
-  }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("roleId");
-    handleClose2();
+    localStorage.clear();
+    handleClose();
     router.push("/authentication/login");
   };
+
   const handleProfileClick = () => {
     router.push('/utilities/profile');
   };
+
+  const handleChangePassword = () => {
+    handleClose();
+    setOpenDialog(true);
+  };
+
+  const fetchProfile = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.replace("/authentication/login");
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${BASE_URL}/profile/getProfileById`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = response.data?.result;
+      if (data) {
+        setProfile({
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          profileImageURL: data.profileImageURL || '/images/profile/user-1.jpg',
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      handleLogout();
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [BASE_URL, token, router]);
 
   return (
     <Box>
       <IconButton
         size="large"
-        aria-label="show 11 new notifications"
         color="inherit"
-        aria-controls="msgs-menu"
-        aria-haspopup="true"
-        sx={{
-          ...(typeof anchorEl2 === 'object' && {
-            color: 'primary.main',
-          }),
-        }}
-        onClick={handleClick2}
+        onClick={handleClick}
+        sx={{ ...(anchorEl && { color: 'primary.main' }) }}
       >
         <Avatar
-          src={profileImageURL}
-          alt="User"
-          sx={{
-            width: 35,
-            height: 35,
-          }}
+          src={profile.profileImageURL}
+          alt={`${profile.firstName} ${profile.lastName}`}
+          sx={{ width: 35, height: 35 }}
         />
       </IconButton>
+
       <Menu
-        id="msgs-menu"
-        anchorEl={anchorEl2}
-        keepMounted
-        open={Boolean(anchorEl2)}
-        onClose={handleClose2}
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
-        sx={{
-          "& .MuiMenu-paper": {
-            width: "200px",
-          },
-        }}
+        sx={{ "& .MuiMenu-paper": { width: 200 } }}
       >
         <Box display="flex" alignItems="center" px={2} py={1}>
-          <Person sx={{ color: 'brown', mr: 2 }} />
-          <Typography>{`${user.firstName || ''} ${user.lastName || ''}`}</Typography>
+          <Person sx={{ color: 'brown', mr: 1.5 }} />
+          <Typography>
+            {profile.firstName} {profile.lastName}
+          </Typography>
         </Box>
+
         <MenuItem onClick={handleProfileClick}>
-          <ListItemIcon>
-            <IconUser fontSize="small" />
-          </ListItemIcon>
+          <ListItemIcon><IconUser fontSize="small" /></ListItemIcon>
           <ListItemText>My Profile</ListItemText>
         </MenuItem>
+
+        <MenuItem onClick={handleChangePassword}>
+          <ListItemIcon><VpnKey fontSize="small" /></ListItemIcon>
+          <ListItemText>Change Password</ListItemText>
+        </MenuItem>
+
         <Box mt={1} py={1} px={2}>
-          <Button
-            href="/authentication/login"
-            variant="outlined"
-            color="primary"
-            component={Link}
-            fullWidth
-            onClick={handleLogout}
-          >
+          <Button variant="outlined" color="primary" fullWidth onClick={handleLogout}>
             Logout
           </Button>
         </Box>
       </Menu>
+
+      {/* 🔐 Password change dialog */}
+      <ChangePasswordDialog open={openDialog} onClose={() => setOpenDialog(false)} />
     </Box>
   );
 };

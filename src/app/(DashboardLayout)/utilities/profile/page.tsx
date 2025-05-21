@@ -17,12 +17,6 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
-import EmailIcon from '@mui/icons-material/Email';
-import BusinessIcon from '@mui/icons-material/Business';
-import PersonIcon from '@mui/icons-material/Person';
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { useRouter } from 'next/navigation';
 
 interface ProfileData {

@@ -15,6 +15,7 @@ import {
   Alert,
   Snackbar,
 } from "@mui/material";
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
@@ -30,6 +31,7 @@ import DashboardCard from "../../components/shared/DashboardCard";
 import { formatDateToIST } from '../../../../utils/utils';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
+import React from "react";
 interface Collaborator {
   id: number;
   code?: string;
@@ -74,6 +76,8 @@ const Collaborator = () => {
   const [othersError, setOthersError] = useState("");
   const [vendorList, setVendorList] = useState([]);
   const [vendorUpdated, setVendorUpdated] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
   const [vendorFormData, setVendorFormData] = useState({
     id: "",
@@ -375,9 +379,17 @@ const Collaborator = () => {
 
     fetchVendors();
   }, [token, vendorUpdated]);
+  const handleViewButton = (rowData: any) => {
+    setSelectedRow(rowData);
+    setViewDialogOpen(true);
+  };
 
+  const handleViewDialogClose = () => {
+    setViewDialogOpen(false);
+    setSelectedRow(null);
+  };
   const columns: GridColDef[] = [
-    { field: "id", headerName: "Id", flex: 1 },
+    { field: "id", headerName: "ID", flex: 1 },
 
     { field: "businessName", headerName: "Business name", flex: 1 },
     { field: "businessRepresentative", headerName: "Business representative", flex: 1 },
@@ -410,12 +422,17 @@ const Collaborator = () => {
     {
       field: "actions",
       headerName: "Action",
-      flex: 2,
+      flex: 1,
       align: "center",
-
       renderCell: (params: any) => (
-        <Box display="flex" justifyContent="flex-end" width="40%" mt={1.5}>
-
+        <Box display="flex" justifyContent="flex-start" width="100%" mt={1.5}>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() => handleViewButton(params.row)}
+          >
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
           <IconButton
             color="primary"
             size="small"
@@ -436,7 +453,7 @@ const Collaborator = () => {
           </IconButton>
         </Box>
       ),
-    },
+    }
   ];
 
   const handleOpenDialog = (row: Collaborator) => {
@@ -893,6 +910,56 @@ const Collaborator = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
+      <Dialog open={viewDialogOpen} onClose={handleViewDialogClose} maxWidth="xs" fullWidth>
+        <DialogTitle>View Details</DialogTitle>
+        <DialogContent dividers>
+          <Box display="flex" justifyContent="center" mb={2}>
+            <img
+              src={selectedRow?.profileImageURL || '/images/profile/user-1.jpg'}
+              alt="Profile"
+              style={{
+                width: 150,
+                height: 150,
+                borderRadius: '5%',
+                objectFit: 'cover',
+              }}
+            />
+          </Box>
+          <Box mb={2}>
+            <hr style={{ border: 'none', borderTop: '1px solid #ccc' }} />
+          </Box>
+
+          <Grid container spacing={1}>
+            {selectedRow &&
+              Object.entries(selectedRow)
+                .filter(([key]) => key !== 'profileImageURL')
+                .map(([key, value]) => {
+                  if (value && typeof value === 'object') return null;
+
+                  return (
+                    <React.Fragment key={key}>
+                      <Grid item xs={6}>
+                        <Typography >
+                          <strong>
+                            {key
+                              .replace(/([A-Z])/g, ' $1')
+                              .replace(/^./, str => str.toUpperCase())}:</strong>  {value === null || value === undefined ? '-' : String(value)}
+                        </Typography>
+                      </Grid>
+                    </React.Fragment>
+                  );
+                })}
+          </Grid>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleViewDialogClose} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
       <Snackbar
         open={openVendorSuccessSnackbar}
         autoHideDuration={3000}
