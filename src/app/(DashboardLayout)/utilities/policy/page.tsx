@@ -22,7 +22,7 @@ import {
   Alert,
   Divider,
   Snackbar,
-
+  Tooltip
 } from "@mui/material";
 import axios from "axios";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
@@ -551,29 +551,35 @@ const Policy = () => {
 
         return (
           <Box display="flex" width="100%" gap={1}>
-            <IconButton
-              color="info"
-              size="small"
-              onClick={() => handleViewButton(params.row)}
-            >
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title="Edit">
+              <IconButton
+                color="info"
+                size="small"
+                onClick={() => handleViewButton(params.row)}
+              >
+                <VisibilityIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             {!isEditDeleteHidden && (
               <>
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={() => handleEditButton(params.row)}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  color="error"
-                  size="small"
-                  onClick={() => handleDeleteButton(params.row.id)}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Edit">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => handleEditButton(params.row)}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => handleDeleteButton(params.row.id)}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </>
             )}
 

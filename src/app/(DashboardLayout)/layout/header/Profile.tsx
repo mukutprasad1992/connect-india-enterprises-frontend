@@ -10,7 +10,8 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Typography
+  Typography,
+  Tooltip
 } from "@mui/material";
 import { IconUser } from "@tabler/icons-react";
 import { Person, VpnKey } from "@mui/icons-material";
@@ -27,7 +28,7 @@ const Profile = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
-    firstName: '',
+    firstName: 'User',
     lastName: '',
     profileImageURL: '/images/profile/user-1.jpg',
   });
@@ -75,7 +76,7 @@ const Profile = () => {
       const data = response.data?.result;
       if (data) {
         setProfile({
-          firstName: data.firstName || '',
+          firstName: data.firstName || 'User',
           lastName: data.lastName || '',
           profileImageURL: data.profileImageURL || '/images/profile/user-1.jpg',
         });
@@ -92,19 +93,21 @@ const Profile = () => {
 
   return (
     <Box>
-      <IconButton
-        size="large"
-        color="inherit"
-        onClick={handleClick}
-        sx={{ ...(anchorEl && { color: 'primary.main' }) }}
-      >
-        <Avatar
-          src={profile.profileImageURL}
-          alt={`${profile.firstName} ${profile.lastName}`}
-          sx={{ width: 35, height: 35 }}
-        />
-      </IconButton>
-
+      <Tooltip title="Profile">
+        <IconButton
+          size="large"
+          color="inherit"
+          onClick={handleClick}
+          sx={{ color: "black", borderRadius: '4px', m: 0, p: 0 }}
+        >
+          <Avatar
+            src={profile.profileImageURL}
+            alt={`${profile.firstName} ${profile.lastName}`}
+            sx={{ width: 35, height: 35 }}
+          />
+          <Typography sx={{ m: 1 }}>{`${profile.firstName} ${profile.lastName}`}</Typography>
+        </IconButton>
+      </Tooltip>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -137,7 +140,7 @@ const Profile = () => {
         </Box>
       </Menu>
       <ChangePasswordDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-    </Box>
+    </Box >
   );
 };
 

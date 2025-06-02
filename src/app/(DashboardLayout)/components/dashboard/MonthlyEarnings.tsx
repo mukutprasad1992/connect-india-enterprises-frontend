@@ -8,6 +8,7 @@ import AccountBalanceSharpIcon from "@mui/icons-material/AccountBalanceSharp";
 import Diversity3Icon from "@mui/icons-material/Diversity3";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { ApexOptions } from "apexcharts";
+import { jwtDecode } from "jwt-decode";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -39,7 +40,23 @@ const MonthlyEarnings: React.FC<MonthlyEarningsProps> = ({
   const handleNavigate = (path: string) => {
     router.push(path);
   };
-
+  const getToken = () => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem('accessToken');
+      return token;
+    }
+  }
+  const token = getToken();
+  if (token) {
+    const decoded: any = jwtDecode(token);
+    if (decoded.exp * 1000 < Date.now()) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+  } else {
+    localStorage.clear();
+    router.push("/authentication/login");
+  }
   const iconMap: Record<string, JSX.Element> = {
     Investment: (
       <Fab color="secondary" size="medium" sx={{ color: "#ffffff" }} onClick={() => {
@@ -107,11 +124,11 @@ const MonthlyEarnings: React.FC<MonthlyEarningsProps> = ({
     >
       <Box>
         <Typography variant="h3" fontWeight="700" mt="-20px">
-          {loading ? "Loading..." : errorMessage ? errorMessage : `Total service: ${service}`}
+          {loading ? "Loading..." : errorMessage ? errorMessage : `Total service: ${service || 0}`}
         </Typography>
         <Stack direction="row" spacing={1} my={1} alignItems="center">
           <Typography variant="subtitle2" fontWeight="600">
-            {loading ? "Loading..." : errorMessage ? errorMessage : `Amount: ₹${amount}`}
+            {loading ? "Loading..." : errorMessage ? errorMessage : `Amount: ₹${amount || 0}`}
           </Typography>
         </Stack>
       </Box>

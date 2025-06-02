@@ -26,6 +26,12 @@ export const validateConfirmPassword = (password: string, confirmPassword: strin
   return password === confirmPassword;
 };
 
+export const formatDate = (value: any): string => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "Invalid date";
+  return date.toISOString().split("T")[0];
+};
 
 export const formatDateToIST = (dateString: string | number | Date) => {
   const dateFormat = new Intl.DateTimeFormat('en-IN', {

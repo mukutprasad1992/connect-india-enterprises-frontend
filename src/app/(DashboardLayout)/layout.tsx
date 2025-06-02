@@ -2,12 +2,14 @@
 import { styled, Container, Box } from "@mui/material";
 import React, { useState } from "react";
 import Header from "@/app/(DashboardLayout)/layout/header/Header";
-import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/Sidebar";
+import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/MSidebar";
+
 const MainWrapper = styled("div")(() => ({
   display: "flex",
   minHeight: "100vh",
   width: "100%",
 }));
+
 const PageWrapper = styled("div")(() => ({
   display: "flex",
   flexGrow: 1,
@@ -16,27 +18,30 @@ const PageWrapper = styled("div")(() => ({
   zIndex: 1,
   backgroundColor: "transparent",
 }));
-interface Props {
-  children: React.ReactNode;
-}
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const toggleMobileSidebar = () => setMobileSidebarOpen((prev) => !prev);
+  const handleSidebarClose = (event?: React.MouseEvent<HTMLElement>) => {
+    setMobileSidebarOpen(false);
+  };
   return (
     <MainWrapper className="mainwrapper">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         isMobileSidebarOpen={isMobileSidebarOpen}
-        onSidebarClose={() => setMobileSidebarOpen(false)}
-        toggleMobileSidebar={() => setMobileSidebarOpen(true)}
+        onSidebarClose={handleSidebarClose}
+        toggleMobileSidebar={toggleMobileSidebar}
       />
+
       <PageWrapper className="page-wrapper">
-        <Header toggleMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <Header
+          toggleMobileSidebar={toggleMobileSidebar}
+          toggleSidebar={toggleSidebar}
+        />
         <Container
           sx={{
             paddingTop: "20px",

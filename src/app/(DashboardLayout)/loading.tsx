@@ -1,5 +1,5 @@
-const Loading = () =>{
-    return(
+const Loading = () => {
+    return (
         <div>Dash Loading</div>
     )
 }

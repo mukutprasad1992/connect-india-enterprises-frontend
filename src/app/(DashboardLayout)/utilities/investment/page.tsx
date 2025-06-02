@@ -22,6 +22,7 @@ import {
   Divider,
   Alert,
   Snackbar,
+  Tooltip
 } from "@mui/material";
 import axios from "axios";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
@@ -35,6 +36,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRouter } from 'next/navigation';
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
+import PaymentIcon from '@mui/icons-material/Payment';
 import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
@@ -455,7 +457,6 @@ const Investment = () => {
     setOpenViewDialog(false);
     setSelectedRow(null);
   };
-
   const columns = [
     { field: "id", headerName: "ID", flex: 0.12 },
     { field: "type", headerName: "Type", flex: 0.12 },
@@ -531,29 +532,35 @@ const Investment = () => {
 
         return (
           <Box display="flex" width="100%" gap={1}>
-            <IconButton
-              color="info"
-              size="small"
-              onClick={() => handleViewButton(params.row)}
-            >
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title="View">
+              <IconButton
+                color="info"
+                size="small"
+                onClick={() => handleViewButton(params.row)}
+              >
+                <VisibilityIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             {!isEditDeleteHidden && (
               <>
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={() => handleEditButton(params.row)}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  color="error"
-                  size="small"
-                  onClick={() => handleDeleteButton(params.row.id)}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title="Edit">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => handleEditButton(params.row)}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => handleDeleteButton(params.row.id)}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </>
             )}
 

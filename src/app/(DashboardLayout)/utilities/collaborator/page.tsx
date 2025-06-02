@@ -14,7 +14,9 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  Avatar,
 } from "@mui/material";
+import Tooltip from '@mui/material/Tooltip';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useEffect, useState } from "react";
@@ -26,7 +28,8 @@ import axios from 'axios';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { formatDate } from "../../../../utils/utils";
+import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer, } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { formatDateToIST } from '../../../../utils/utils';
 import { useRouter } from 'next/navigation';
@@ -389,7 +392,7 @@ const Collaborator = () => {
     setSelectedRow(null);
   };
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
+    { field: "id", headerName: "ID", flex: 0.5 },
 
     { field: "businessName", headerName: "Business name", flex: 1 },
     { field: "businessRepresentative", headerName: "Business representative", flex: 1 },
@@ -397,7 +400,7 @@ const Collaborator = () => {
     {
       field: "mobileNo",
       headerName: "Phone",
-      flex: 1,
+      flex: .6,
       headerAlign: "center",
       align: "center",
     },
@@ -409,48 +412,57 @@ const Collaborator = () => {
     },
     {
       field: "createdAt",
-      headerName: "Create at",
-      flex: 1,
+      headerName: "Created At",
+      flex: .8,
       align: "center",
+      renderCell: (params: any) => {
+        return formatDate(params.value || params.row.createdAt);
+      },
     },
     {
       field: "status",
       headerName: "Status",
-      flex: 1,
+      flex: .5,
       align: "center",
     },
     {
       field: "actions",
       headerName: "Action",
-      flex: 1,
+      flex: .8,
       align: "center",
       renderCell: (params: any) => (
         <Box display="flex" justifyContent="flex-start" width="100%" mt={1.5}>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() => handleViewButton(params.row)}
-          >
-            <VisibilityIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() => handleEditButton(params.row)}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            color={params.row.status === "Enable" ? "success" : "error"}
-            size="small"
-            onClick={() => handleStatusButton(params.row)}
-          >
-            {params.row.status === "Enable" ? (
-              <CheckCircleIcon fontSize="small" />
-            ) : (
-              <BlockIcon fontSize="small" />
-            )}
-          </IconButton>
+          <Tooltip title="View">
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() => handleViewButton(params.row)}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit">
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() => handleEditButton(params.row)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Enable/Disable">
+            <IconButton
+              color={params.row.status === "Enable" ? "success" : "error"}
+              size="small"
+              onClick={() => handleStatusButton(params.row)}
+            >
+              {params.row.status === "Enable" ? (
+                <CheckCircleIcon fontSize="small" />
+              ) : (
+                <BlockIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
         </Box>
       ),
     }
@@ -910,40 +922,43 @@ const Collaborator = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
-      <Dialog open={viewDialogOpen} onClose={handleViewDialogClose} maxWidth="xs" fullWidth>
+      <Dialog open={viewDialogOpen} onClose={handleViewDialogClose} maxWidth="sm" fullWidth>
         <DialogTitle>View Details</DialogTitle>
         <DialogContent dividers>
           <Box display="flex" justifyContent="center" mb={2}>
-            <img
+            <Avatar
               src={selectedRow?.profileImageURL || '/images/profile/user-1.jpg'}
-              alt="Profile"
-              style={{
-                width: 150,
-                height: 150,
-                borderRadius: '5%',
-                objectFit: 'cover',
+              alt="User"
+              sx={{ width: 150, height: 150 }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/images/profile/user-1.jpg';
               }}
             />
           </Box>
-          <Box mb={2}>
-            <hr style={{ border: 'none', borderTop: '1px solid #ccc' }} />
-          </Box>
-
+          <Divider sx={{ marginBottom: 2 }} />
           <Grid container spacing={1}>
             {selectedRow &&
               Object.entries(selectedRow)
                 .filter(([key]) => key !== 'profileImageURL')
                 .map(([key, value]) => {
                   if (value && typeof value === 'object') return null;
-
+                  const formattedValue =
+                    (key === 'createdAt' || key === 'dateOfBirth') && value
+                      ? formatDate(value)
+                      : value === null || value === undefined
+                        ? '-'
+                        : String(value);
                   return (
                     <React.Fragment key={key}>
                       <Grid item xs={6}>
-                        <Typography >
+                        <Typography>
                           <strong>
                             {key
                               .replace(/([A-Z])/g, ' $1')
-                              .replace(/^./, str => str.toUpperCase())}:</strong>  {value === null || value === undefined ? '-' : String(value)}
+                              .replace(/^./, str => str.toUpperCase())}
+                            :
+                          </strong>{' '}
+                          {formattedValue}
                         </Typography>
                       </Grid>
                     </React.Fragment>
@@ -951,22 +966,20 @@ const Collaborator = () => {
                 })}
           </Grid>
         </DialogContent>
-
         <DialogActions>
           <Button onClick={handleViewDialogClose} color="primary">
             Close
           </Button>
         </DialogActions>
       </Dialog>
-
-
       <Snackbar
         open={openVendorSuccessSnackbar}
         autoHideDuration={3000}
         onClose={handleCloseVendorSuccessSnackbar}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert onClose={handleCloseVendorSuccessSnackbar} variant="filled" severity="success" sx={{ width: '100%' }}>
+        <Alert onClose={handleCloseVendorSuccessSnackbar}
+          severity="success" sx={{ width: '100%', border: 1 }}>
           {successVendorMessage}
         </Alert>
       </Snackbar>
@@ -975,6 +988,3 @@ const Collaborator = () => {
 };
 
 export default Collaborator;
-function setProducts(arg0: (prevProducts: any[]) => any[]) {
-  throw new Error("Function not implemented.");
-}

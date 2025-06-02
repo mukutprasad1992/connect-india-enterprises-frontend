@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-// mui imports
 import { ListSubheader, styled, Theme } from '@mui/material';
 
 type NavGroup = {
@@ -9,9 +8,10 @@ type NavGroup = {
 
 interface ItemType {
   item: NavGroup;
+  isSidebarOpen: boolean;
 }
 
-const NavGroup = ({ item }: ItemType) => {
+const NavGroup = ({ item, isSidebarOpen }: ItemType) => {
   const ListSubheaderStyle = styled((props: Theme | any) => <ListSubheader disableSticky {...props} />)(
     ({ theme }) => ({
       ...theme.typography.overline,
@@ -23,13 +23,15 @@ const NavGroup = ({ item }: ItemType) => {
       padding: '3px 12px',
     }),
   );
-  return (
-    <ListSubheaderStyle>{item.subheader}</ListSubheaderStyle>
-  );
+
+  if (!isSidebarOpen) return null;
+
+  return <ListSubheaderStyle>{item.subheader}</ListSubheaderStyle>;
 };
 
 NavGroup.propTypes = {
   item: PropTypes.object,
+  isSidebarOpen: PropTypes.bool.isRequired,
 };
 
 export default NavGroup;

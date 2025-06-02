@@ -13,6 +13,7 @@ import {
     InputAdornment,
     Snackbar,
     Alert,
+    Tooltip,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
@@ -40,11 +41,11 @@ import {
     Badge,
     Home,
     Pin,
-    Image,
     Cake,
     Phone,
     Code,
 } from '@mui/icons-material';
+import { jwtDecode } from 'jwt-decode';
 const ProfilePage: React.FC = () => {
     const { control, handleSubmit, setValue } = useForm<ProfileData>();
     const [loading, setLoading] = useState(false);
@@ -62,44 +63,110 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
         setMounted(true);
     }, []);
-    useEffect(() => {
+    const fetchProfile = async () => {
         if (!token) {
             localStorage.clear();
             router.push('/authentication/login');
             return;
         }
-
         if (!BASE_URL) {
             console.error('BASE_URL is not defined');
             return;
         }
+        try {
+            const res = await axios.get(`${BASE_URL}/profile/getProfileById`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-        const fetchProfile = async () => {
-            try {
-                const res = await axios.get(`${BASE_URL}/profile/getProfileById`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+            const data: ProfileData = res.data.result;
 
-                const data: ProfileData = res.data.result;
-
-                Object.entries(data).forEach(([key, value]) => {
-                    if (key === 'dateOfBirth' && typeof value === 'string') {
-                        const formattedDate = value.split('T')[0];
-                        setValue('dateOfBirth', formattedDate as ProfileData['dateOfBirth']);
-                    } else {
-                        setValue(key as keyof ProfileData, value as any);
-                    }
-                });
-            } catch (error: any) {
-                console.error("Error fetching profile:", error);
-                if (axios.isAxiosError(error)) {
-                    alert(`Failed to fetch profile: ${error.response?.data?.message || error.message}`);
+            Object.entries(data).forEach(([key, value]) => {
+                if (key === 'dateOfBirth' && typeof value === 'string') {
+                    const formattedDate = value.split('T')[0];
+                    setValue('dateOfBirth', formattedDate as ProfileData['dateOfBirth']);
                 } else {
-                    alert("Unexpected error occurred.");
+                    setValue(key as keyof ProfileData, value as any);
                 }
+            });
+        } catch (error: any) {
+            console.error("Error fetching profile:", error);
+            if (axios.isAxiosError(error)) {
+                alert(`Failed to fetch profile: ${error.response?.data?.message || error.message}`);
+            } else {
+                alert("Unexpected error occurred.");
             }
-        };
-
+        }
+    };
+    useEffect(() => {
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+            if (roleId !== 1 && roleId !== 2) {
+                if (roleId !== 1 && roleId !== 2) {
+                    localStorage.clear();
+                    router.push("/authentication/login");
+                }
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        } else {
+            localStorage.clear();
+            router.push("/authentication/login");
+        } if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+            if (roleId !== 1 && roleId !== 2) {
+                if (roleId !== 1 && roleId !== 2) {
+                    localStorage.clear();
+                    router.push("/authentication/login");
+                }
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        } else {
+            localStorage.clear();
+            router.push("/authentication/login");
+        } if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+            if (roleId !== 1 && roleId !== 2) {
+                if (roleId !== 1 && roleId !== 2) {
+                    localStorage.clear();
+                    router.push("/authentication/login");
+                }
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        } else {
+            localStorage.clear();
+            router.push("/authentication/login");
+        } if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+            if (roleId !== 1 && roleId !== 2) {
+                if (roleId !== 1 && roleId !== 2) {
+                    localStorage.clear();
+                    router.push("/authentication/login");
+                }
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        } else {
+            localStorage.clear();
+            router.push("/authentication/login");
+        }
         fetchProfile();
     }, [router, token, setValue]);
     const validateFields = (data: ProfileData) => {
@@ -194,7 +261,7 @@ const ProfilePage: React.FC = () => {
                 }
             }
         } catch (error: any) {
-            setSnackbarMessage(error.data.message);
+            setSnackbarMessage(error?.data?.message);
         } finally {
             setLoading(false);
         }
@@ -226,11 +293,12 @@ const ProfilePage: React.FC = () => {
                                         />
                                     )}
                                 />
-                                <IconButton color="primary" component="label" sx={{ mt: 1, fontSize: 12 }}>
-                                    Upload image
-                                    <EditIcon sx={{ fontSize: 20 }} />
-                                    <input type="file" accept="image/*" hidden onChange={handleImageChange} />
-                                </IconButton>
+                                <Tooltip title="Upload Image">
+                                    <IconButton color="primary" component="label" sx={{ mt: 1, fontSize: 12 }}>
+                                        <EditIcon sx={{ fontSize: 20 }} />
+                                        <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+                                    </IconButton>
+                                </Tooltip>
                             </Box>
                         </Grid>
 
@@ -632,7 +700,7 @@ const ProfilePage: React.FC = () => {
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
-        </Box>
+        </Box >
     );
 };
 

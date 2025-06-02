@@ -18,6 +18,7 @@ import {
   Alert,
   Snackbar,
 } from "@mui/material";
+import Tooltip from '@mui/material/Tooltip';
 import {
   DataGrid,
   GridToolbarColumnsButton,
@@ -34,6 +35,7 @@ import VoucherPdfView from "../../components/generatePdf/VoucherPdfView";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
+import { formatDate } from "../../../../utils/utils";
 
 const VoucherTable: React.FC = () => {
   const router = useRouter();
@@ -520,6 +522,7 @@ const VoucherTable: React.FC = () => {
   };
 
   const handleClickOpenPdfPopUp = (rowToEdit: any) => {
+
     setViewSelectedVocher(rowToEdit);
     setopenPdfPopUp(true);
     setLoading(false)
@@ -607,12 +610,18 @@ const VoucherTable: React.FC = () => {
       headerName: "Validity From",
       flex: 1,
       editable: true,
+      renderCell: (params: any) => {
+        return formatDate(params.value || params.row.validityFrom);
+      },
     },
     {
       field: "validityTo",
       headerName: "Validity To",
       flex: 1,
-      editable: true
+      editable: true,
+      renderCell: (params: any) => {
+        return formatDate(params.value || params.row.validityTo);
+      },
     },
     {
       field: "status",
@@ -626,30 +635,51 @@ const VoucherTable: React.FC = () => {
       flex: 2,
       renderCell: (params: any) => (
         <Box display="flex" justifyContent="flex-end" width="100%" mt={1}>
-          <IconButton color="primary" onClick={() => {
+          {/* <IconButton color="primary" onClick={() => {
             handleClickOpenPdfPopUp(params.row)
           }}>
             <VisibilityIcon style={{ fontSize: 20 }} />
-          </IconButton>
+          </IconButton> */}
+          <Tooltip title="View">
+            <IconButton
+              color="primary"
+              onClick={() => {
+                const pdfURL = params.row?.pdfURL;
+                if (pdfURL) {
+                  window.open(pdfURL, '_blank');
+                } else {
+                  alert('PDF not available');
+                }
+              }}
+            >
+              <VisibilityIcon style={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
           {roleId === 1 && (
             <>
-              <IconButton
-                color={params.row.status === 'Disable' ? 'error' : 'primary'}
-                size="small"
-                onClick={() => handleUpdateStatusButton(params.row.id)}
-              >
-                <BlockIcon fontSize="small" />
-              </IconButton>
-              <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton color="primary" size="small" onClick={() => handleDeleteButton(params.row.id)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-
+              <Tooltip title="Block">
+                <IconButton
+                  color={params.row.status === 'Disable' ? 'error' : 'primary'}
+                  size="small"
+                  onClick={() => handleUpdateStatusButton(params.row.id)}
+                >
+                  <BlockIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Edit">
+                <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete">
+                <IconButton color="primary" size="small" onClick={() => handleDeleteButton(params.row.id)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </>
-          )}
-        </Box>
+          )
+          }
+        </Box >
       ),
     }
   ];
@@ -1215,10 +1245,28 @@ const VoucherTable: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        <Dialog maxWidth="lg" open={openPdfPopUp} onClose={handleClosePdfPopUp}>
+        <Dialog
+          open={openPdfPopUp}
+          onClose={handleClosePdfPopUp}
+          maxWidth="sm"
+          fullWidth
+        >
           <DialogTitle>Voucher</DialogTitle>
           <DialogContent>
-            <VoucherPdfView viewSelectedVocher={viewSelectedVocher} />
+            {viewSelectedVocher?.pdfURL ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => window.open(viewSelectedVocher.pdfURL, '_blank')}
+              >
+                Open PDF in New Tab
+              </Button>
+            ) : (
+              <p>No PDF available</p>
+            )}
+
+            {/* PDF generator component commented */}
+            {/* <VoucherPdfView viewSelectedVocher={viewSelectedVocher} /> */}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClosePdfPopUp} color="primary">
@@ -1226,6 +1274,8 @@ const VoucherTable: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+
       </PageContainer>
       <Snackbar
         open={openVoucherSuccessSnackbar}

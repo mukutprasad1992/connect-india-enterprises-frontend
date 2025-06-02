@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
     IconButton, Badge, Menu, MenuItem, Dialog,
     DialogTitle, DialogContent, List, ListItem, ListItemText,
-    Button, Box, Typography, Divider
+    Button, Box, Typography, Divider, Tooltip
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import axios from 'axios';
@@ -132,12 +132,13 @@ const Notification = () => {
     }
     return (
         <>
-            <IconButton color="inherit" onClick={handleClick}>
-                <Badge badgeContent={unreadCount} color="error">
-                    <NotificationsIcon />
-                </Badge>
-            </IconButton>
-
+            <Tooltip title="Notification">
+                <IconButton color="inherit" onClick={handleClick}>
+                    <Badge badgeContent={unreadCount} color="error">
+                        <NotificationsIcon />
+                    </Badge>
+                </IconButton>
+            </Tooltip>
             <Menu
                 anchorEl={anchorEl}
                 open={open}
