@@ -15,6 +15,7 @@ import {
   CircularProgress,
   Snackbar,
   Container,
+  Tooltip
 } from "@mui/material";
 import axios from 'axios';
 import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
@@ -404,25 +405,29 @@ const User = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "name", headerName: "Name", width: 150 },
-    { field: "email", headerName: "Email", width: 200 },
-    { field: "phone", headerName: "Phone", width: 120 },
-    { field: "address", headerName: "Address", width: 200 },
-    { field: "pincode", headerName: "Pin Code", width: 100 },
+    { field: "id", headerName: "ID", flex: .5 },
+    { field: "name", headerName: "Name", flex: .8 },
+    { field: "email", headerName: "Email", flex: .8 },
+    { field: "phone", headerName: "Phone", flex: .8 },
+    { field: "address", headerName: "Address", flex: .8 },
+    { field: "pincode", headerName: "Pin Code", flex: .8 },
     {
       field: "actions",
       headerName: "Actions",
-      width: 120,
+      flex: .8,
       renderCell: (params: any) => (
         <>
-          <IconButton color="secondary" size="small" onClick={() => handleViewButton(params.row)}>
-            <VisibilityIcon fontSize="small" />
-          </IconButton>
-          {roleId === 2 && (
-            <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
-              <EditIcon fontSize="small" />
+          <Tooltip title="View">
+            <IconButton color="secondary" size="small" onClick={() => handleViewButton(params.row)}>
+              <VisibilityIcon fontSize="small" />
             </IconButton>
+          </Tooltip>
+          {roleId === 2 && (
+            <Tooltip title="Edit">
+              <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           )}
         </>
       ),

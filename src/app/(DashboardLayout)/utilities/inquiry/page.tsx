@@ -10,7 +10,12 @@ import {
     DialogTitle,
     Button,
     Container,
-    Typography
+    Typography,
+    Snackbar,
+    Alert,
+    Avatar,
+    Divider,
+    Tooltip
 } from "@mui/material";
 import { CheckCircle, Cancel, HourglassEmpty, Pending, Visibility } from "@mui/icons-material";
 import axios from "axios";
@@ -35,6 +40,9 @@ const InquiryPage = () => {
     const [selectedInquiryId, setSelectedInquiryId] = useState<number | null>(null);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
     const router = useRouter();
     const getToken = () => {
         if (typeof window !== "undefined") {
@@ -73,6 +81,10 @@ const InquiryPage = () => {
             router.push("/authentication/login");
         }
     }, [router, token]);
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+
+    }
     const fetchInquiries = async () => {
         setIsLoading(true);
         try {
@@ -81,8 +93,14 @@ const InquiryPage = () => {
             });
 
             if (response.data.status) {
+                // setSnackbarSeverity("success");
+                // setSnackbarMessage(response.data.message || "Data fetched successfully");
+                // setSnackbarOpen(true);
+
                 const formattedData = response.data.data.map((item: any) => ({
                     id: item.id,
+                    firstName: item.firstName,
+                    lastName: item.lastName,
                     email: item.email,
                     mobileNo: item.mobileNo,
                     type: item.serviceSubType,
@@ -92,16 +110,23 @@ const InquiryPage = () => {
                     toTime: item.toTime,
                     status: item.status,
                     comment: item.comment,
+                    profileImageURL: item.profileImageURL
                 }));
+
                 setInquiries(formattedData);
-                setIsLoading(false);
+            } else {
+                setSnackbarSeverity("error");
+                setSnackbarMessage(response.data.message || "Something went wrong");
+                setSnackbarOpen(true);
             }
-        } catch (error) {
+        } catch (error: any) {
+            setSnackbarSeverity("error");
+            setSnackbarMessage(error.response.data.message);
+            setSnackbarOpen(true);
+        } finally {
             setIsLoading(false);
-            console.error("Error fetching data:", error);
         }
     };
-
     useEffect(() => {
         fetchInquiries();
     }, [token]);
@@ -170,9 +195,11 @@ const InquiryPage = () => {
     };
 
     const columns = [
-        { field: "id", headerName: "ID", flex: 0.02 },
-        { field: "email", headerName: "Email", flex: 0.08 },
-        { field: "mobileNo", headerName: "Mobile No", flex: 0.08 },
+        { field: "id", headerName: "ID", flex: 0.5 },
+        { field: "firstName", headerName: "First Name", flex: 0.8 },
+        { field: "lastName", headerName: "Last Name", flex: 0.8 },
+        { field: "email", headerName: "Email", flex: 0.8 },
+        { field: "mobileNo", headerName: "Mobile No", flex: 0.8 },
         { field: "type", headerName: "Type", flex: 0.12 },
         { field: "amount", headerName: "Amount", flex: 0.12 },
         {
@@ -245,36 +272,44 @@ const InquiryPage = () => {
                 const status = params.row.status;
                 return (
                     <>
-                        <IconButton
-                            color="info"
-                            onClick={() => {
-                                setSelectedInquiry(params.row);
-                                setIsViewDialogOpen(true);
-                            }}
-                        >
-                            <Visibility />
-                        </IconButton>
+                        <Tooltip title="View">
+                            <IconButton
+                                color="info"
+                                onClick={() => {
+                                    setSelectedInquiry(params.row);
+                                    setIsViewDialogOpen(true);
+                                }}
+                            >
+                                <Visibility />
+                            </IconButton>
+                        </Tooltip>
                         {status !== "Approved" && status !== "Rejected" && (
                             <>
-                                <IconButton color="success" onClick={() => handleApproveClick(params.row.id)}>
-                                    <CheckCircle />
-                                </IconButton>
-                                <IconButton
-                                    onClick={() => handleInProgressClick(params.row.id)}
-                                    sx={{
-                                        color:
-                                            params.row.status === "Pending"
-                                                ? "#ffeb3b"
-                                                : params.row.status === "In Progress"
-                                                    ? "#ffa726"
-                                                    : "inherit",
-                                    }}
-                                >
-                                    <Pending />
-                                </IconButton>
-                                <IconButton color="error" onClick={() => handleRejectClick(params.row.id)}>
-                                    <Cancel />
-                                </IconButton>
+                                <Tooltip title="Approve">
+                                    <IconButton color="success" onClick={() => handleApproveClick(params.row.id)}>
+                                        <CheckCircle />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Inprogress/Pending">
+                                    <IconButton
+                                        onClick={() => handleInProgressClick(params.row.id)}
+                                        sx={{
+                                            color:
+                                                params.row.status === "Pending"
+                                                    ? "#ffeb3b"
+                                                    : params.row.status === "In Progress"
+                                                        ? "#ffa726"
+                                                        : "inherit",
+                                        }}
+                                    >
+                                        <Pending />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Reject">
+                                    <IconButton color="error" onClick={() => handleRejectClick(params.row.id)}>
+                                        <Cancel />
+                                    </IconButton>
+                                </Tooltip>
                             </>
                         )}
                     </>
@@ -395,80 +430,91 @@ const InquiryPage = () => {
                 <DialogTitle>Inquiry Details</DialogTitle>
                 <DialogContent>
                     {selectedInquiry && (
-                        <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                {Object.keys(selectedInquiry).map((key, index) => {
-                                    if (index % 2 === 0) {
-                                        return (
-                                            <Typography
-                                                variant="body1"
-                                                key={key}
-                                                sx={{ marginLeft: 2, marginBottom: 2 }}
-                                            >
-                                                <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
-                                                <span
-                                                    style={{
-                                                        color:
-                                                            key === "status"
-                                                                ? selectedInquiry[key] === "Pending"
-                                                                    ? theme.palette.warning.main
-                                                                    : selectedInquiry[key] === "In Progress"
-                                                                        ? theme.palette.info.main
-                                                                        : selectedInquiry[key] === "Approved"
-                                                                            ? theme.palette.success.main
-                                                                            : selectedInquiry[key] === "Rejected"
-                                                                                ? theme.palette.error.main
-                                                                                : "inherit"
-                                                                : "inherit",
-                                                        fontWeight: key === "status" ? "bold" : "normal",
-                                                    }}
+                        <>
+                            <Box display="flex" justifyContent="center" mb={2}>
+                                <Avatar
+                                    src={selectedInquiry?.profileImageURL || '/images/profile/user-1.jpg'}
+                                    alt="User"
+                                    sx={{ width: 150, height: 150 }}
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/images/profile/user-1.jpg';
+                                    }}
+                                />
+                            </Box>
+                            <Divider sx={{ marginBottom: 2 }} />
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    {Object.keys(selectedInquiry).filter(key => key !== 'profileImageURL').map((key, index) => {
+                                        if (index % 2 === 0) {
+                                            return (
+                                                <Typography
+                                                    variant="body1"
+                                                    key={key}
+                                                    sx={{ marginLeft: 2, marginBottom: 2 }}
                                                 >
-                                                    {selectedInquiry[key] || "N/A"}
-                                                </span>
-                                            </Typography>
-
-                                        );
-                                    }
-                                    return null;
-                                })}
-                            </Grid>
-                            <Grid item xs={6}>
-                                {Object.keys(selectedInquiry).map((key, index) => {
-                                    if (index % 2 !== 0) {
-                                        return (
-                                            <Typography
-                                                variant="body1"
-                                                key={key}
-                                                sx={{ marginBottom: 2 }}
-                                            >
-                                                <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
-                                                <span
-                                                    style={{
-                                                        color:
-                                                            key === "status"
-                                                                ? selectedInquiry[key] === "Pending"
-                                                                    ? theme.palette.warning.main
-                                                                    : selectedInquiry[key] === "In Progress"
-                                                                        ? theme.palette.info.main
-                                                                        : selectedInquiry[key] === "Approved"
-                                                                            ? theme.palette.success.main
-                                                                            : selectedInquiry[key] === "Reject"
-                                                                                ? theme.palette.error.main
-                                                                                : "inherit"
-                                                                : "inherit",
-                                                        fontWeight: key === "status" ? "bold" : "normal",
-                                                    }}
+                                                    <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
+                                                    <span
+                                                        style={{
+                                                            color:
+                                                                key === "status"
+                                                                    ? selectedInquiry[key] === "Pending"
+                                                                        ? theme.palette.warning.main
+                                                                        : selectedInquiry[key] === "In Progress"
+                                                                            ? theme.palette.info.main
+                                                                            : selectedInquiry[key] === "Approved"
+                                                                                ? theme.palette.success.main
+                                                                                : selectedInquiry[key] === "Rejected"
+                                                                                    ? theme.palette.error.main
+                                                                                    : "inherit"
+                                                                    : "inherit",
+                                                            fontWeight: key === "status" ? "bold" : "normal",
+                                                        }}
+                                                    >
+                                                        {selectedInquiry[key] || "N/A"}
+                                                    </span>
+                                                </Typography>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </Grid>
+                                <Grid item xs={6}>
+                                    {Object.keys(selectedInquiry).filter(key => key !== 'profileImageURL').map((key, index) => {
+                                        if (index % 2 !== 0) {
+                                            return (
+                                                <Typography
+                                                    variant="body1"
+                                                    key={key}
+                                                    sx={{ marginBottom: 2 }}
                                                 >
-                                                    {selectedInquiry[key] || "N/A"}
-                                                </span>
-                                            </Typography>
-
-                                        );
-                                    }
-                                    return null;
-                                })}
+                                                    <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
+                                                    <span
+                                                        style={{
+                                                            color:
+                                                                key === "status"
+                                                                    ? selectedInquiry[key] === "Pending"
+                                                                        ? theme.palette.warning.main
+                                                                        : selectedInquiry[key] === "In Progress"
+                                                                            ? theme.palette.info.main
+                                                                            : selectedInquiry[key] === "Approved"
+                                                                                ? theme.palette.success.main
+                                                                                : selectedInquiry[key] === "Rejected"
+                                                                                    ? theme.palette.error.main
+                                                                                    : "inherit"
+                                                                    : "inherit",
+                                                            fontWeight: key === "status" ? "bold" : "normal",
+                                                        }}
+                                                    >
+                                                        {selectedInquiry[key] || "N/A"}
+                                                    </span>
+                                                </Typography>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </Grid>
                             </Grid>
-                        </Grid>
+                        </>
                     )}
                 </DialogContent>
                 <DialogActions>
@@ -477,6 +523,25 @@ const InquiryPage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{
+                        width: "100%",
+
+                    }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
+
         </>
     );
 };

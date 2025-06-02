@@ -40,9 +40,18 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
     setEmail(e.target.value);
   };
 
-  const handlePasswordChange = (e: any) => {
-    setPassword(e.target.value);
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+
+    if (!validatePassword(newPassword)) {
+      setPasswordError(
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+      );
+    } else {
+      setPasswordError("");
+    }
   };
+
 
   const validateEmailInput = () => {
     if (!validateEmail(email)) {
@@ -56,7 +65,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const validatePasswordInput = () => {
     if (!validatePassword(password)) {
       setPasswordError(
-        "Password must be at least 8 characters long and include one uppercase letter, one number, and one special character."
+        "Password is required!"
       );
       return false;
     }
@@ -164,7 +173,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
             fullWidth
             size="small"
             value={password}
-            onChange={handlePasswordChange}
+            onChange={(e: any) => handlePasswordChange(e.target.value)}
             error={!!passwordError}
             helperText={passwordError}
             onBlur={validatePasswordInput}
@@ -176,7 +185,6 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
             }}
           />
         </Box>
-
         <Stack
           justifyContent="space-between"
           direction="row"

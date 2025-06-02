@@ -1,5 +1,4 @@
 import React from "react";
-// mui imports
 import {
   ListItemIcon,
   ListItem,
@@ -28,9 +27,10 @@ interface ItemType {
   hideMenu?: any;
   level?: number | any;
   pathDirect: string;
+  isSidebarOpen: boolean;
 }
 
-const NavItem = ({ item, level, pathDirect, onClick }: ItemType) => {
+const NavItem = ({ item, level, pathDirect, onClick, isSidebarOpen }: ItemType) => {
   const Icon = item.icon;
   const theme = useTheme();
   const itemIcon = <Icon stroke={1.5} size="1.3rem" />;
@@ -80,9 +80,11 @@ const NavItem = ({ item, level, pathDirect, onClick }: ItemType) => {
           >
             {itemIcon}
           </ListItemIcon>
-          <ListItemText>
-            <>{item.title}</>
-          </ListItemText>
+          {isSidebarOpen && (
+            <ListItemText>
+              <>{item.title}</>
+            </ListItemText>
+          )}
         </ListItemButton>
       </ListItemStyled>
     </List>

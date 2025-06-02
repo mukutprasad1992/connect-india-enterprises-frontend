@@ -6,6 +6,7 @@ import { PieChart } from "@mui/x-charts/PieChart";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
 
 const PieChartPage = () => {
     const [radius, setRadius] = useState(50);
@@ -46,6 +47,16 @@ const PieChartPage = () => {
             router.push("/authentication/login");
             return;
         }
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        } else {
+            localStorage.clear();
+            router.push("/authentication/login");
+        }
         setLoading(true);
         try {
             const response = await axios.get(`${BASE_URL}/serviceType/getTotalAmountAndServiecsByUserIdServiceType`, {
@@ -79,14 +90,15 @@ const PieChartPage = () => {
         }
     };
     useEffect(() => {
+
         fetchServiceData();
     }, [router]);
 
     const colorMap: Record<string, string> = {
-        Investment: "#42a5f5", // Blue
-        Policy: "#66bb6a", // Green
-        Insurance: "#26a69a", // Teal
-        Loan: "#ef5350", // Red
+        Investment: "#42a5f5",
+        Policy: "#66bb6a",
+        Insurance: "#26a69a",
+        Loan: "#ef5350",
     };
 
     const amountData = Object.entries(amounts)
@@ -99,13 +111,13 @@ const PieChartPage = () => {
         .slice(0, itemNb);
 
     const serviceData = [
-        { label: "Asset", value: services.Investment, color: "#42a5f5" }, // Blue
+        { label: "Asset", value: services.Investment, color: "#42a5f5" },
         {
             label: "Protection",
             value: services.Policy + services.Insurance,
             color: "#46b182",
-        }, // Green
-        { label: "Liability", value: services.Loan, color: "#ef5350" }, // Red
+        },
+        { label: "Liability", value: services.Loan, color: "#ef5350" },
     ]
         .filter((item) => item.value > 0)
         .slice(0, itemNb);
@@ -144,7 +156,7 @@ const PieChartPage = () => {
                         width={300}
                         series={[
                             {
-                                data: amountData,
+                                data: amountData || 0,
                                 innerRadius: radius,
                                 arcLabel: (params) => `${params.label}`,
                                 arcLabelMinAngle: 20,
@@ -164,7 +176,7 @@ const PieChartPage = () => {
                             {
                                 data: serviceData,
                                 innerRadius: radius,
-                                arcLabel: (params) => `${params.label}:\n${params.value}`,
+                                arcLabel: (params) => `${params.label}:\n${params.value || 0}`,
                                 arcLabelMinAngle: 5,
                             },
                         ]}
@@ -185,7 +197,7 @@ const PieChartPage = () => {
                 value={radius}
                 onChange={handleRadiusChange}
                 valueLabelDisplay="auto"
-                min={15}
+                min={5}
                 max={100}
             />
         </Box>
