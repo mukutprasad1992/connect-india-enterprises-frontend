@@ -17,6 +17,7 @@ import { IconUser } from "@tabler/icons-react";
 import { Person, VpnKey } from "@mui/icons-material";
 import axios from "axios";
 import ChangePasswordDialog from "../../components/changePassword/changePassword";
+import { jwtDecode } from "jwt-decode";
 
 interface ProfileData {
   firstName: string;
@@ -67,7 +68,13 @@ const Profile = () => {
       router.replace("/authentication/login");
       return;
     }
-
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     try {
       const response = await axios.get(`${BASE_URL}/profile/getProfileById`, {
         headers: { Authorization: `Bearer ${token}` },

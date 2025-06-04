@@ -188,6 +188,17 @@ const Investment = () => {
 
   const fetchInvestmentOptions = async () => {
     try {
+      if (!token) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       setLoading(true)
       const response = await axios.get(
         `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${1}`,
@@ -218,6 +229,17 @@ const Investment = () => {
     fetchInvestmentOptions();
   }, [token]);
   const addInvestment = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     if (!amount.trim()) {
       setAmountError("Investment amount is required.");
       return;
@@ -295,7 +317,19 @@ const Investment = () => {
   };
 
   const editInvestment = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     try {
+
       const UpdateInvestmentPayload = {
         amount,
         comment,

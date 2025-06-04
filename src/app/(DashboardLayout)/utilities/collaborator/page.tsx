@@ -133,12 +133,6 @@ const Collaborator = () => {
         localStorage.clear();
         router.push("/authentication/login");
       }
-      if (roleId !== 1) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-    } else {
-
     }
   }, [router]);
   const validateVendorForm = () => {
@@ -204,7 +198,13 @@ const Collaborator = () => {
   };
   const toggleVendorStatus = async () => {
     if (!token) return;
-
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     try {
       const vendorId = selectedId;
       const currentStatus = vendorFormData.status;
@@ -222,9 +222,6 @@ const Collaborator = () => {
       } else {
         return;
       }
-
-      console.log("status -- payload", status);
-
       setLoading(true);
 
       const response = await axios.put(
@@ -242,7 +239,7 @@ const Collaborator = () => {
         setOpenStatusVendorDialog(false);
         setSuccessVendorMessage(response.data.message);
         setOpenVendorSuccessSnackbar(true);
-        setVendorUpdated(prev => !prev); // refresh data
+        setVendorUpdated(prev => !prev);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -261,7 +258,6 @@ const Collaborator = () => {
       setLoading(false);
     }
   };
-
 
   const [comment, setComment] = useState("");
 
@@ -305,6 +301,13 @@ const Collaborator = () => {
     try {
       if (!token) {
         return;
+      }
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
       }
       if (!isEdit) {
         const response = await axios.post(`${BASE_URL}/user/register`, vendorPayload, {
@@ -350,11 +353,9 @@ const Collaborator = () => {
         } else if (error.request) {
           console.error("No response from server:", error.request);
         } else {
-          // Request setup error
           console.error("Error during request setup:", error.message);
         }
       } else {
-        // Unknown error
         console.error("Unexpected error:", error);
       }
     }
@@ -365,6 +366,13 @@ const Collaborator = () => {
       try {
         if (!token) {
           return;
+        }
+        if (token) {
+          const decoded: any = jwtDecode(token);
+          if (decoded.exp * 1000 < Date.now()) {
+            localStorage.clear();
+            router.push("/authentication/login");
+          }
         }
         const response = await axios.get(`${BASE_URL}/user/getAllVendor`, {
           headers: {
@@ -450,7 +458,9 @@ const Collaborator = () => {
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Enable/Disable">
+          <Tooltip
+            title={vendorFormData.status === "Enable" ? "Block" : "Unblock"}
+          >
             <IconButton
               color={params.row.status === "Enable" ? "success" : "error"}
               size="small"
@@ -846,8 +856,8 @@ const Collaborator = () => {
                   }
                   name="address"
                   multiline
-                  rows={2} // Set 2 lines
-                  maxRows={2} // Restrict to 2 lines
+                  rows={2}
+                  maxRows={2}
                   fullWidth
                   variant="outlined"
                   inputProps={{
@@ -857,12 +867,12 @@ const Collaborator = () => {
                   value={vendorFormData.address}
                   onChange={(e) => {
                     let inputValue = e.target.value;
-                    inputValue = inputValue.replace(/\s{2,}/g, " "); // Replace multiple spaces with a single space
+                    inputValue = inputValue.replace(/\s{2,}/g, " ");
 
                     setVendorFormData((prev: any) => ({ ...prev, address: inputValue }));
                   }}
                   onBlur={() => {
-                    let trimmedAddress = vendorFormData.address.trim(); // Trim only at start and end
+                    let trimmedAddress = vendorFormData.address.trim();
 
                     setVendorFormData((prev: any) => ({ ...prev, address: trimmedAddress }));
 
@@ -894,21 +904,29 @@ const Collaborator = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
         <Dialog
           open={openStatusVendorDialog}
-          onClose={() => setOpenStatusVendorDialog(false)}
+          onClose={() => !loading && setOpenStatusVendorDialog(false)} // Disable close on backdrop click while loading
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle>Status vendor</DialogTitle>
+          <DialogTitle>
+            {vendorFormData.status === "Enable" ? "Block" : "Unblock"} Vendor
+          </DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to update status?</Typography>
+            <Typography>
+              Are you sure you want to{" "}
+              <strong>
+                {vendorFormData.status === "Enable" ? "Block" : "Unblock"}
+              </strong>{" "}
+              this vendor?
+            </Typography>
           </DialogContent>
           <DialogActions>
             <Button
               onClick={() => setOpenStatusVendorDialog(false)}
               variant="outlined"
+              disabled={loading}
             >
               Cancel
             </Button>
@@ -916,8 +934,9 @@ const Collaborator = () => {
               onClick={toggleVendorStatus}
               variant="contained"
               color="primary"
+              disabled={loading}
             >
-              Update
+              {loading ? <CircularProgress color="inherit" size={24} /> : vendorFormData.status === "Enable" ? "Block" : "Unblock"}
             </Button>
           </DialogActions>
         </Dialog>

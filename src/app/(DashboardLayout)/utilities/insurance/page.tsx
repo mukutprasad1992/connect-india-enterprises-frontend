@@ -182,6 +182,13 @@ const Insurance = () => {
 
   const fetchInsuranceOptions = async () => {
     try {
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       setInsuranceTypeError("")
       setInsuranceErrorMessage(false);
       setLoading(true)
@@ -214,6 +221,10 @@ const Insurance = () => {
     fetchInsuranceOptions();
   }, [insuranceUpdated, token]);
   const addInsurance = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
     if (!amount.trim()) {
       setAmountError("Insurance amount is required.");
       return;
@@ -246,6 +257,13 @@ const Insurance = () => {
       serviceId: 3,
     };
     try {
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       setInsuranceErrorMessage(false)
       setLoading(true)
       const response = await axios.post(
@@ -292,6 +310,17 @@ const Insurance = () => {
 
   const editInsurance = async () => {
     try {
+      if (!token) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       const UpdateInsurancePayload = {
         amount,
         comment,
@@ -344,6 +373,9 @@ const Insurance = () => {
   };
 
   const deleteInsurance = async () => {
+    if (!token) {
+      return
+    }
     if (!selectedId) {
       console.error("No  insurance selected for deletion.");
       return;
@@ -351,6 +383,17 @@ const Insurance = () => {
     setInsuranceErrorMessage(false)
     setLoading(true)
     try {
+      if (!token) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,

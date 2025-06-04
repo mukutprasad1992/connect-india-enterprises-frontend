@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { jwtDecode } from "jwt-decode";
 import {
     Box,
     Typography,
-    Stack,
     useTheme,
     Chip,
-    Avatar,
     useMediaQuery,
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -47,26 +43,6 @@ const AnalyticCard: React.FC<AnalyticCardProps> = ({
     const roleId =
         typeof window !== "undefined" ? localStorage.getItem("roleId") : null;
 
-    const getToken = () => {
-        if (typeof window !== "undefined") {
-            return localStorage.getItem("accessToken");
-        }
-    };
-
-    useEffect(() => {
-        const token = getToken();
-        if (token) {
-            const decoded: any = jwtDecode(token);
-            if (decoded.exp * 1000 < Date.now()) {
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-        } else {
-            localStorage.clear();
-            router.push("/authentication/login");
-        }
-    }, [router]);
-
     const iconMap: Record<string, JSX.Element> = {
         Policy: <ReceiptLongIcon fontSize="small" />,
         Insurance: <Diversity3Icon fontSize="small" />,
@@ -76,7 +52,7 @@ const AnalyticCard: React.FC<AnalyticCardProps> = ({
 
     const handleClick = () => {
         if (roleId === "3") {
-            router.push(`utilities/${title.toLowerCase()}`);
+            router.push(`/utilities/${title.toLowerCase()}`);
         }
     };
 
@@ -89,35 +65,32 @@ const AnalyticCard: React.FC<AnalyticCardProps> = ({
             sx={{
                 cursor: "pointer",
                 border: "1px solid #e0e0e0",
-                borderRadius: '3px',
+                borderRadius: "8px",
                 p: 2,
                 background: theme.palette.background.paper,
+                transition: "all 0.2s",
+                "&:hover": {
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                },
             }}
         >
-            <Typography variant="subtitle2" color="textSecondary"
+            <Typography
+                variant="subtitle2"
                 sx={{
-                    py: 1,
-                    m: 0,
-                    fontWeight: 400,
-                    fontSize: "0.875rem",
-                    lineHeight: 1.5,
-                    fontFamily: "'Public Sans', sans-serif",
+                    mb: 1,
                     color: "#8c8c8c",
+                    fontWeight: 500,
+                    fontSize: "0.875rem",
                 }}
             >
                 Total {title}: {service}
             </Typography>
 
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                }}
-            >
+            <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Typography
-                    variant="body2"
+                    variant="body1"
                     fontWeight={600}
-                    sx={{ fontSize: 20 }}
+                    sx={{ fontSize: 20, color: errorMessage ? "error.main" : "text.primary" }}
                 >
                     {loading
                         ? "Loading..."
@@ -126,49 +99,43 @@ const AnalyticCard: React.FC<AnalyticCardProps> = ({
                             : amount.toLocaleString()}
                 </Typography>
 
-                <Chip
-                    icon={<TrendIcon />}
-                    label={`${percentage}%`}
-                    size="small"
-                    sx={{
-                        ml: 1,
-                        fontWeight: 400,
-                        lineHeight: 1.66,
-                        fontFamily: "'Public Sans', sans-serif",
-                        border: 1,
-                        borderColor: growth === "up" ? "#69b1ff" : "#ffd666",
-                        backgroundColor: growth === "up" ? "#e6f4ff" : "#fffbe6",
-                        color: growth === "up" ? "#1677ff" : "#faad14",
-                        fontSize: 13,
-                        borderRadius: "4px",
-                        px: 1,
-                    }}
-                />
+                {!loading && !errorMessage && (
+                    <Chip
+                        icon={<TrendIcon />}
+                        label={`${percentage}%`}
+                        size="small"
+                        sx={{
+                            ml: 1,
+                            fontWeight: 400,
+                            fontSize: 13,
+                            borderRadius: "4px",
+                            px: 1,
+                            border: 1,
+                            borderColor: growth === "up" ? "#69b1ff" : "#ffd666",
+                            backgroundColor: growth === "up" ? "#e6f4ff" : "#fffbe6",
+                            color: growth === "up" ? "#1677ff" : "#faad14",
+                        }}
+                    />
+                )}
             </Box>
 
-            <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={{ mt: 2 }}
-            >
-                You made an extra{" "}
-                <Typography
-                    component="span"
-                    sx={{
-                        m: 0,
-                        fontWeight: 400,
-                        fontSize: "0.75rem",
-                        lineHeight: 1.66,
-                        fontFamily: "'Public Sans', sans-serif",
-                        color: growth === "up" ? theme.palette.primary.main : "#faad14",
-                        py: 1,
-                    }}
-                >
-                    {extra.toLocaleString()}
-                </Typography>{" "}
-                this year
-            </Typography>
-        </Box >
+            {!loading && !errorMessage && (
+                <Typography variant="body2" sx={{ mt: 2, color: "text.secondary" }}>
+                    You made an extra{" "}
+                    <Typography
+                        component="span"
+                        sx={{
+                            fontWeight: 500,
+                            fontSize: "0.85rem",
+                            color: growth === "up" ? theme.palette.primary.main : "#faad14",
+                        }}
+                    >
+                        ₹{extra.toLocaleString()}
+                    </Typography>{" "}
+                    this month
+                </Typography>
+            )}
+        </Box>
     );
 };
 

@@ -4,18 +4,60 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Grid, Box, CircularProgress, Typography } from "@mui/material";
 import PageContainer from "./components/container/PageContainer";
-import MonthlyEarnings from "./components/dashboard/MonthlyEarnings"; // OLD component (commented)
-import AnalyticCard from "./components/dashboard/AnalyticCard"; // ✅ NEW component
+import AnalyticCard from "./components/dashboard/AnalyticCard";
 import PieAnimationPage from "./components/dashboard/pieChart";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+
+type ServiceType = "Investment" | "Policy" | "Insurance" | "Loan";
+
+interface ServiceStats {
+  totalAmount: number;
+  totalServices: number;
+  current: number;
+  previous: number;
+  extra: number;
+  percent: number;
+}
 
 const Dashboard = () => {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [amounts, setAmounts] = useState<{ [key: string]: number }>({});
-  const [services, setServices] = useState<{ [key: string]: number }>({});
+  const [stats, setStats] = useState<Record<ServiceType, ServiceStats>>({
+    Investment: {
+      totalAmount: 0,
+      totalServices: 0,
+      current: 0,
+      previous: 0,
+      extra: 0,
+      percent: 0,
+    },
+    Policy: {
+      totalAmount: 0,
+      totalServices: 0,
+      current: 0,
+      previous: 0,
+      extra: 0,
+      percent: 0,
+    },
+    Insurance: {
+      totalAmount: 0,
+      totalServices: 0,
+      current: 0,
+      previous: 0,
+      extra: 0,
+      percent: 0,
+    },
+    Loan: {
+      totalAmount: 0,
+      totalServices: 0,
+      current: 0,
+      previous: 0,
+      extra: 0,
+      percent: 0,
+    },
+  });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -38,13 +80,11 @@ const Dashboard = () => {
     }
 
     try {
-      if (token) {
-        const decoded: any = jwtDecode(token);
-        if (decoded.exp * 1000 < Date.now()) {
-          localStorage.clear();
-          router.replace("/authentication/login");
-          return;
-        }
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.replace("/authentication/login");
+        return;
       }
     } catch {
       localStorage.clear();
@@ -55,7 +95,6 @@ const Dashboard = () => {
     setIsAuthenticated(true);
     fetchData(token);
   }, []);
-
   const fetchData = async (token: string) => {
     try {
       const response = await axios.get(
@@ -66,30 +105,101 @@ const Dashboard = () => {
       if (response.data.status) {
         const data = response.data.data;
 
-        setAmounts({
-          Investment: parseFloat(data.Investment?.totalAmount) || 0,
-          Policy: parseFloat(data.Policy?.totalAmount) || 0,
-          Insurance: parseFloat(data.Insurance?.totalAmount) || 0,
-          Loan: parseFloat(data.Loan?.totalAmount) || 0,
-        });
-        setServices({
-          Investment: parseInt(data.Investment?.totalServices) || 0,
-          Policy: parseInt(data.Policy?.totalServices) || 0,
-          Insurance: parseInt(data.Insurance?.totalServices) || 0,
-          Loan: parseInt(data.Loan?.totalServices) || 0,
+        setStats({
+          Investment: {
+            totalAmount: parseFloat(data.Investment?.totalAmount) || 0,
+            totalServices: parseInt(data.Investment?.totalServices) || 0,
+            current: parseFloat(data.Investment?.current) || 0,
+            previous: parseFloat(data.Investment?.previous) || 0,
+            extra: parseFloat(data.Investment?.extra) || 0,
+            percent: parseFloat(data.Investment?.percent) || 0,
+          },
+          Policy: {
+            totalAmount: parseFloat(data.Policy?.totalAmount) || 0,
+            totalServices: parseInt(data.Policy?.totalServices) || 0,
+            current: parseFloat(data.Policy?.current) || 0,
+            previous: parseFloat(data.Policy?.previous) || 0,
+            extra: parseFloat(data.Policy?.extra) || 0,
+            percent: parseFloat(data.Policy?.percent) || 0,
+          },
+          Insurance: {
+            totalAmount: parseFloat(data.Insurance?.totalAmount) || 0,
+            totalServices: parseInt(data.Insurance?.totalServices) || 0,
+            current: parseFloat(data.Insurance?.current) || 0,
+            previous: parseFloat(data.Insurance?.previous) || 0,
+            extra: parseFloat(data.Insurance?.extra) || 0,
+            percent: parseFloat(data.Insurance?.percent) || 0,
+          },
+          Loan: {
+            totalAmount: parseFloat(data.Loan?.totalAmount) || 0,
+            totalServices: parseInt(data.Loan?.totalServices) || 0,
+            current: parseFloat(data.Loan?.current) || 0,
+            previous: parseFloat(data.Loan?.previous) || 0,
+            extra: parseFloat(data.Loan?.extra) || 0,
+            percent: parseFloat(data.Loan?.percent) || 0,
+          },
         });
 
         setErrorMessage(null);
+      } else if (
+        response.status === 400 &&
+        response.data.message?.toLowerCase().includes("service not found")
+      ) {
+        setStats({
+          Investment: {
+            totalAmount: 0,
+            totalServices: 0,
+            current: 0,
+            previous: 0,
+            extra: 0,
+            percent: 0,
+          },
+          Policy: {
+            totalAmount: 0,
+            totalServices: 0,
+            current: 0,
+            previous: 0,
+            extra: 0,
+            percent: 0,
+          },
+          Insurance: {
+            totalAmount: 0,
+            totalServices: 0,
+            current: 0,
+            previous: 0,
+            extra: 0,
+            percent: 0,
+          },
+          Loan: {
+            totalAmount: 0,
+            totalServices: 0,
+            current: 0,
+            previous: 0,
+            extra: 0,
+            percent: 0,
+          },
+        });
+        setErrorMessage(null);
       } else {
-        setErrorMessage("Failed to retrieve data");
+        console.warn("API returned unexpected error", response.data);
+        setErrorMessage(null);
       }
-    } catch (err) {
-      console.error("API error:", err);
-      setErrorMessage("Unexpected error occurred.");
+    } catch (err: any) {
+      if (
+        axios.isAxiosError(err) &&
+        err.response?.status === 400 &&
+        err.response?.data?.message?.toLowerCase().includes("service not found")
+      ) {
+        setErrorMessage(null);
+      } else {
+        console.error("API error:", err);
+        setErrorMessage(null);
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   if (!isAuthenticated) return null;
 
@@ -110,7 +220,6 @@ const Dashboard = () => {
       )}
 
       <PageContainer title="Dashboard" description="This is Dashboard">
-
         <Box>
           <Typography variant="h6" sx={{ mb: 3 }}>
             Dashboard
@@ -118,30 +227,22 @@ const Dashboard = () => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Grid container spacing={2}>
-                {["Investment", "Policy", "Insurance", "Loan"].map((title) => (
-                  <Grid item xs={12} sm={6} md={3} key={title}>
-                    {/* OLD CARD — DEPRECATED */}
-                    {/* <MonthlyEarnings
-                      title={title}
-                      amount={amounts[title] || 0}
-                      service={services[title] || 0}
-                      loading={loading}
-                      errorMessage={errorMessage}
-                    /> */}
-
-                    {/* ✅ NEW CARD — MODERN VERSION */}
-                    <AnalyticCard
-                      title={title as "Investment" | "Policy" | "Insurance" | "Loan"}
-                      amount={Math.floor(amounts[title] || 0)}
-                      service={services[title] || 0}
-                      percentage={Math.floor(Math.random() * 50) + 10} // Replace with real % if needed
-                      growth={Math.random() > 0.5 ? "up" : "down"} // Replace with real trend
-                      extra={Math.floor(Math.random() * 10000) + 1000} // Replace with real extra if needed
-                      loading={loading}
-                      errorMessage={errorMessage}
-                    />
-                  </Grid>
-                ))}
+                {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map(
+                  (title) => (
+                    <Grid item xs={12} sm={6} md={3} key={title}>
+                      <AnalyticCard
+                        title={title}
+                        amount={Math.floor(stats[title].totalAmount)}
+                        service={stats[title].totalServices}
+                        percentage={stats[title].percent}
+                        growth={stats[title].extra >= 0 ? "up" : "down"}
+                        extra={stats[title].extra}
+                        loading={loading}
+                        errorMessage={errorMessage}
+                      />
+                    </Grid>
+                  )
+                )}
               </Grid>
             </Grid>
           </Grid>
