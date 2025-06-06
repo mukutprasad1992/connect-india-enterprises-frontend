@@ -154,43 +154,18 @@ const User = () => {
     setAddError(newErrors);
     return isValid;
   };
-
-  // const fetchAllVendorCustomers = async () => {
-  //   if (roleId !== 2) {
-  //     return;
-  //   }
-  //   if (!token) {
-  //     return;
-  //   }
-  //   else {
-  //     try {
-  //       setLoading(true);
-  //       const response = await axios.get(`${BASE_URL}/customer/getCustomerByVendor`, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       });
-
-  //       if (response?.data?.status && response?.data?.data) {
-  //         setRows(response.data.data);
-  //       }
-
-  //       setLoading(false);
-  //     } catch (error) {
-  //       setLoading(false);
-  //       console.error("Error fetching customers:", error);
-  //     }
-  //   }
-  // };
-  // useEffect(() => {
-  //   fetchAllVendorCustomers();
-  // }, [roleId, token, customerUpdated]);
-
   useEffect(() => {
     const fetchAllCustomers = async () => {
       if (!roleId || !token) {
         return;
       } else {
+        if (token) {
+          const decoded: any = jwtDecode(token);
+          if (decoded.exp * 1000 < Date.now()) {
+            localStorage.clear();
+            router.push("/authentication/login");
+          }
+        }
         try {
           setLoading(true);
           const response = await axios.get(`${BASE_URL}/customer/getAllCustomer`, {
@@ -221,6 +196,13 @@ const User = () => {
     }
     if (roleId !== 2) {
       return;
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
     }
     try {
       const addPayload = {
@@ -293,6 +275,13 @@ const User = () => {
     }
     if (roleId !== 2) {
       return;
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
     }
     try {
       const updatePayload = {

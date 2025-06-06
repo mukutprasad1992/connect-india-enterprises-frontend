@@ -166,7 +166,13 @@ const InquiryPage = () => {
                     newStatus = "In Progress";
                 }
             }
-
+            if (token) {
+                const decoded: any = jwtDecode(token);
+                if (decoded.exp * 1000 < Date.now()) {
+                    localStorage.clear();
+                    router.push("/authentication/login");
+                }
+            }
             const response = await axios.put(
                 `${BASE_URL}/serviceType/updateStatus/${id}`,
                 { status: newStatus },

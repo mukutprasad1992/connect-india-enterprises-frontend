@@ -235,6 +235,13 @@ const VoucherTable: React.FC = () => {
 
   const confirmDelete = async () => {
     if (selectedId !== null) {
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       setLoading(true);
       try {
         const response = await axios.delete(
@@ -292,6 +299,13 @@ const VoucherTable: React.FC = () => {
 
         status: "Disable",
       };
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       try {
         const response = await axios.put(
           `${BASE_URL}/voucher/updateVoucherStatusById/${selectedId}`,
@@ -377,6 +391,13 @@ const VoucherTable: React.FC = () => {
     }
     setVoucherErrorMessage(false);
     setLoading(true);
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     try {
       const payload = {
         amount: parseFloat(formData.amount),
@@ -387,6 +408,7 @@ const VoucherTable: React.FC = () => {
         customerId: formData.customerName?.value,
         status: "Enable",
       };
+
       const response = await axios.post(
         `${BASE_URL}/voucher/createVoucher`,
         payload,
@@ -454,7 +476,13 @@ const VoucherTable: React.FC = () => {
     }
     setVoucherErrorMessage(false);
     setLoading(true);
-
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     try {
       const payload = {
         amount: parseFloat(formData.amount),
@@ -777,6 +805,13 @@ const VoucherTable: React.FC = () => {
       if (!token) {
         return;
       }
+      if (token) {
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          localStorage.clear();
+          router.push("/authentication/login");
+        }
+      }
       setLoading(true);
       const response = await axios.get(`${BASE_URL}/voucher/getAllVoucherByVendor`, {
         headers: {
@@ -807,6 +842,14 @@ const VoucherTable: React.FC = () => {
     if (!token) {
       return;
     }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+
+    }
     try {
       setLoading(true);
       const response = await axios.get(`${BASE_URL}/user/getAllVendor`, {
@@ -830,7 +873,13 @@ const VoucherTable: React.FC = () => {
 
   const getAllCustomerByVendorId = async () => {
     if (!formData.vendorName?.value) return;
-
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     const selectedVendorId = formData.vendorName.value;
     try {
       const response = await axios.get(

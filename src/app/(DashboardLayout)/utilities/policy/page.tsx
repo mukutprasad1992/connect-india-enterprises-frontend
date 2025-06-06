@@ -156,6 +156,17 @@ const Policy = () => {
     setPolicyTypeError("");
   };
   const fetchAllPolicyData = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     setLoading(true)
     try {
       const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${2}`, {
@@ -189,6 +200,17 @@ const Policy = () => {
   }, [policyUpdated, token]);
 
   const fetchPolicyOptions = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     try {
       setLoading(true)
       const response = await axios.get(
@@ -221,6 +243,17 @@ const Policy = () => {
   }, [token]);
 
   const addPolicy = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     if (!amount.trim()) {
       setAmountError("Policy amount is required.");
       return;
@@ -298,6 +331,17 @@ const Policy = () => {
     }
   };
   const editPolicy = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     if (!amount.trim()) {
       setAmountError("Policy amount is required.");
       return;
@@ -343,6 +387,17 @@ const Policy = () => {
     }
   };
   const deletePolicy = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push("/authentication/login");
+    }
+    if (token) {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+      }
+    }
     if (!selectedId) {
       console.error("No Policy selected for deletion.");
       return;

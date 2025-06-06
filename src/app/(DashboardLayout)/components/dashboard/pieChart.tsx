@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Box, Grid, Typography, Slider } from "@mui/material";
+import { Box, Grid, Typography, Slider, Stack } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -12,33 +12,31 @@ const PieChartPage = () => {
     const [radius, setRadius] = useState(50);
     const [itemNb, setItemNb] = useState(5);
     const [skipAnimation, setSkipAnimation] = useState(false);
+    const [loading, setLoading] = useState<boolean>(true);
+
     const router = useRouter();
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-    const [amounts, setAmounts] = useState<{ [key: string]: number }>({
-        Investment: 0,
-        Policy: 0,
-        Insurance: 0,
-        Loan: 0,
+    const [stats, setStats] = useState<{
+        Investment: any;
+        Policy: any;
+        Insurance: any;
+        Loan: any;
+    }>({
+        Investment: { totalAmount: 0, totalServices: 0 },
+        Policy: { totalAmount: 0, totalServices: 0 },
+        Insurance: { totalAmount: 0, totalServices: 0 },
+        Loan: { totalAmount: 0, totalServices: 0 },
     });
-    const [services, setServices] = useState<{ [key: string]: number }>({
-        Investment: 0,
-        Policy: 0,
-        Insurance: 0,
-        Loan: 0,
-    });
-    const [loading, setLoading] = useState<boolean>(true);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const getToken = () => {
-        if (typeof window !== "undefined") {
-            return localStorage.getItem("accessToken");
-        }
-        return null;
-    };
-    const token = getToken();
+    const [hasError, setHasError] = useState(false);
+
+    const getToken = () =>
+        typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
     const getRoleId = () =>
         typeof window !== "undefined" ? localStorage.getItem("roleId") : null;
+
+    const token = getToken();
     const roleId = getRoleId();
 
     const fetchServiceData = async () => {
@@ -47,52 +45,72 @@ const PieChartPage = () => {
             router.push("/authentication/login");
             return;
         }
-        if (token) {
-            const decoded: any = jwtDecode(token);
-            if (decoded.exp * 1000 < Date.now()) {
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-        } else {
+
+        const decoded: any = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
             localStorage.clear();
             router.push("/authentication/login");
+            return;
         }
+
         setLoading(true);
+        setHasError(false);
+
         try {
-            const response = await axios.get(`${BASE_URL}/serviceType/getTotalAmountAndServiecsByUserIdServiceType`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.data.status) {
-                const data = response.data.data;
-                setAmounts({
-                    Investment: parseFloat(data.Investment?.totalAmount) || 0,
-                    Policy: parseFloat(data.Policy?.totalAmount) || 0,
-                    Insurance: parseFloat(data.Insurance?.totalAmount) || 0,
-                    Loan: parseFloat(data.Loan?.totalAmount) || 0,
-                });
+            const response = await axios.get(
+                `${BASE_URL}/serviceType/getTotalAmountAndServiecsByUserIdServiceType`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
-                setServices({
-                    Investment: parseInt(data.Investment?.totalServices) || 0,
-                    Policy: parseInt(data.Policy?.totalServices) || 0,
-                    Insurance: parseInt(data.Insurance?.totalServices) || 0,
-                    Loan: parseInt(data.Loan?.totalServices) || 0,
-                });
+            const data = response.data.data;
 
-                setErrorMessage(null);
+            if (response.data.status && data) {
+                setStats({
+                    Investment: {
+                        totalAmount: parseFloat(data?.Investment?.totalAmount) || 0,
+                        totalServices: parseInt(data?.Investment?.totalServices) || 0,
+                    },
+                    Policy: {
+                        totalAmount: parseFloat(data?.Policy?.totalAmount) || 0,
+                        totalServices: parseInt(data?.Policy?.totalServices) || 0,
+                    },
+                    Insurance: {
+                        totalAmount: parseFloat(data?.Insurance?.totalAmount) || 0,
+                        totalServices: parseInt(data?.Insurance?.totalServices) || 0,
+                    },
+                    Loan: {
+                        totalAmount: parseFloat(data?.Loan?.totalAmount) || 0,
+                        totalServices: parseInt(data?.Loan?.totalServices) || 0,
+                    },
+                });
             } else {
-                setErrorMessage("Failed to retrieve data");
+                // Gracefully fallback to zero stats
+                setStats({
+                    Investment: { totalAmount: 0, totalServices: 0 },
+                    Policy: { totalAmount: 0, totalServices: 0 },
+                    Insurance: { totalAmount: 0, totalServices: 0 },
+                    Loan: { totalAmount: 0, totalServices: 0 },
+                });
             }
         } catch (error) {
-            console.error("Error fetching data:", error);
-            setErrorMessage("Unexpected error occurred.");
+            // Unexpected error fallback
+            setHasError(true);
+            setStats({
+                Investment: { totalAmount: 0, totalServices: 0 },
+                Policy: { totalAmount: 0, totalServices: 0 },
+                Insurance: { totalAmount: 0, totalServices: 0 },
+                Loan: { totalAmount: 0, totalServices: 0 },
+            });
         } finally {
             setLoading(false);
         }
     };
-    useEffect(() => {
 
+    useEffect(() => {
         fetchServiceData();
-    }, [router]);
+    }, []);
 
     const colorMap: Record<string, string> = {
         Investment: "#42a5f5",
@@ -101,37 +119,62 @@ const PieChartPage = () => {
         Loan: "#ef5350",
     };
 
-    const amountData = Object.entries(amounts)
+    const amountData = Object.entries(stats)
         .map(([label, value]) => ({
             label,
-            value,
+            value: value.totalAmount || 0,
             color: colorMap[label] || "#9e9e9e",
         }))
         .filter((item) => item.value > 0)
         .slice(0, itemNb);
 
     const serviceData = [
-        { label: "Asset", value: services.Investment, color: "#42a5f5" },
+        { label: "Asset", value: stats.Investment.totalServices, color: "#42a5f5" },
         {
             label: "Protection",
-            value: services.Policy + services.Insurance,
+            value: stats.Policy.totalServices + stats.Insurance.totalServices,
             color: "#46b182",
         },
-        { label: "Liability", value: services.Loan, color: "#ef5350" },
+        { label: "Liability", value: stats.Loan.totalServices, color: "#ef5350" },
     ]
         .filter((item) => item.value > 0)
         .slice(0, itemNb);
 
-    const handleItemNbChange = (_: Event, newValue: number | number[]) => {
-        if (typeof newValue === "number") {
-            setItemNb(newValue);
-        }
-    };
-
-    const handleRadiusChange = (_: Event, newValue: number | number[]) => {
-        if (typeof newValue === "number") {
-            setRadius(newValue);
-        }
+    const renderPieOrMessage = (title: string, data: any[]) => {
+        return (
+            <Box textAlign="center">
+                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                    {title}
+                </Typography>
+                {data.length > 0 ? (
+                    <PieChart
+                        height={300}
+                        width={300}
+                        series={[
+                            {
+                                data: data,
+                                innerRadius: radius,
+                                arcLabel: (params) => `${params.label}`,
+                                arcLabelMinAngle: 10,
+                            },
+                        ]}
+                        skipAnimation={skipAnimation}
+                    />
+                ) : (
+                    <Box
+                        height={300}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        border="1px dashed #ccc"
+                        borderRadius={2}
+                        color="gray"
+                    >
+                        <Typography variant="body1">No data available</Typography>
+                    </Box>
+                )}
+            </Box>
+        );
     };
 
     return (
@@ -140,66 +183,42 @@ const PieChartPage = () => {
                 Pie Chart Overview
             </Typography>
 
-            {errorMessage && (
-                <Typography color="error" gutterBottom>
-                    {errorMessage}
-                </Typography>
-            )}
-
             <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                        Total Amount by Category
-                    </Typography>
-                    <PieChart
-                        height={300}
-                        width={300}
-                        series={[
-                            {
-                                data: amountData || 0,
-                                innerRadius: radius,
-                                arcLabel: (params) => `${params.label}`,
-                                arcLabelMinAngle: 20,
-                            },
-                        ]}
-                        skipAnimation={skipAnimation}
-                    />
+                    {renderPieOrMessage("Total Amount by Category", amountData)}
                 </Grid>
                 <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                        Number of Services by Category
-                    </Typography>
-                    <PieChart
-                        height={300}
-                        width={300}
-                        series={[
-                            {
-                                data: serviceData,
-                                innerRadius: radius,
-                                arcLabel: (params) => `${params.label}:\n${params.value || 0}`,
-                                arcLabelMinAngle: 5,
-                            },
-                        ]}
-                        skipAnimation={skipAnimation}
-                    />
+                    {renderPieOrMessage("Number of Services by Category", serviceData)}
                 </Grid>
             </Grid>
-            <Typography gutterBottom>Number of items</Typography>
-            <Slider
-                value={itemNb}
-                onChange={handleItemNbChange}
-                valueLabelDisplay="auto"
-                min={1}
-                max={8}
-            />
-            <Typography gutterBottom>Radius</Typography>
-            <Slider
-                value={radius}
-                onChange={handleRadiusChange}
-                valueLabelDisplay="auto"
-                min={5}
-                max={100}
-            />
+
+            <Stack mt={4} spacing={3}>
+                <Box>
+                    <Typography gutterBottom>Number of Items</Typography>
+                    <Slider
+                        value={itemNb}
+                        onChange={(_, value) =>
+                            typeof value === "number" && setItemNb(value)
+                        }
+                        valueLabelDisplay="auto"
+                        min={1}
+                        max={8}
+                    />
+                </Box>
+
+                <Box>
+                    <Typography gutterBottom>Radius</Typography>
+                    <Slider
+                        value={radius}
+                        onChange={(_, value) =>
+                            typeof value === "number" && setRadius(value)
+                        }
+                        valueLabelDisplay="auto"
+                        min={5}
+                        max={100}
+                    />
+                </Box>
+            </Stack>
         </Box>
     );
 };

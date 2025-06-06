@@ -69,6 +69,13 @@ const ProfilePage: React.FC = () => {
             router.push('/authentication/login');
             return;
         }
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        }
         if (!BASE_URL) {
             console.error('BASE_URL is not defined');
             return;
@@ -185,6 +192,13 @@ const ProfilePage: React.FC = () => {
     };
 
     const handleImageChange = async (e: any) => {
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        }
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -226,6 +240,13 @@ const ProfilePage: React.FC = () => {
     };
 
     const onSubmit = async (data: ProfileData) => {
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        }
         if (!validateFields(data)) return;
         setLoading(true);
         if (!BASE_URL || !token) {

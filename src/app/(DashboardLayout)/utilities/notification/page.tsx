@@ -86,8 +86,17 @@ const Notification = () => {
     };
 
     const fetchNotifications = async (userId: number | null) => {
-        if (!token) return console.error('No token found.');
-
+        if (!token) {
+            localStorage.clear();
+            router.push("/authentication/login");
+        }
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        }
         try {
             const res = await axios.get(`${BASE_URL}/notification/getAllUserNotification`, { headers: { Authorization: `Bearer ${token}` } });
             const data = res.data.result || [];
@@ -99,8 +108,18 @@ const Notification = () => {
     };
 
     const updateIsRead = async (id: number) => {
-        if (!token) return console.error('No token found.');
 
+        if (!token) {
+            localStorage.clear();
+            router.push("/authentication/login");
+        };
+        if (token) {
+            const decoded: any = jwtDecode(token);
+            if (decoded.exp * 1000 < Date.now()) {
+                localStorage.clear();
+                router.push("/authentication/login");
+            }
+        }
         try {
             const res = await axios.put(`${BASE_URL}/notification/updateisRead/${id}`, null, {
                 headers: { Authorization: `Bearer ${token}` },
