@@ -660,9 +660,9 @@ const VoucherTable: React.FC = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 2,
+      flex: .01,
       renderCell: (params: any) => (
-        <Box display="flex" justifyContent="flex-end" width="100%" mt={1}>
+        <Box display="flex" justifyContent="flex-start" width="100%" mt={1}>
           {/* <IconButton color="primary" onClick={() => {
             handleClickOpenPdfPopUp(params.row)
           }}>
@@ -953,7 +953,7 @@ const VoucherTable: React.FC = () => {
                   <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "65vh", display: "flex" }}>
                     <DataGrid
                       rows={rows}
-                      columns={columns}
+                      columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}

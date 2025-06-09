@@ -642,8 +642,8 @@ const Collaborator = () => {
                   >
                     <DataGrid
                       rows={vendorList}
-                      columns={columns}
-                      sortModel={[{ field: "id", sort: "desc" }]}
+                      columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
+                      sortModel={[{ field: "id", sort: "desc", }]}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}

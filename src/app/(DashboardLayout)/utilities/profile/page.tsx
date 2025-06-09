@@ -14,10 +14,17 @@ import {
     Snackbar,
     Alert,
     Tooltip,
+    CircularProgress,
+    DialogActions,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useRouter } from 'next/navigation';
 
 interface ProfileData {
@@ -55,6 +62,10 @@ const ProfilePage: React.FC = () => {
     const [errors, setErrors] = useState<Partial<Record<keyof ProfileData, string>>>({});
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [profileImageURL, setProfileImageURL] = useState('');
+    const [formDataToSubmit, setFormDataToSubmit] = useState<ProfileData | null>(null);
+    const [openDialog, setOpenDialog] = useState(false);
     const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -86,7 +97,7 @@ const ProfilePage: React.FC = () => {
             });
 
             const data: ProfileData = res.data.result;
-
+            setProfileImageURL(data.profileImageURL);
             Object.entries(data).forEach(([key, value]) => {
                 if (key === 'dateOfBirth' && typeof value === 'string') {
                     const formattedDate = value.split('T')[0];
@@ -111,68 +122,6 @@ const ProfilePage: React.FC = () => {
                 localStorage.clear();
                 router.push("/authentication/login");
             }
-            if (roleId !== 1 && roleId !== 2) {
-                if (roleId !== 1 && roleId !== 2) {
-                    localStorage.clear();
-                    router.push("/authentication/login");
-                }
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-        } else {
-            localStorage.clear();
-            router.push("/authentication/login");
-        } if (token) {
-            const decoded: any = jwtDecode(token);
-            if (decoded.exp * 1000 < Date.now()) {
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-            if (roleId !== 1 && roleId !== 2) {
-                if (roleId !== 1 && roleId !== 2) {
-                    localStorage.clear();
-                    router.push("/authentication/login");
-                }
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-        } else {
-            localStorage.clear();
-            router.push("/authentication/login");
-        } if (token) {
-            const decoded: any = jwtDecode(token);
-            if (decoded.exp * 1000 < Date.now()) {
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-            if (roleId !== 1 && roleId !== 2) {
-                if (roleId !== 1 && roleId !== 2) {
-                    localStorage.clear();
-                    router.push("/authentication/login");
-                }
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-        } else {
-            localStorage.clear();
-            router.push("/authentication/login");
-        } if (token) {
-            const decoded: any = jwtDecode(token);
-            if (decoded.exp * 1000 < Date.now()) {
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-            if (roleId !== 1 && roleId !== 2) {
-                if (roleId !== 1 && roleId !== 2) {
-                    localStorage.clear();
-                    router.push("/authentication/login");
-                }
-                localStorage.clear();
-                router.push("/authentication/login");
-            }
-        } else {
-            localStorage.clear();
-            router.push("/authentication/login");
         }
         fetchProfile();
     }, [router, token, setValue]);
@@ -216,7 +165,7 @@ const ProfilePage: React.FC = () => {
         formData.append('description', 'optional description here');
 
         try {
-            const res = await axios.post(`${BASE_URL}/files/upload`, formData, {
+            const res = await axios.post(`${BASE_URL}/files/profileImageUpload`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
@@ -226,6 +175,7 @@ const ProfilePage: React.FC = () => {
                 setSnackbarOpen(true);
                 const imageUrl = res.data.result.url;
                 const profileImageKey = res.data.result.key
+                setProfileImageURL(imageUrl)
                 setValue('profileImageURL', imageUrl);
                 setValue('profileImageKey', profileImageKey);
                 setSnackbarMessage(res.data.message)
@@ -238,6 +188,28 @@ const ProfilePage: React.FC = () => {
             setSnackbarMessage(error.data.error)
         }
     };
+    const handleDelete = async () => {
+        try {
+            const response = await axios.delete(`${BASE_URL}/files/deleteProfileImage`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            setSnackbarMessage(response.data.message || 'Profile image deleted successfully!');
+            setSnackbarSeverity('success');
+            setProfileImageURL('');
+            setValue('profileImageURL', '');
+            setValue('profileImageKey', '');
+        } catch (error) {
+            console.error('Error deleting profile image:', error);
+            setSnackbarMessage('Failed to delete profile image.');
+            setSnackbarSeverity('error');
+        } finally {
+            setSnackbarOpen(true);
+            setOpenDialog(false);
+        }
+    };
+
 
     const onSubmit = async (data: ProfileData) => {
         if (token) {
@@ -245,15 +217,17 @@ const ProfilePage: React.FC = () => {
             if (decoded.exp * 1000 < Date.now()) {
                 localStorage.clear();
                 router.push("/authentication/login");
+                return;
             }
         }
         if (!validateFields(data)) return;
-        setLoading(true);
+
         if (!BASE_URL || !token) {
             localStorage.clear();
             router.push('/authentication/login');
             return;
         }
+
         try {
             const payload = {
                 firstName: data.firstName,
@@ -267,39 +241,52 @@ const ProfilePage: React.FC = () => {
             };
 
             const response = await axios.put(`${BASE_URL}/profile/updateProfile`, payload, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
             });
+
             if (response.data.status === true) {
                 setSnackbarOpen(true);
                 setSnackbarMessage(response.data.message);
                 if (roleId === 2) {
-                    router.push('/utilities/customer');
-                }
-                else {
-                    router.push('/');
+                    setTimeout(() => router.push('/utilities/customer'), 3000);
+                } else {
+                    setTimeout(() => router.push('/'), 3000);
                 }
             }
         } catch (error: any) {
-            setSnackbarMessage(error?.data?.message);
-        } finally {
-            setLoading(false);
+            setSnackbarMessage(error?.data?.message || 'Update failed');
         }
     };
+
     const handleSnackbarClose = () => {
         setSnackbarOpen(false);
     }
 
+    const handleSubmitWithConfirm = (data: ProfileData) => {
+        if (!validateFields(data)) return;
+        setFormDataToSubmit(data);
+        setConfirmOpen(true);
+    };
+    const handleConfirmUpdate = async () => {
+        if (!formDataToSubmit) return;
+        setLoading(true);
+        setConfirmOpen(false);
+
+        try {
+            await onSubmit(formDataToSubmit);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <Box sx={{ p: 4 }}>
             <Card elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h4" gutterBottom>
+                <Typography variant="h4" gutterBottom align="center">
                     My Profile
                 </Typography>
                 <Divider sx={{ mb: 3 }} />
 
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(handleSubmitWithConfirm)}>
                     <Grid container spacing={3}>
                         <Grid item xs={12} md={3}>
                             <Box display="flex" flexDirection="column" alignItems="center">
@@ -314,12 +301,29 @@ const ProfilePage: React.FC = () => {
                                         />
                                     )}
                                 />
-                                <Tooltip title="Upload Image">
-                                    <IconButton color="primary" component="label" sx={{ mt: 1, fontSize: 12 }}>
-                                        <EditIcon sx={{ fontSize: 20 }} />
-                                        <input type="file" accept="image/*" hidden onChange={handleImageChange} />
-                                    </IconButton>
-                                </Tooltip>
+                                <Grid container spacing={1} justifyContent="center" sx={{ mt: 1 }}>
+                                    <Grid item>
+                                        <Tooltip title="Upload Image">
+                                            <IconButton color="primary" component="label" sx={{ fontSize: 12 }}>
+                                                <EditIcon sx={{ fontSize: 20 }} />
+                                                <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Grid>
+                                    <Grid item>
+                                        {profileImageURL && (
+                                            <Tooltip title="Delete Image">
+                                                <IconButton
+                                                    color="primary"
+                                                    onClick={() => setOpenDialog(true)}
+                                                    sx={{ fontSize: 12 }}
+                                                >
+                                                    <DeleteIcon sx={{ fontSize: 20 }} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        )}
+                                    </Grid>
+                                </Grid>
                             </Box>
                         </Grid>
 
@@ -697,16 +701,55 @@ const ProfilePage: React.FC = () => {
                         <Grid item xs={12}>
                             <Box textAlign="right">
                                 <Button variant="contained" color="primary" type="submit" disabled={loading}>
-                                    {loading ? 'Updating...' : 'Update Profile'}
+                                    Update Profile
                                 </Button>
                             </Box>
                         </Grid>
                     </Grid>
                 </form>
             </Card>
+            <Dialog open={confirmOpen} onClose={() => !loading && setConfirmOpen(false)}>
+                <DialogTitle>Confirm Update</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>Are you sure you want to update your profile?</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)} disabled={loading}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleConfirmUpdate}
+                        variant="contained"
+                        color="primary"
+                        disabled={loading}
+                        sx={{ minWidth: 120 }}
+                    >
+                        {loading ? (
+                            <>
+                                <CircularProgress size={20} sx={{ mr: 1 }} /> Updating...
+                            </>
+                        ) : (
+                            'Confirm'
+                        )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                <DialogTitle>Delete Profile Image</DialogTitle>
+                <DialogContent>
+                    Are you sure you want to delete the profile image?
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDelete} color="error" variant="contained">
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <Snackbar
                 open={snackbarOpen}
-                // open={true}
                 autoHideDuration={3000}
                 onClose={handleSnackbarClose}
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}

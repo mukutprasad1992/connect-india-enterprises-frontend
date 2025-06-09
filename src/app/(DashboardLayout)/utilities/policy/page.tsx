@@ -741,7 +741,7 @@ const Policy = () => {
                   >
                     <DataGrid
                       rows={Policies}
-                      columns={columns.map((col) => ({ ...col, flex: 1 }))}
+                      columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
@@ -954,7 +954,7 @@ const Policy = () => {
 
                                 const from = dayjs(fromTime);
                                 const to = dayjs(timeValue);
-                                if (to.isBefore(from)) {
+                                if (to.isBefore(from.add(5, "minute"))) {
                                   setToTimeError("The 'to' time cannot be before the 'from' time.");
                                 } else {
                                   setToTime(timeValue);
