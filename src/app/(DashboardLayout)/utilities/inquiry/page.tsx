@@ -201,11 +201,11 @@ const InquiryPage = () => {
     };
 
     const columns = [
-        { field: "id", headerName: "ID", flex: 0.5 },
-        { field: "firstName", headerName: "First Name", flex: 0.8 },
-        { field: "lastName", headerName: "Last Name", flex: 0.8 },
-        { field: "email", headerName: "Email", flex: 0.8 },
-        { field: "mobileNo", headerName: "Mobile No", flex: 0.8 },
+        { field: "id", headerName: "ID", flex: 0.02 },
+        { field: "firstName", headerName: "First Name", flex: 0.08 },
+        { field: "lastName", headerName: "Last Name", flex: 0.08 },
+        { field: "email", headerName: "Email", flex: 0.08 },
+        { field: "mobileNo", headerName: "Mobile No", flex: 0.08 },
         { field: "type", headerName: "Type", flex: 0.12 },
         { field: "amount", headerName: "Amount", flex: 0.12 },
         {
@@ -253,15 +253,15 @@ const InquiryPage = () => {
                     <Box
                         sx={{
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            alignItems: "start",
+                            justifyContent: "start",
                             width: "100%",
                             height: "100%",
                         }}
                     >
                         <Typography
                             variant="body1"
-                            sx={{ color, fontWeight: "bold", textAlign: "center" }}
+                            sx={{ color, fontWeight: "bold", textAlign: "start" }}
                         >
                             {status}
                         </Typography>
@@ -273,7 +273,7 @@ const InquiryPage = () => {
         {
             field: "actions",
             headerName: "Actions",
-            flex: 0.2,
+            flex: 0.8,
             renderCell: (params: any) => {
                 const status = params.row.status;
                 return (
@@ -384,7 +384,7 @@ const InquiryPage = () => {
                                     <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                                         <DataGrid
                                             rows={inquiries || []}
-                                            columns={columns}
+                                            columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                                             pageSizeOptions={[5, 10, 20, 50, 100]}
                                             paginationModel={pagination}
                                             onPaginationModelChange={setPagination}
