@@ -18,7 +18,8 @@ import {
   Alert,
   Divider,
   Snackbar,
-  Tooltip
+  Tooltip,
+  CircularProgress
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { SetStateAction, useEffect, useState } from "react";
@@ -765,6 +766,19 @@ const Insurance = () => {
           maxWidth="sm"
           fullWidth
         >
+          {loading && (
+            <div
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+              }}
+            >
+              <CircularProgress />
+            </div>
+          )}
           <DialogTitle>
             <Typography variant="h3" component="h2">
               {isEdit ? "Edit insurance" : "Add insurance"}

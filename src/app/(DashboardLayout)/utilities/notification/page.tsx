@@ -176,7 +176,7 @@ const Notification = () => {
                 </Box>
 
                 {paginatedNotifications.length > 0 ? (
-                    paginatedNotifications.slice(0, 4).map((notification) => (
+                    paginatedNotifications.map((notification) => (
                         <MenuItem
                             key={notification.id}
                             onClick={() => handleNotificationClick(notification)}
@@ -205,6 +205,7 @@ const Notification = () => {
                 ) : (
                     <MenuItem disabled>No notifications</MenuItem>
                 )}
+
                 <Box display="flex" justifyContent="space-between" px={2} py={1}>
                     <Button
                         size="small"
