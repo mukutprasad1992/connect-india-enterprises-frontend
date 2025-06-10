@@ -711,7 +711,9 @@ const ProfilePage: React.FC = () => {
             <Dialog open={confirmOpen} onClose={() => !loading && setConfirmOpen(false)}>
                 <DialogTitle>Confirm Update</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>Are you sure you want to update your profile?</DialogContentText>
+                    <DialogContentText>
+                        Are you sure you want to update your profile?
+                    </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setConfirmOpen(false)} disabled={loading}>
@@ -719,18 +721,12 @@ const ProfilePage: React.FC = () => {
                     </Button>
                     <Button
                         onClick={handleConfirmUpdate}
-                        variant="contained"
                         color="primary"
+                        variant="contained"
                         disabled={loading}
-                        sx={{ minWidth: 120 }}
+                        startIcon={loading ? <CircularProgress size={20} /> : null}
                     >
-                        {loading ? (
-                            <>
-                                <CircularProgress size={20} sx={{ mr: 1 }} /> Updating...
-                            </>
-                        ) : (
-                            'Confirm'
-                        )}
+                        {loading ? <CircularProgress size={20} /> : 'I am sure'}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -36,6 +36,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 import { formatDate } from "../../../../utils/utils";
+import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
 
 const VoucherTable: React.FC = () => {
   const router = useRouter();
@@ -623,7 +624,7 @@ const VoucherTable: React.FC = () => {
     {
       field: "amount",
       headerName: "Discount Amount",
-      flex: 1,
+      flex: .02,
       type: "number",
       editable: true,
     },
