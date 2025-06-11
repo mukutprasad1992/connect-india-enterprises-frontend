@@ -292,7 +292,7 @@ const Collaborator = () => {
       businessRepresentative: vendorFormData.businessRepresentative,
       roleId: vendorFormData.roleId,
       mobileNo: vendorFormData.mobileNo,
-      vendorCode: generatedCode || vendorFormData.vendorCode,
+      vendorCode: vendorFormData.vendorCode || generatedCode,
       status: "Enable"
     };
     setVendorErrorMessage(false)
@@ -841,10 +841,11 @@ const Collaborator = () => {
                   type="text"
                   fullWidth
                   variant="outlined"
-                  value={isEdit ? vendorFormData.vendorCode : generatedCode || ""}
-                  InputProps={{ readOnly: true }}
+                  // value={isEdit ? vendorFormData.vendorCode : generatedCode || ""}
+                  value={vendorFormData.vendorCode}
+                  // InputProps={{ readOnly: true }}
                   onChange={handleChange}
-                  disabled
+                // disabled
                 />
               </Grid>
               <Grid item xs={12}>
@@ -861,7 +862,7 @@ const Collaborator = () => {
                   fullWidth
                   variant="outlined"
                   inputProps={{
-                    maxLength: 60,
+                    maxLength: 100,
                     style: { lineHeight: 1.0, wordBreak: "break-word" },
                   }}
                   value={vendorFormData.address}
