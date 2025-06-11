@@ -36,7 +36,7 @@ import DashboardCard from "../../components/shared/DashboardCard";
 import { useRouter } from 'next/navigation';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-//import InsuranceDialogDialog from '../AI/aiAssistantInsurance/page';
+// import InsuranceDialogDialog from '../../components/AI/AIAssistantInsurance';
 import React from "react";
 
 const durations = [
@@ -647,7 +647,6 @@ const Insurance = () => {
                 </Tooltip>
               </>
             )}
-
           </Box>
         );
       },

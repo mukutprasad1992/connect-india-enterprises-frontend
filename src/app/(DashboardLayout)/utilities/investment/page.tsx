@@ -40,7 +40,7 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
-// import InvestmentDialog from '../AI/AiAssistantInvestment/page';
+// import InvestmentDialog from '../../components/AI/AIAssistantInvestment';
 import React from "react";
 
 const durations = [
