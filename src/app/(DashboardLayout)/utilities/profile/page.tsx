@@ -51,6 +51,7 @@ import {
     Cake,
     Phone,
     Code,
+    ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { jwtDecode } from 'jwt-decode';
 const ProfilePage: React.FC = () => {
@@ -74,6 +75,7 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
         setMounted(true);
     }, []);
+    console.log("<---control--->", control);
     const fetchProfile = async () => {
         if (!token) {
             localStorage.clear();
@@ -220,7 +222,7 @@ const ProfilePage: React.FC = () => {
                 return;
             }
         }
-        if (!validateFields(data)) return;
+        // if (!validateFields(data)) return;
 
         if (!BASE_URL || !token) {
             localStorage.clear();
@@ -230,14 +232,14 @@ const ProfilePage: React.FC = () => {
 
         try {
             const payload = {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                address: data.address,
-                dateOfBirth: data.dateOfBirth,
-                profileImageURL: data.profileImageURL,
-                profileImageKey: data.profileImageKey,
-                mobileNo: data.mobileNo,
-                pinCode: data.pinCode,
+                firstName: data?.firstName || '',
+                lastName: data?.lastName || '',
+                address: data?.address || '',
+                dateOfBirth: data?.dateOfBirth || '',
+                profileImageURL: data?.profileImageURL || '',
+                profileImageKey: data?.profileImageKey || '',
+                mobileNo: data?.mobileNo,
+                pinCode: data?.pinCode,
             };
 
             const response = await axios.put(`${BASE_URL}/profile/updateProfile`, payload, {
@@ -263,7 +265,7 @@ const ProfilePage: React.FC = () => {
     }
 
     const handleSubmitWithConfirm = (data: ProfileData) => {
-        if (!validateFields(data)) return;
+        // if (!validateFields(data)) return;
         setFormDataToSubmit(data);
         setConfirmOpen(true);
     };
@@ -280,10 +282,13 @@ const ProfilePage: React.FC = () => {
     };
     return (
         <Box sx={{ p: 4 }}>
-            <Card elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h4" gutterBottom align="center">
-                    My Profile
-                </Typography>
+            <Card elevation={3} sx={{ p: 2 }}>
+                <Grid item xs={12} textAlign="center" sx={{ pb: 1 }}>
+                    <Typography variant="h4" gutterBottom >
+                        My Profile
+                    </Typography>
+                </Grid>
+
                 <Divider sx={{ mb: 3 }} />
 
                 <form onSubmit={handleSubmit(handleSubmitWithConfirm)}>
@@ -295,7 +300,7 @@ const ProfilePage: React.FC = () => {
                                     control={control}
                                     render={({ field }) => (
                                         <Avatar
-                                            src={field.value || '/images/profile/user-1.jpg'}
+                                            src={field?.value || '/images/profile/user-1.jpg'}
                                             variant="square"
                                             sx={{ width: 150, height: 150, borderRadius: 3, border: 1 }}
                                         />
@@ -337,14 +342,14 @@ const ProfilePage: React.FC = () => {
                                             <TextField
                                                 {...field}
                                                 fullWidth
-                                                label={
-                                                    <>
-                                                        First Name <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
-                                                InputLabelProps={{ shrink: Boolean(field.value) }}
-                                                error={!!errors.firstName}
-                                                helperText={errors.firstName}
+                                                label="First Name"
+                                                InputLabelProps={{
+                                                    shrink: Boolean(field?.value), sx: {
+                                                        marginLeft: field?.value ? '0px' : '32px'
+                                                    }
+                                                }}
+                                                error={!!errors?.firstName}
+                                                helperText={errors?.firstName}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -352,20 +357,20 @@ const ProfilePage: React.FC = () => {
                                                         </InputAdornment>
                                                     ),
                                                 }}
-                                                onBlur={() => {
-                                                    if (!field.value) {
-                                                        setErrors(prev => ({ ...prev, firstName: 'First name is required' }));
-                                                    } else {
-                                                        setErrors(prev => ({ ...prev, firstName: '' }));
-                                                    }
-                                                }}
+                                                // onBlur={() => {
+                                                //     if (!field?.value) {
+                                                //         setErrors(prev => ({ ...prev, firstName: 'First name is required' }));
+                                                //     } else {
+                                                //         setErrors(prev => ({ ...prev, firstName: '' }));
+                                                //     }
+                                                // }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    setErrors(prev => ({
-                                                        ...prev,
-                                                        firstName: val ? '' : 'First name is required',
-                                                    }));
+                                                    // setErrors(prev => ({
+                                                    //     ...prev,
+                                                    //     firstName: val ? '' : 'First name is required',
+                                                    // }));
                                                 }}
                                             />
                                         )}
@@ -380,12 +385,12 @@ const ProfilePage: React.FC = () => {
                                             <TextField
                                                 {...field}
                                                 fullWidth
-                                                label={
-                                                    <>
-                                                        Last Name <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
-                                                InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                label='Last Name'
+                                                InputLabelProps={{
+                                                    shrink: Boolean(field?.value), sx: {
+                                                        marginLeft: field?.value ? '0px' : '32px'
+                                                    }
+                                                }}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -393,22 +398,22 @@ const ProfilePage: React.FC = () => {
                                                         </InputAdornment>
                                                     ),
                                                 }}
-                                                error={!!errors.lastName}
-                                                helperText={errors.lastName}
-                                                onBlur={() => {
-                                                    if (!field.value) {
-                                                        setErrors(prev => ({ ...prev, lastName: 'Last name is required' }));
-                                                    } else {
-                                                        setErrors(prev => ({ ...prev, lastName: '' }));
-                                                    }
-                                                }}
+                                                error={!!errors?.lastName}
+                                                helperText={errors?.lastName}
+                                                // onBlur={() => {
+                                                //     if (!field?.value) {
+                                                //         setErrors(prev => ({ ...prev, lastName: 'Last name is required' }));
+                                                //     } else {
+                                                //         setErrors(prev => ({ ...prev, lastName: '' }));
+                                                //     }
+                                                // }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    setErrors(prev => ({
-                                                        ...prev,
-                                                        lastName: val ? '' : 'Last name is required',
-                                                    }));
+                                                    // setErrors(prev => ({
+                                                    //     ...prev,
+                                                    //     lastName: val ? '' : 'Last name is required',
+                                                    // }));
                                                 }}
                                             />
                                         )}
@@ -423,13 +428,13 @@ const ProfilePage: React.FC = () => {
                                             <TextField
                                                 {...field}
                                                 fullWidth
-                                                label={
-                                                    <>
-                                                        Email <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
+                                                label=''
                                                 disabled
-                                                InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                InputLabelProps={{
+                                                    shrink: Boolean(field?.value), sx: {
+                                                        marginLeft: field?.value ? '0px' : '32px'
+                                                    }
+                                                }}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -451,13 +456,13 @@ const ProfilePage: React.FC = () => {
                                                     <TextField
                                                         {...field}
                                                         fullWidth
-                                                        label={
-                                                            <>
-                                                                Business name <span style={{ color: 'red' }}>*</span>
-                                                            </>
-                                                        }
+                                                        label='Business Name'
                                                         disabled
-                                                        InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                        InputLabelProps={{
+                                                            shrink: Boolean(field?.value), sx: {
+                                                                marginLeft: field?.value ? '0px' : '32px'
+                                                            }
+                                                        }}
                                                         InputProps={{
                                                             startAdornment: (
                                                                 <InputAdornment position="start">
@@ -478,11 +483,7 @@ const ProfilePage: React.FC = () => {
                                                     <TextField
                                                         {...field}
                                                         fullWidth
-                                                        label={
-                                                            <>
-                                                                Represntative <span style={{ color: 'red' }}>*</span>
-                                                            </>
-                                                        }
+                                                        label='Business Representative'
                                                         disabled
                                                         InputProps={{
                                                             startAdornment: (
@@ -491,7 +492,11 @@ const ProfilePage: React.FC = () => {
                                                                 </InputAdornment>
                                                             ),
                                                         }}
-                                                        InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                        InputLabelProps={{
+                                                            shrink: Boolean(field?.value), sx: {
+                                                                marginLeft: field?.value ? '0px' : '32px'
+                                                            }
+                                                        }}
                                                     />
                                                 )}
                                             />
@@ -505,11 +510,7 @@ const ProfilePage: React.FC = () => {
                                                     <TextField
                                                         {...field}
                                                         fullWidth
-                                                        label={
-                                                            <>
-                                                                Collaborator code <span style={{ color: 'red' }}>*</span>
-                                                            </>
-                                                        }
+                                                        label='Vendor Code'
                                                         disabled
                                                         InputProps={{
                                                             startAdornment: (
@@ -518,7 +519,11 @@ const ProfilePage: React.FC = () => {
                                                                 </InputAdornment>
                                                             ),
                                                         }}
-                                                        InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                        InputLabelProps={{
+                                                            shrink: Boolean(field.value), sx: {
+                                                                marginLeft: field?.value ? '0px' : '32px'
+                                                            }
+                                                        }}
                                                     />
                                                 )}
                                             />
@@ -532,12 +537,13 @@ const ProfilePage: React.FC = () => {
                                         render={({ field }) => (
                                             <TextField
                                                 {...field}
-                                                fullWidth label={
-                                                    <>
-                                                        Address <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
-                                                InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                fullWidth
+                                                label='Address'
+                                                InputLabelProps={{
+                                                    shrink: Boolean(field.value), sx: {
+                                                        marginLeft: field?.value ? '0px' : '32px'
+                                                    }
+                                                }}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -547,20 +553,20 @@ const ProfilePage: React.FC = () => {
                                                 }}
                                                 error={!!errors.address}
                                                 helperText={errors.address}
-                                                onBlur={() => {
-                                                    if (!field.value) {
-                                                        setErrors(prev => ({ ...prev, address: 'Address is required' }));
-                                                    } else {
-                                                        setErrors(prev => ({ ...prev, address: '' }));
-                                                    }
-                                                }}
+                                                // onBlur={() => {
+                                                //     if (!field.value) {
+                                                //         setErrors(prev => ({ ...prev, address: 'Address is required' }));
+                                                //     } else {
+                                                //         setErrors(prev => ({ ...prev, address: '' }));
+                                                //     }
+                                                // }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    setErrors(prev => ({
-                                                        ...prev,
-                                                        address: val ? '' : 'Address name is required',
-                                                    }));
+                                                    // setErrors(prev => ({
+                                                    //     ...prev,
+                                                    //     address: val ? '' : 'Address name is required',
+                                                    // }));
                                                 }}
                                             />
                                         )}
@@ -574,11 +580,7 @@ const ProfilePage: React.FC = () => {
                                             <TextField
                                                 {...field}
                                                 fullWidth
-                                                label={
-                                                    <>
-                                                        Pin code <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
+                                                label='Pin Code'
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -586,23 +588,27 @@ const ProfilePage: React.FC = () => {
                                                         </InputAdornment>
                                                     ),
                                                 }}
-                                                InputLabelProps={{ shrink: Boolean(field.value) }}
-                                                error={!!errors.pinCode}
-                                                helperText={errors.pinCode}
-                                                onBlur={() => {
-                                                    if (!field.value) {
-                                                        setErrors(prev => ({ ...prev, pinCode: 'Pin code is required' }));
-                                                    } else {
-                                                        setErrors(prev => ({ ...prev, pinCode: '' }));
+                                                InputLabelProps={{
+                                                    shrink: Boolean(field.value), sx: {
+                                                        marginLeft: field?.value ? '0px' : '32px'
                                                     }
                                                 }}
+                                                error={!!errors.pinCode}
+                                                helperText={errors.pinCode}
+                                                // onBlur={() => {
+                                                //     if (!field.value) {
+                                                //         setErrors(prev => ({ ...prev, pinCode: 'Pin code is required' }));
+                                                //     } else {
+                                                //         setErrors(prev => ({ ...prev, pinCode: '' }));
+                                                //     }
+                                                // }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    setErrors(prev => ({
-                                                        ...prev,
-                                                        pinCode: val ? '' : 'Pin code  name is required',
-                                                    }));
+                                                    // setErrors(prev => ({
+                                                    //     ...prev,
+                                                    //     pinCode: val ? '' : 'Pin code  name is required',
+                                                    // }));
                                                 }}
                                             />
                                         )}
@@ -617,11 +623,7 @@ const ProfilePage: React.FC = () => {
                                             <TextField
                                                 {...field}
                                                 fullWidth
-                                                label={
-                                                    <>
-                                                        Date of Birth <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
+                                                label='Date of Birth'
                                                 type="date"
                                                 InputLabelProps={{ shrink: true }}
                                                 InputProps={{
@@ -633,20 +635,20 @@ const ProfilePage: React.FC = () => {
                                                 }}
                                                 error={!!errors.dateOfBirth}
                                                 helperText={errors.dateOfBirth}
-                                                onBlur={() => {
-                                                    if (!field.value) {
-                                                        setErrors(prev => ({ ...prev, dateOfBirth: 'Date of birth is required' }));
-                                                    } else {
-                                                        setErrors(prev => ({ ...prev, dateOfBirth: '' }));
-                                                    }
-                                                }}
+                                                // onBlur={() => {
+                                                //     if (!field.value) {
+                                                //         setErrors(prev => ({ ...prev, dateOfBirth: 'Date of birth is required' }));
+                                                //     } else {
+                                                //         setErrors(prev => ({ ...prev, dateOfBirth: '' }));
+                                                //     }
+                                                // }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    setErrors(prev => ({
-                                                        ...prev,
-                                                        dateOfBirth: val ? '' : 'Date of birth is required',
-                                                    }));
+                                                    // setErrors(prev => ({
+                                                    //     ...prev,
+                                                    //     dateOfBirth: val ? '' : 'Date of birth is required',
+                                                    // }));
                                                 }}
                                             />
                                         )}
@@ -661,12 +663,12 @@ const ProfilePage: React.FC = () => {
                                             <TextField
                                                 {...field}
                                                 fullWidth
-                                                label={
-                                                    <>
-                                                        Mobile no. <span style={{ color: 'red' }}>*</span>
-                                                    </>
-                                                }
-                                                InputLabelProps={{ shrink: Boolean(field.value) }}
+                                                label='Mobile No.'
+                                                InputLabelProps={{
+                                                    shrink: Boolean(field.value), sx: {
+                                                        marginLeft: field?.value ? '0px' : '32px'
+                                                    }
+                                                }}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -676,20 +678,20 @@ const ProfilePage: React.FC = () => {
                                                 }}
                                                 error={!!errors.mobileNo}
                                                 helperText={errors.mobileNo}
-                                                onBlur={() => {
-                                                    if (!field.value) {
-                                                        setErrors(prev => ({ ...prev, mobileNo: 'Mobile no. name is required' }));
-                                                    } else {
-                                                        setErrors(prev => ({ ...prev, mobileNo: '' }));
-                                                    }
-                                                }}
+                                                // onBlur={() => {
+                                                //     if (!field.value) {
+                                                //         setErrors(prev => ({ ...prev, mobileNo: 'Mobile no. name is required' }));
+                                                //     } else {
+                                                //         setErrors(prev => ({ ...prev, mobileNo: '' }));
+                                                //     }
+                                                // }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    setErrors(prev => ({
-                                                        ...prev,
-                                                        mobileNo: val ? '' : 'Mobile no. is required',
-                                                    }));
+                                                    // setErrors(prev => ({
+                                                    //     ...prev,
+                                                    //     mobileNo: val ? '' : 'Mobile no. is required',
+                                                    // }));
                                                 }}
                                             />
                                         )}
@@ -697,9 +699,13 @@ const ProfilePage: React.FC = () => {
                                 </Grid>
                             </Grid>
                         </Grid>
-
                         <Grid item xs={12}>
-                            <Box textAlign="right">
+                            <Box display={"flex"} justifyContent="space-between" alignItems="center">
+                                <Tooltip title="Back">
+                                    <Button variant="outlined" color="secondary" onClick={() => router.back()} disabled={loading}>
+                                        <ArrowBackIcon sx={{ mr: 1 }} />
+                                    </Button>
+                                </Tooltip>
                                 <Button variant="contained" color="primary" type="submit" disabled={loading}>
                                     Update Profile
                                 </Button>
@@ -726,7 +732,7 @@ const ProfilePage: React.FC = () => {
                         disabled={loading}
                         startIcon={loading ? <CircularProgress size={20} /> : null}
                     >
-                        {loading ? <CircularProgress size={20} /> : 'I am sure'}
+                        {loading ? <CircularProgress size={20} /> : 'confirm'}
                     </Button>
                 </DialogActions>
             </Dialog>

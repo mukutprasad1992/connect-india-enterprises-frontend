@@ -201,8 +201,8 @@ const PieChartPage = () => {
                             typeof value === "number" && setItemNb(value)
                         }
                         valueLabelDisplay="auto"
-                        min={1}
-                        max={8}
+                        min={0}
+                        max={4}
                     />
                 </Box>
 

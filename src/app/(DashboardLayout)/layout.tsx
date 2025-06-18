@@ -4,30 +4,41 @@ import React, { useState } from "react";
 import Header from "@/app/(DashboardLayout)/layout/header/Header";
 import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/MSidebar";
 
+// Define the widths
+const SIDEBAR_WIDTH_EXPANDED = 0;
+const SIDEBAR_WIDTH_COLLAPSED = 0;
+
 const MainWrapper = styled("div")(() => ({
   display: "flex",
   minHeight: "100vh",
   width: "100%",
+  overflowX: "auto",
 }));
 
-const PageWrapper = styled("div")(() => ({
-  display: "flex",
+const PageWrapper = styled("div", {
+  shouldForwardProp: (prop) => prop !== "isSidebarOpen",
+})<{ isSidebarOpen: boolean }>(({ isSidebarOpen }) => ({
   flexGrow: 1,
-  paddingBottom: "60px",
+  display: "flex",
   flexDirection: "column",
-  zIndex: 1,
+  paddingBottom: "60px",
   backgroundColor: "transparent",
+  transition: "padding-left 0.3s ease",
+  paddingLeft: isSidebarOpen ? SIDEBAR_WIDTH_EXPANDED : SIDEBAR_WIDTH_COLLAPSED,
+  boxSizing: 'border-box',
+  "@media (max-width: 1200px)": {
+    paddingLeft: 0,
+  },
 }));
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const toggleMobileSidebar = () => setMobileSidebarOpen((prev) => !prev);
-  const handleSidebarClose = (event?: React.MouseEvent<HTMLElement>) => {
-    setMobileSidebarOpen(false);
-  };
+  const handleSidebarClose = () => setMobileSidebarOpen(false);
+
   return (
     <MainWrapper className="mainwrapper">
       <Sidebar
@@ -37,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         toggleMobileSidebar={toggleMobileSidebar}
       />
 
-      <PageWrapper className="page-wrapper">
+      <PageWrapper isSidebarOpen={isSidebarOpen}>
         <Header
           toggleMobileSidebar={toggleMobileSidebar}
           toggleSidebar={toggleSidebar}
@@ -45,10 +56,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Container
           sx={{
             paddingTop: "20px",
-            maxWidth: "1200px",
+            maxWidth: "100%",
           }}
         >
-          <Box sx={{ minHeight: "calc(100vh - 170px)" }}>{children}</Box>
+          <Box sx={{ minHeight: "calc(100vh - 170px)" }}>
+            {children}
+          </Box>
         </Container>
       </PageWrapper>
     </MainWrapper>

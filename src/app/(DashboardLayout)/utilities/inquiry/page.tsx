@@ -253,8 +253,7 @@ const InquiryPage = () => {
                     <Box
                         sx={{
                             display: "flex",
-                            alignItems: "start",
-                            justifyContent: "start",
+                            alignItems: "center",
                             width: "100%",
                             height: "100%",
                         }}
