@@ -136,7 +136,7 @@ const ForgotPassword = () => {
                 {loading ? (
                   <CircularProgress size={24} sx={{ color: "#fff" }} />
                 ) : (
-                  "Send Reset Link"
+                  "forget password"
                 )}
               </Button>
 

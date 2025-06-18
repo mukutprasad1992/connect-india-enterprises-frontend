@@ -591,7 +591,6 @@ const Insurance = () => {
             sx={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
               width: "100%",
               height: "100%",
             }}
@@ -615,7 +614,7 @@ const Insurance = () => {
         const isEditDeleteHidden = status === "Approved" || status === "Rejected";
 
         return (
-          <Box display="flex" width="100%" gap={1}>
+          <Box display="flex" width="100%" height="100%">
             <Tooltip title="View">
               <IconButton
                 color="info"

@@ -766,6 +766,9 @@ const Collaborator = () => {
                   variant="outlined"
                   value={vendorFormData.email}
                   onChange={handleChange}
+                  InputProps={{
+                    readOnly: isEdit,
+                  }}
                   onBlur={() => {
                     const emailRegex = /^[^\s@]+@([^\s@.]+\.)+[a-zA-Z]{2,}$/;
 
@@ -827,11 +830,8 @@ const Collaborator = () => {
                 />
 
               </Grid>
-
-
               <Grid item xs={12} md={6}>
                 <TextField
-
                   label={
                     <span>
                       Vendor code<span style={{ color: "red" }}> *</span>
@@ -841,11 +841,11 @@ const Collaborator = () => {
                   type="text"
                   fullWidth
                   variant="outlined"
-                  // value={isEdit ? vendorFormData.vendorCode : generatedCode || ""}
                   value={vendorFormData.vendorCode}
-                  // InputProps={{ readOnly: true }}
                   onChange={handleChange}
-                // disabled
+                  InputProps={{
+                    readOnly: isEdit,
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>

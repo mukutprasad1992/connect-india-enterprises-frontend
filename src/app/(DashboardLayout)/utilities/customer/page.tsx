@@ -613,10 +613,13 @@ const User = () => {
                   fullWidth
                   value={addFormData.email}
                   onChange={handleAddChange}
+                  InputProps={{
+                    readOnly: isEdit,
+                  }}
                   onBlur={() => {
                     const email = addFormData.email.trim();
                     const emailRegex =
-                      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // Email regex
+                      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
                     if (!email) {
                       setAddError((prev: any) => ({
@@ -696,7 +699,7 @@ const User = () => {
                     rows={2}
                     maxRows={2}
                     inputProps={{
-                      maxLength: 60,
+                      maxLength: 100,
                       style: {
                         lineHeight: 1.0,
                         wordBreak: "break-word",
