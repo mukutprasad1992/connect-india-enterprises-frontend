@@ -27,6 +27,12 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { formatDateTime } from "@/utils/utils";
+
 interface CustomerData {
   id: number;
   name: string;
@@ -80,6 +86,17 @@ const User = () => {
   }
   const token = getToken();
   const roleId = getRoleId();
+  const getUser = () => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem('user');
+      return user;
+    }
+  }
+  const user = getUser();
+  const userObj = user ? JSON.parse(user) : null;
+  console.log(userObj?.firstName);
+  const userName = `${userObj?.firstName}  ${userObj?.lastName}`
+
   useEffect(() => {
     if (!token && !roleId) {
       localStorage.clear();
@@ -436,6 +453,93 @@ const User = () => {
       </GridToolbarContainer>
     );
   }
+
+  const exportToPDF = async () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(12);
+    doc.text("INVESTMENT LIST", 14, 30);
+    const logoWidth = 80;
+    const logoHeight = 25;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoWidth) / 2;
+    const dataTime = formatDateTime(new Date())
+    doc.addImage('/images/logos/logo.png', "PNG", logoX, 3, logoWidth, logoHeight);
+    doc.setFontSize(12);
+    doc.text("Name: " + userName, 14, 40);
+    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
+
+    autoTable(doc, {
+      startY: 50,
+      head: [
+        ["ID", "Name", "Email", "Phone", "Address", "Pin Code", "business Name", "Representative"]
+      ],
+      body: (rows || []).map((row: any) => [
+        row.id,
+        row.name,
+        row.email,
+        row.phone,
+        row.address,
+        row.pincode,
+        row.businessName,
+        row.businessRepresentative
+      ]),
+      headStyles: {
+        fillColor: [165, 42, 42],
+        textColor: 255,
+        halign: "center",
+        fontStyle: "bold",
+        fontSize: 10
+      },
+      bodyStyles: {
+        halign: "center",
+      },
+    });
+
+    const pdfBlob = doc.output("blob");
+    const fileURL = URL.createObjectURL(pdfBlob);
+    window.open(fileURL);
+    doc.save("AllInvestmentData.pdf");
+  };
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(rows || []);
+
+    const headerKeys = Object.keys(rows[0] || {});
+    headerKeys.forEach((key, idx) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx });
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "A52A2A" },
+        },
+        font: {
+          bold: true,
+          color: { rgb: "FFFFFF" },
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+      };
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Customers");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL);
+    saveAs(blob, "customers.xlsx");
+  }
   return (
     <>
       {loading && (
@@ -455,7 +559,7 @@ const User = () => {
         <Box >
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end">
+              <Box display="flex" justifyContent="flex-end" gap={1}>
                 {roleId === 2 && (
                   <Button
                     variant="contained"
@@ -465,6 +569,12 @@ const User = () => {
                     Add
                   </Button>
                 )}
+                <Button variant="outlined" onClick={exportToExcel}>
+                  Export to Excel
+                </Button>
+                <Button variant="contained" onClick={exportToPDF}>
+                  Export to PDF
+                </Button>
               </Box>
             </Grid>
             <Grid item xs={12}>

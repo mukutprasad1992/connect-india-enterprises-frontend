@@ -36,12 +36,16 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRouter } from 'next/navigation';
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
-import PaymentIcon from '@mui/icons-material/Payment';
 import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
 // import InvestmentDialog from '../../components/AI/AIAssistantInvestment';
 import React from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { formatDateTime } from "@/utils/utils";
 
 const durations = [
   { value: "6 Months" },
@@ -78,6 +82,8 @@ const Investment = () => {
   const [othersError, setOthersError] = useState("");
   const [investmentUpdated, setInvestmentUpdated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
+
   const router = useRouter();
   const [investmentErrorMessage, setInvestmentErrorMessage] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -153,12 +159,22 @@ const Investment = () => {
     }
   }, [router, token]);
 
+  const getUser = () => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem('user');
+      return user;
+    }
+  }
+  const user = getUser();
+  const userObj = user ? JSON.parse(user) : null;
+  console.log(userObj?.firstName);
+  const userName = `${userObj?.firstName}  ${userObj?.lastName}`
   const fetchAllInvestmentData = async () => {
     setLoading(true)
     try {
       const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${1}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token} `,
         },
       });
 
@@ -201,10 +217,10 @@ const Investment = () => {
       }
       setLoading(true)
       const response = await axios.get(
-        `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${1}`,
+        `${BASE_URL} /serviceSubType/getServiceSubTypeByServiceId / ${1} `,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token} `,
           },
         }
       );
@@ -275,11 +291,11 @@ const Investment = () => {
       setInvestmentErrorMessage(false)
       setLoading(true)
       const response = await axios.post(
-        `${BASE_URL}/serviceType/createServiceType`,
+        `${BASE_URL} /serviceType/createServiceType`,
         investmentPayload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token} `,
             "Content-Type": "application/json",
           },
         }
@@ -342,11 +358,11 @@ const Investment = () => {
       setInvestmentErrorMessage(false)
       setLoading(true)
       const response = await axios.put(
-        `${BASE_URL}/serviceType/updateServiceTypeById/${selectedId}`,
+        `${BASE_URL} /serviceType/updateServiceTypeById / ${selectedId} `,
         UpdateInvestmentPayload,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token} `,
             "Content-Type": "application/json",
           },
         }
@@ -372,34 +388,40 @@ const Investment = () => {
   const deleteInvestment = async () => {
     if (!selectedId) {
       console.error("No investment selected for deletion.");
+
+      setSnackbarMessage("No investment selected for deletion.");
       return;
     }
-    setLoading(true)
+
+    setDialogLoading(true);
+
     try {
-      await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const serviceDeleted = await axios.delete(
+        `${BASE_URL} /serviceType/deleteServiceTypeById / ${selectedId} `,
+        {
+          headers: {
+            Authorization: `Bearer ${token} `,
+          },
+        }
+      );
       setInvestmentUpdated(prev => !prev);
-      setAllInvestment((prevAllInvestment: any[]) => {
-        const updatedAllInvestment = prevAllInvestment
-          .filter((investment) => investment.id !== selectedId)
-          .map((investment, index) => ({
-            ...investment,
-          }));
-
-        return updatedAllInvestment;
-      });
-      setLoading(false)
-      console.log(`Investment with ID ${selectedId} deleted successfully.`);
-    } catch (error) {
-      setLoading(false)
+      setAllInvestment((prevAllInvestment: any[]) =>
+        prevAllInvestment.filter((investment) => investment.id !== selectedId)
+      );
+      setSnackbarOpen(true)
+      setSnackbarMessage(serviceDeleted.data.message);
+    } catch (error: any) {
       console.error("Error deleting investment:", error);
+      setSnackbarOpen(true)
+      setSnackbarMessage(
+        error?.response?.data?.message || "Failed to delete investment. Please try again."
+      );
+    } finally {
+      setDialogLoading(false);
+      setOpenDeleteInvestmentDialog(false);
     }
-
-    setOpenDeleteInvestmentDialog(false);
   };
+
   const [comment, setComment] = useState("");
   const handleCommentChange = (event: any) => {
     const newComment = event.target.value;
@@ -480,7 +502,7 @@ const Investment = () => {
     let hourNum = parseInt(hours, 10);
     const amPm = hourNum >= 12 ? "PM" : "AM";
     hourNum = hourNum % 12 || 12;
-    return `${hourNum}:${minutes} ${amPm}`;
+    return `${hourNum}:${minutes} ${amPm} `;
   };
   const handleViewButton = (row: any) => {
     setSelectedRow(row);
@@ -508,7 +530,7 @@ const Investment = () => {
       renderCell: (params: any) => {
         const fromTime = formatTime(params.row.fromTime);
         const toTime = formatTime(params.row.toTime);
-        return fromTime !== "N/A" && toTime !== "N/A" ? `${fromTime} - ${toTime}` : "N/A";
+        return fromTime !== "N/A" && toTime !== "N/A" ? `${fromTime} - ${toTime} ` : "N/A";
       },
     },
     {
@@ -517,23 +539,23 @@ const Investment = () => {
       flex: 0.12,
       renderCell: (params: any) => {
         const status = params.row.status;
-        let color = "yellow";
+        let color = "#fbf774";
 
         switch (status) {
           case "Pending":
-            color = "#ffeb3b";
+            color = "#fbf774";
             break;
           case "In Progress":
-            color = "#ffa726";
+            color = "#fbe06f";
             break;
           case "Approved":
-            color = "#4caf50";
+            color = "#8df1b4";
             break;
           case "Rejected":
-            color = "#ff5252";
+            color = "#ff8780";
             break;
           default:
-            color = "#ffeb3b";
+            color = "#fbf774";
         }
 
         return (
@@ -547,7 +569,7 @@ const Investment = () => {
           >
             <Typography
               variant="body1"
-              sx={{ color, fontWeight: "bold", textAlign: "center" }}
+              sx={{ color, textAlign: "center" }}
             >
               {status}
             </Typography>
@@ -561,7 +583,7 @@ const Investment = () => {
       flex: 0.12,
       renderCell: (params: any) => {
         const status = params.row.status;
-        const isEditDeleteHidden = status === "Approved" || status === "Rejected";
+        const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
 
         return (
           <Box display="flex" width="100%" height="100%">
@@ -605,15 +627,15 @@ const Investment = () => {
   let getStatusColor = (status: any) => {
     switch (status) {
       case "Pending":
-        return "#ffeb3b";
+        return "#fbf774";
       case "In Progress":
-        return "#ffa726";
+        return "#fbe06f";
       case "Approved":
-        return "#4caf50";
+        return "#8df1b4";
       case "Rejected":
-        return "#ff5252";
+        return "#ff8780";
       default:
-        return "#ffeb3b";
+        return "#fbf774";
     }
   };
 
@@ -650,6 +672,94 @@ const Investment = () => {
     setSnackbarOpen(false);
   }
 
+  const exportToPDF = async () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(12);
+    doc.text("INVESTMENT LIST", 14, 30);
+    const logoWidth = 80;
+    const logoHeight = 25;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoWidth) / 2;
+    const dataTime = formatDateTime(new Date())
+    doc.addImage('/images/logos/logo.png', "PNG", logoX, 3, logoWidth, logoHeight);
+    doc.setFontSize(12);
+    doc.text("Name: " + userName, 14, 40);
+    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
+
+    autoTable(doc, {
+      startY: 50,
+      head: [
+        ["ID", "Type", "Amount", "Duration", "From Time", "To Time", "Status", "Comment"]
+      ],
+      body: (allInvestment || []).map((row: any) => [
+        row.id,
+        row.type,
+        row.amount,
+        row.duration,
+        row.fromTime,
+        row.toTime,
+        row.status,
+        row.comment,
+      ]),
+      headStyles: {
+        fillColor: [165, 42, 42],
+        textColor: 255,
+        halign: "center",
+        fontStyle: "bold",
+        fontSize: 10
+      },
+      bodyStyles: {
+        halign: "center",
+      },
+    });
+
+    const pdfBlob = doc.output("blob");
+    const fileURL = URL.createObjectURL(pdfBlob);
+    window.open(fileURL);
+    doc.save("AllInvestmentData.pdf");
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(allInvestment || []);
+
+    const headerKeys = Object.keys(allInvestment[0] || {});
+    headerKeys.forEach((key, idx) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx });
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "A52A2A" },
+        },
+        font: {
+          bold: true,
+          color: { rgb: "FFFFFF" },
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+      };
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Investments");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL);
+    saveAs(blob, "investments.xlsx");
+  };
+
   return (
     <>
       {loading && (
@@ -681,6 +791,12 @@ const Investment = () => {
                   }}
                 >
                   Add
+                </Button>
+                <Button variant="outlined" onClick={exportToExcel}>
+                  Export to Excel
+                </Button>
+                <Button variant="contained" onClick={exportToPDF}>
+                  Export to PDF
                 </Button>
               </Box>
             </Grid>
@@ -981,6 +1097,19 @@ const Investment = () => {
           maxWidth="xs"
           fullWidth
         >
+          {dialogLoading && (
+            <div
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+              }}
+            >
+              <CircularProgress />
+            </div>
+          )}
           <DialogTitle>Delete investment</DialogTitle>
           <DialogContent>
             <Typography>Are you sure you want to delete ?</Typography>
@@ -1041,6 +1170,7 @@ const Investment = () => {
 
       <Snackbar
         open={snackbarOpen}
+        // open={true}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}

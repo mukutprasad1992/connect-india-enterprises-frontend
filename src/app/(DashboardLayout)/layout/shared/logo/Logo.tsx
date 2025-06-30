@@ -23,12 +23,12 @@ const Logo = () => {
         }}
       >
         <Image
-          src="/images/logos/logo.png"
+          src="/images/logos/smallLogo.png"
           alt="logo"
           width={400} // Define a fixed width to ensure the image scales appropriately.
           height={130} // Maintain the aspect ratio by setting height.
           priority
-          // style={{ width: 'auto', height: 'auto' }}
+        // style={{ width: 'auto', height: 'auto' }}
         />
       </Box>
     </Link>
@@ -36,4 +36,3 @@ const Logo = () => {
 };
 
 export default Logo;
-  
