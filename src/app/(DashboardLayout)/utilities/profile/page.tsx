@@ -239,7 +239,7 @@ const ProfilePage: React.FC = () => {
                 profileImageURL: data?.profileImageURL || '',
                 profileImageKey: data?.profileImageKey || '',
                 mobileNo: data?.mobileNo,
-                pinCode: data?.pinCode,
+                pinCode: data?.pinCode || '',
             };
 
             const response = await axios.put(`${BASE_URL}/profile/updateProfile`, payload, {

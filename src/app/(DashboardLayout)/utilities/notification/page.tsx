@@ -172,7 +172,11 @@ const Notification = () => {
             >
                 <Box p={1} display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="subtitle1">Notifications</Typography>
-                    <Button onClick={markAllAsRead} size="small">Mark All as Read</Button>
+                    {notifications.some(n => n.isRead === 0) && (
+                        <Button onClick={markAllAsRead} size="small">
+                            Mark All as Read
+                        </Button>
+                    )}
                 </Box>
 
                 {paginatedNotifications.length > 0 ? (

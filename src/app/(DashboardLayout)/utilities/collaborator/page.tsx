@@ -22,12 +22,12 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 import { useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import dayjs from "dayjs";
 import axios from 'axios';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
-import DeleteIcon from "@mui/icons-material/Delete";
+import { format } from "date-fns";
 import { formatDate } from "../../../../utils/utils";
 import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer, } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
@@ -35,6 +35,12 @@ import { formatDateToIST } from '../../../../utils/utils';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 import React from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { formatDateTime } from "@/utils/utils";
+
 interface Collaborator {
   id: number;
   code?: string;
@@ -42,7 +48,7 @@ interface Collaborator {
     names: { first_name: string };
     input_text: string;
     email: string;
-    numeric_field: string;
+    phone: string;
     address: string;
   };
 }
@@ -54,7 +60,7 @@ const Collaborator = () => {
       business_name: string;
       business_representative: string;
       email: string;
-      numeric_field: string;
+      phone: string;
 
     }[]
   >([]);
@@ -122,6 +128,17 @@ const Collaborator = () => {
     }
   }
   const roleId = getRoleId();
+  const getUser = () => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem('user');
+      return user;
+    }
+  }
+  const user = getUser();
+  const userObj = user ? JSON.parse(user) : null;
+  console.log(userObj?.firstName);
+  const userName = `${userObj?.firstName}  ${userObj?.lastName}`
+
   useEffect(() => {
     if (!token && !roleId) {
       localStorage.clear();
@@ -401,7 +418,9 @@ const Collaborator = () => {
   };
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 0.5 },
-
+    { field: "firstName", headerName: "First name", flex: 1 },
+    { field: "lastName", headerName: "Last name", flex: 1 },
+    { field: "dateOfBirth", headerName: "DOB", flex: 1 },
     { field: "businessName", headerName: "Business name", flex: 1 },
     { field: "businessRepresentative", headerName: "Business representative", flex: 1 },
     { field: "email", headerName: "Email", headerAlign: "center", flex: 1 },
@@ -413,11 +432,18 @@ const Collaborator = () => {
       align: "center",
     },
     {
+      field: "address",
+      headerName: "Address",
+      flex: 1,
+      align: "center",
+    },
+    {
       field: "vendorCode",
       headerName: "Vendor code",
       flex: 1,
       align: "center",
     },
+
     {
       field: "createdAt",
       headerName: "Created At",
@@ -459,7 +485,7 @@ const Collaborator = () => {
             </IconButton>
           </Tooltip>
           <Tooltip
-            title={vendorFormData.status === "Enable" ? "Block" : "Unblock"}
+            title={params.row.status === "Enable" ? "Block" : "Unblock"}
           >
             <IconButton
               color={params.row.status === "Enable" ? "success" : "error"}
@@ -467,7 +493,7 @@ const Collaborator = () => {
               onClick={() => handleStatusButton(params.row)}
             >
               {params.row.status === "Enable" ? (
-                <CheckCircleIcon fontSize="small" />
+                <LockOpenIcon fontSize="small" />
               ) : (
                 <BlockIcon fontSize="small" />
               )}
@@ -571,6 +597,103 @@ const Collaborator = () => {
       </GridToolbarContainer>
     );
   }
+  const formatDateTime = (date: Date) => {
+    return format(date, "dd/MM/yyyy");
+  };
+  const exportToPDF = async (vendorList: any[], userName: string) => {
+    // 📝 Landscape mode
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    // 🖼 Logo setup
+    const logoWidth = 80;
+    const logoHeight = 25;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoWidth) / 2;
+    const dataTime = formatDateTime(new Date());
+
+    doc.addImage('/images/logos/logo.png', 'PNG', logoX, 3, logoWidth, logoHeight);
+    doc.setFontSize(12);
+    doc.text("VENDOR LIST", 14, 30);
+    doc.text(`Name: ${userName}`, 14, 40);
+    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
+    autoTable(doc, {
+      startY: 50,
+      head: [[
+        "ID", "Name", "Date Of Birth", "Email", "Phone",
+        "Pin Code", "Business Name", "Representative", "Vendor Code"
+      ]],
+      body: (vendorList || []).map((row: any) => [
+        row.id,
+        `${row.firstName || ""} ${row.lastName || ""}`.trim(),
+        formatDateTime(row.dateOfBirth),
+        row.email,
+        row.mobileNo,
+        row.pinCode,
+        row.businessName,
+        row.businessRepresentative,
+        row.vendorCode
+      ]),
+      headStyles: {
+        fillColor: [165, 42, 42],
+        textColor: 255,
+        halign: "center",
+        fontStyle: "bold",
+        fontSize: 8
+      },
+      bodyStyles: {
+        halign: "center",
+        fontSize: 8
+      },
+      styles: {
+        cellWidth: 'wrap',
+        overflow: 'linebreak'
+      }
+    });
+    const pdfBlob = doc.output("blob");
+    const fileURL = URL.createObjectURL(pdfBlob);
+    window.open(fileURL);
+    doc.save("AllVendorData.pdf");
+  };
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(vendorList || []);
+
+    const headerKeys = Object.keys(vendorList[0] || {});
+    headerKeys.forEach((key, idx) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx });
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "A52A2A" },
+        },
+        font: {
+          bold: true,
+          color: { rgb: "FFFFFF" },
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+      };
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Vendors");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL);
+    saveAs(blob, "vendors.xlsx");
+  }
+
   return (
     <>
       {loading && (
@@ -590,7 +713,7 @@ const Collaborator = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end">
+              <Box display="flex" justifyContent="flex-end" gap={1}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -622,6 +745,15 @@ const Collaborator = () => {
 
                 >
                   Add
+                </Button>
+                <Button variant="outlined" onClick={exportToExcel}>
+                  Export to Excel
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => exportToPDF(vendorList, userName)}
+                >
+                  Export to PDF
                 </Button>
               </Box>
             </Grid>

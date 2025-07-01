@@ -142,10 +142,13 @@ const PieChartPage = () => {
 
     const renderPieOrMessage = (title: string, data: any[]) => {
         return (
-            <Box textAlign="center">
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            <Box
+
+            >
+                <Typography sx={{ textAlign: 'center' }}  >
                     {title}
                 </Typography>
+
                 {data.length > 0 ? (
                     <PieChart
                         height={300}
@@ -163,6 +166,7 @@ const PieChartPage = () => {
                 ) : (
                     <Box
                         height={300}
+                        width={300}
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
@@ -178,34 +182,44 @@ const PieChartPage = () => {
     };
 
     return (
-        <Box sx={{ width: "100%", padding: 3 }}>
-            <Typography variant="h4" gutterBottom>
+        <Box sx={{ width: "100%", mt: 5 }}>
+            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center' }}>
                 Pie Chart Overview
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={3} sx={{ mt: 3 }}>
                 <Grid item xs={12} md={6}>
                     {renderPieOrMessage("Total Amount by Category", amountData)}
                 </Grid>
                 <Grid item xs={12} md={6}>
                     {renderPieOrMessage("Number of Services by Category", serviceData)}
                 </Grid>
+
             </Grid>
 
             <Stack mt={4} spacing={3}>
-                <Box>
-                    <Typography gutterBottom>Number of Items</Typography>
-                    <Slider
-                        value={itemNb}
-                        onChange={(_, value) =>
-                            typeof value === "number" && setItemNb(value)
-                        }
-                        valueLabelDisplay="auto"
-                        min={0}
-                        max={4}
-                    />
-                </Box>
-
+                {(stats.Investment.totalAmount > 0 ||
+                    stats.Policy.totalAmount > 0 ||
+                    stats.Loan.totalAmount > 0 ||
+                    stats.Insurance.totalAmount > 0) && (
+                        <Box>
+                            <Typography gutterBottom>Number of Items</Typography>
+                            <Slider
+                                value={itemNb}
+                                onChange={(_, value) =>
+                                    typeof value === "number" && setItemNb(value)
+                                }
+                                valueLabelDisplay="auto"
+                                min={1}
+                                max={[
+                                    stats.Investment.totalAmount > 0,
+                                    stats.Policy.totalAmount > 0,
+                                    stats.Loan.totalAmount > 0,
+                                    stats.Insurance.totalAmount > 0,
+                                ].filter(Boolean).length}
+                            />
+                        </Box>
+                    )}
                 <Box>
                     <Typography gutterBottom>Radius</Typography>
                     <Slider

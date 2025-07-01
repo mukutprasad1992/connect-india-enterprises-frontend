@@ -4,14 +4,10 @@ import React, { useState } from "react";
 import Header from "@/app/(DashboardLayout)/layout/header/Header";
 import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/MSidebar";
 
-// Define the widths
-const SIDEBAR_WIDTH_EXPANDED = 0;
-const SIDEBAR_WIDTH_COLLAPSED = 0;
-
 const MainWrapper = styled("div")(() => ({
   display: "flex",
   minHeight: "100vh",
-  width: "100%",
+  maxWidth: "100%",
   overflowX: "auto",
 }));
 
@@ -24,10 +20,9 @@ const PageWrapper = styled("div", {
   paddingBottom: "60px",
   backgroundColor: "transparent",
   transition: "padding-left 0.3s ease",
-  paddingLeft: isSidebarOpen ? SIDEBAR_WIDTH_EXPANDED : SIDEBAR_WIDTH_COLLAPSED,
   boxSizing: 'border-box',
   "@media (max-width: 1200px)": {
-    paddingLeft: 0,
+    paddingLeft: 0
   },
 }));
 

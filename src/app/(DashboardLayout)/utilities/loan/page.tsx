@@ -42,6 +42,11 @@ import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
 // import LoanDialog from "../../components/AI/AIAssistanceLoan";
 import React from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { formatDateTime } from "@/utils/utils";
 
 const durations = [
   { value: "6 Months" },
@@ -78,6 +83,7 @@ const Loan = () => {
   const router = useRouter();
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
   const [loading, setLoading] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
   const [loanErrorMessage, setLoanErrorMessage] = useState(false);
   const [loanUpdated, setLoanUpdated] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -139,6 +145,18 @@ const Loan = () => {
     }
   }
   const roleId = getRoleId();
+
+  const getUser = () => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem('user');
+      return user;
+    }
+  }
+  const user = getUser();
+  const userObj = user ? JSON.parse(user) : null;
+  console.log(userObj?.firstName);
+  const userName = `${userObj?.firstName}  ${userObj?.lastName}`
+
   useEffect(() => {
     if (!token && !roleId) {
       localStorage.clear();
@@ -401,7 +419,7 @@ const Loan = () => {
       console.error("No loan selected for deletion.");
       return;
     }
-    setLoading(true)
+    setDialogLoading(true)
     try {
       await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
@@ -418,10 +436,10 @@ const Loan = () => {
 
         return updatedAllLoan;
       });
-      setLoading(false)
+      setDialogLoading(false)
       console.log(`Loan with ID ${selectedId} deleted successfully.`);
     } catch (error) {
-      setLoading(false)
+      setDialogLoading(false)
       console.error("Error deleting loan:", error);
     }
     setOpenDeleteLoanDialog(false);
@@ -567,23 +585,23 @@ const Loan = () => {
       flex: 0.12,
       renderCell: (params: any) => {
         const status = params.row.status;
-        let color = "yellow";
+        let color = "#fbf774";
 
         switch (status) {
           case "Pending":
-            color = "#ffeb3b";
+            color = "#fbf774";
             break;
           case "In Progress":
-            color = "#ffa726";
+            color = "#fbe06f";
             break;
           case "Approved":
-            color = "#4caf50";
+            color = "#8df1b4";
             break;
           case "Rejected":
-            color = "#ff5252";
+            color = "#ff8780";
             break;
           default:
-            color = "#ffeb3b";
+            color = "#fbf774";
         }
 
         return (
@@ -597,7 +615,7 @@ const Loan = () => {
           >
             <Typography
               variant="body1"
-              sx={{ color, fontWeight: "bold", textAlign: "center" }}
+              sx={{ color, textAlign: "center" }}
             >
               {status}
             </Typography>
@@ -611,8 +629,7 @@ const Loan = () => {
       flex: 0.12,
       renderCell: (params: any) => {
         const status = params.row.status;
-        const isEditDeleteHidden = status === "Approved" || status === "Rejected";
-
+        const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
         return (
           <Box display="flex" width="100%" height="100%" >
             <Tooltip title="View">
@@ -693,16 +710,104 @@ const Loan = () => {
   let getStatusColor = (status: any) => {
     switch (status) {
       case "Pending":
-        return "#ffeb3b";
+        return "#fbf774";
       case "In Progress":
-        return "#ffa726";
+        return "#fbe06f";
       case "Approved":
-        return "#4caf50";
+        return "#8df1b4";
       case "Rejected":
-        return "#ff5252";
+        return "#ff8780";
       default:
-        return "#ffeb3b";
+        return "#fbf774";
     }
+  };
+
+  const exportToPDF = async () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(12);
+    doc.text("LOAN LIST", 14, 30);
+    const logoWidth = 80;
+    const logoHeight = 25;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoWidth) / 2;
+    const dataTime = formatDateTime(new Date())
+    doc.addImage('/images/logos/logo.png', "PNG", logoX, 3, logoWidth, logoHeight);
+    doc.setFontSize(12);
+    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
+    doc.setFontSize(12);
+    doc.text(`Name: ${userName}`, 14, 40);
+    autoTable(doc, {
+      startY: 50,
+      head: [
+        ["ID", "Type", "Amount", "Duration", "From Time", "To Time", "Status", "Comment"]
+      ],
+      body: (loans || []).map((row: any) => [
+        row.id,
+        row.type,
+        row.amount,
+        row.duration,
+        row.fromTime,
+        row.toTime,
+        row.status,
+        row.comment,
+      ]),
+      headStyles: {
+        fillColor: [165, 42, 42],
+        textColor: 255,
+        halign: "center",
+        fontStyle: "bold",
+        fontSize: 10
+      },
+      bodyStyles: {
+        halign: "center",
+      },
+    });
+
+    const pdfBlob = doc.output("blob");
+    const fileURL = URL.createObjectURL(pdfBlob);
+    window.open(fileURL);
+    doc.save("AllLoanData.pdf");
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(loans || []);
+
+    const headerKeys = Object.keys(loans || {});
+    headerKeys.forEach((key, idx) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx });
+      worksheet[cellAddress].s = {
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "A52A2A" },
+        },
+        font: {
+          bold: true,
+          color: { rgb: "FFFFFF" },
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+      };
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Loans List");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const fileURL = URL.createObjectURL(blob);
+    window.open(fileURL);
+    saveAs(blob, "Loans.xlsx");
   };
 
   return (
@@ -724,7 +829,7 @@ const Loan = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end">
+              <Box display="flex" justifyContent="flex-end" gap={1}>
                 {/* <LoanDialog onConfirmYes={handleConfirmYes} /> */}
                 <Button
                   variant="contained"
@@ -735,6 +840,12 @@ const Loan = () => {
                   }}
                 >
                   Add
+                </Button>
+                <Button variant="outlined" onClick={exportToExcel}>
+                  Export to Excel
+                </Button>
+                <Button variant="contained" onClick={exportToPDF}>
+                  Export to PDF
                 </Button>
               </Box>
             </Grid>
@@ -1034,6 +1145,19 @@ const Loan = () => {
           maxWidth="xs"
           fullWidth
         >
+          {dialogLoading && (
+            <div
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+              }}
+            >
+              <CircularProgress />
+            </div>
+          )}
           <DialogTitle>Delete Loan</DialogTitle>
           <DialogContent>
             <Typography>Are you sure you want to delete ?</Typography>

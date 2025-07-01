@@ -24,11 +24,11 @@ import {
   GridToolbarColumnsButton,
   GridToolbarContainer,
 } from "@mui/x-data-grid";
+import { format } from "date-fns";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
-import BlockIcon from '@mui/icons-material/Block';
+import RedeemIcon from "@mui/icons-material/Redeem";
 import DeleteIcon from "@mui/icons-material/Delete";
-
 import DashboardCard from "../../components/shared/DashboardCard";
 import PageContainer from "../../components/container/PageContainer";
 import VoucherPdfView from "../../components/generatePdf/VoucherPdfView";
@@ -36,7 +36,11 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 import { formatDate } from "../../../../utils/utils";
-import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { formatDateTime } from "@/utils/utils";
 
 const VoucherTable: React.FC = () => {
   const router = useRouter();
@@ -115,6 +119,16 @@ const VoucherTable: React.FC = () => {
     }
   }
   const roleId = getRoleId();
+  const getUser = () => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem('user');
+      return user;
+    }
+  }
+  const user = getUser();
+  const userObj = user ? JSON.parse(user) : null;
+  console.log(userObj?.firstName);
+  const userName = `${userObj?.firstName}  ${userObj?.lastName}`
 
   useEffect(() => {
     if (!token && !roleId) {
@@ -686,14 +700,17 @@ const VoucherTable: React.FC = () => {
           </Tooltip>
           {roleId === 1 && (
             <>
-              <Tooltip title="Block">
-                <IconButton
-                  color={params.row.status === 'Disable' ? 'error' : 'primary'}
-                  size="small"
-                  onClick={() => handleUpdateStatusButton(params.row.id)}
-                >
-                  <BlockIcon fontSize="small" />
-                </IconButton>
+              <Tooltip title={params.row.status === 'Disable' ? 'User has already redeemed' : 'Redeem'}>
+                <span>
+                  <IconButton
+                    color={params.row.status === 'Disable' ? 'error' : 'primary'}
+                    size="small"
+                    onClick={() => handleUpdateStatusButton(params.row.id)}
+                    disabled={params.row.status === 'Disable'}
+                  >
+                    <RedeemIcon fontSize="small" />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip title="Edit">
                 <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
@@ -909,6 +926,114 @@ const VoucherTable: React.FC = () => {
   const handleCloseVoucherSuccessSnackbar = () => {
     setOpenVoucherSuccessSnackbar(false);
   }
+  const formatDateTime = (date: Date) => {
+    return format(date, "dd/MM/yyyy");
+  };
+  const exportToPDF = async (data: any[], userName: string) => {
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    const logoWidth = 80;
+    const logoHeight = 25;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const dataTime = formatDateTime(new Date());
+
+    const logoX = (pageWidth - logoWidth) / 2;
+    doc.addImage("/images/logos/logo.png", "PNG", logoX, 3, logoWidth, logoHeight);
+
+    doc.setFontSize(12);
+    doc.text("COUPAN LIST", 14, 30);
+    doc.text("Name: " + userName, 14, 40);
+    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
+
+    doc.setFontSize(14);
+    doc.text("COUPAN LIST", 14, 50);
+
+    const columns = [
+      "ID", "Amount", "voucher Code", "validity From", "validity To", "customer Id", "vendor Id", "customer Name",
+      "customer Phone", "customer Email", "customer Pincode", "vendor Email", "vendor Phone",
+      "Business Name", "Representative", "vendor Code", "vendor Pincode",
+      "status"
+    ];
+
+    const rows = data.map((row: any) => [
+      row.id,
+      row.amount,
+      row.voucherCode,
+      formatDateTime(row.validityFrom),
+      formatDateTime(row.validityTo),
+      row.customerId,
+      row.vendorId,
+      row.customerName,
+      row.customerPhone,
+      row.customerEmail,
+      row.customerPincode,
+      row.vendorEmail,
+      row.vendorMobileNo,
+      row.vendorBusinessName,
+      row.vendorBusinessRepresentative,
+      row.vendorCode,
+      row.vendorPincode,
+      row.status
+    ]);
+
+    autoTable(doc, {
+      startY: 45,
+      head: [columns],
+      body: rows,
+      styles: {
+        fontSize: 7,
+        overflow: 'linebreak',
+        cellPadding: .2,
+      },
+      headStyles: {
+        fillColor: [165, 42, 42],
+        textColor: 255,
+        fontStyle: "bold",
+        halign: "center",
+        fontSize: 7,
+      },
+      bodyStyles: {
+        halign: "center",
+      },
+    });
+
+    const pdfBlob = doc.output("blob");
+    const fileURL = URL.createObjectURL(pdfBlob);
+    window.open(fileURL);
+    doc.save("AllCoupanData.pdf");
+  };
+  const exportToExcel = (data: any[]) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Coupan");
+    const range = XLSX.utils.decode_range(worksheet["!ref"] || "");
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ c: col, r: 0 });
+      if (!worksheet[cellAddress]) continue;
+      worksheet[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "A52A2A" },
+        },
+        font: { color: { rgb: "FFFFFF" }, bold: true },
+      };
+    }
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+      cellStyles: true,
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    window.open(url);
+    saveAs(blob, "CoupanData.xlsx");
+  };
   return (
     <>
       {loading && (
@@ -928,7 +1053,7 @@ const VoucherTable: React.FC = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end">
+              <Box display="flex" justifyContent="flex-end" gap={1}>
                 {roleId === 1 && (
                   <Button
                     variant="contained"
@@ -938,6 +1063,12 @@ const VoucherTable: React.FC = () => {
                     Generate
                   </Button>
                 )}
+                <Button variant="outlined" onClick={() => exportToExcel(rows)}>
+                  Export to Excel
+                </Button>
+                <Button variant="contained" onClick={() => exportToPDF(rows, userName)}>
+                  Export to PDF
+                </Button>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -993,9 +1124,9 @@ const VoucherTable: React.FC = () => {
           open={openStatusDialog}
           onClose={() => setOpenStatusDialog(false)}
         >
-          <DialogTitle>Update Sataus Voucher</DialogTitle>
+          <DialogTitle>Redeem Voucher</DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to Sataus?</Typography>
+            <Typography>Are you sure you want to Redeem this voucher?</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenStatusDialog(false)} color="secondary">
