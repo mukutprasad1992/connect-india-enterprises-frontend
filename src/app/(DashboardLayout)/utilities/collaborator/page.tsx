@@ -27,7 +27,6 @@ import dayjs from "dayjs";
 import axios from 'axios';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
-import { format } from "date-fns";
 import { formatDate } from "../../../../utils/utils";
 import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer, } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
@@ -597,14 +596,8 @@ const Collaborator = () => {
       </GridToolbarContainer>
     );
   }
-  const formatDateTime = (date: Date) => {
-    return format(date, "dd/MM/yyyy");
-  };
   const exportToPDF = async (vendorList: any[], userName: string) => {
-    // 📝 Landscape mode
     const doc = new jsPDF({ orientation: "landscape" });
-
-    // 🖼 Logo setup
     const logoWidth = 80;
     const logoHeight = 25;
     const pageWidth = doc.internal.pageSize.getWidth();

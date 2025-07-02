@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Grid, Box, CircularProgress, Typography } from "@mui/material";
+import { Grid, Box, CircularProgress, Typography, Tabs, Tab } from "@mui/material";
 import PageContainer from "./components/container/PageContainer";
 import AnalyticCard from "./components/dashboard/AnalyticCard";
 import PieAnimationPage from "./components/dashboard/pieChart";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import OverviewCard from "./components/dashboardNew/OverviewCard";
 
 type ServiceType = "Investment" | "Policy" | "Insurance" | "Loan";
 
@@ -20,10 +21,37 @@ interface ServiceStats {
   percent: number;
 }
 
+import { AttachMoney, Policy, Security, AccountBalance } from "@mui/icons-material";
+
+const ICONS: Record<ServiceType, React.ReactNode> = {
+  Investment: <AttachMoney />,
+  Policy: <Policy />,
+  Insurance: <Security />,
+  Loan: <AccountBalance />,
+};
+
+const BG_COLORS: Record<ServiceType, string> = {
+  Investment: "#E3F2FD",
+  Policy: "#E8F5E9",
+  Insurance: "#F3E5F5",
+  Loan: "#FFEBEE",
+};
+
+const LINKS: Record<ServiceType, string> = {
+  Investment: "/utilities/investment",
+  Policy: "/utilities/policy",
+  Insurance: "/utilities/insurance",
+  Loan: "/utilities/loan",
+};
+
 const Dashboard = () => {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"today" | "week" | "month">("today");
+  const handleTabChange = (event: React.SyntheticEvent, newValue: "today" | "week" | "month") => {
+    setFilter(newValue);
+  };
   const [stats, setStats] = useState<Record<ServiceType, ServiceStats>>({
     Investment: {
       totalAmount: 0,
@@ -61,6 +89,14 @@ const Dashboard = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const getRoleId = () => {
+    if (typeof window !== "undefined") {
+      const storedRole = localStorage.getItem("roleId");
+      const roleId = storedRole ? parseInt(storedRole, 10) : null;
+      return roleId;
+    }
+  }
+  const roleId = getRoleId();
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -224,30 +260,37 @@ const Dashboard = () => {
           <Typography variant="h6" sx={{ mb: 3 }}>
             Dashboard
           </Typography>
+          <Tabs
+            value={filter}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ mb: 2 }}
+          >
+            <Tab value="today" label="Today" />
+            <Tab value="week" label="This Week" />
+            <Tab value="month" label="This Month" />
+          </Tabs>
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Grid container spacing={2}>
-                {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map(
-                  (title) => (
-                    <Grid item xs={12} sm={6} md={3} key={title}>
-                      <AnalyticCard
-                        title={title}
-                        amount={Math.floor(stats[title].totalAmount)}
-                        service={stats[title].totalServices}
-                        percentage={stats[title].percent}
-                        growth={stats[title].extra >= 0 ? "up" : "down"}
-                        extra={stats[title].extra}
-                        loading={loading}
-                        errorMessage={errorMessage}
-                      />
-                    </Grid>
-                  )
-                )}
+                {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map((title) => (
+                  <Grid item xs={12} sm={6} md={3} key={title}>
+                    <OverviewCard
+                      title={title}
+                      value={Math.floor(stats[title].totalAmount)}
+                      icon={ICONS[title]}
+                      backgroundColor={BG_COLORS[title]}
+                      navigateTo={roleId === 3 ? LINKS[title] : undefined}
+                      progress={Math.abs(stats[title].percent)}
+                      tooltip={`Total Services: ${stats[title].totalServices}\nGrowth: ${stats[title].extra >= 0 ? "+" : "-"}₹${Math.abs(stats[title].extra)}`}
+                    />
+                  </Grid>
+                ))}
               </Grid>
             </Grid>
           </Grid>
         </Box>
-
         <PieAnimationPage />
       </PageContainer>
     </>
