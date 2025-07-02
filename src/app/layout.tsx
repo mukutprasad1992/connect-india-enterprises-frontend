@@ -10,7 +10,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/images/logos/smallLogo.png" />
       </head>
       <body>
-        <ClientWrapper>{children}</ClientWrapper>
+        <ClientWrapper >{children}</ClientWrapper>
       </body>
     </html>
   );

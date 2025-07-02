@@ -110,13 +110,13 @@ const PieChartPage = () => {
 
     useEffect(() => {
         fetchServiceData();
-    }, []);
+    }, [fetchServiceData]);
 
     const colorMap: Record<string, string> = {
-        Investment: "#42a5f5",
-        Policy: "#66bb6a",
-        Insurance: "#26a69a",
-        Loan: "#ef5350",
+        Investment: "#d2e8f7",
+        Policy: "#d5f5d7",
+        Insurance: "#f4daf7",
+        Loan: "#fce3e7",
     };
 
     const amountData = Object.entries(stats)
@@ -129,13 +129,13 @@ const PieChartPage = () => {
         .slice(0, itemNb);
 
     const serviceData = [
-        { label: "Asset", value: stats.Investment.totalServices, color: "#42a5f5" },
+        { label: "Asset", value: stats.Investment.totalServices, color: "#d2e8f7" },
         {
             label: "Protection",
             value: stats.Policy.totalServices + stats.Insurance.totalServices,
-            color: "#46b182",
+            color: "#d5f5d7",
         },
-        { label: "Liability", value: stats.Loan.totalServices, color: "#ef5350" },
+        { label: "Liability", value: stats.Loan.totalServices, color: "#fce3e7" },
     ]
         .filter((item) => item.value > 0)
         .slice(0, itemNb);

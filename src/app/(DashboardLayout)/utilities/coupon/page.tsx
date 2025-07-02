@@ -24,7 +24,6 @@ import {
   GridToolbarColumnsButton,
   GridToolbarContainer,
 } from "@mui/x-data-grid";
-import { format } from "date-fns";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import RedeemIcon from "@mui/icons-material/Redeem";
@@ -926,9 +925,6 @@ const VoucherTable: React.FC = () => {
   const handleCloseVoucherSuccessSnackbar = () => {
     setOpenVoucherSuccessSnackbar(false);
   }
-  const formatDateTime = (date: Date) => {
-    return format(date, "dd/MM/yyyy");
-  };
   const exportToPDF = async (data: any[], userName: string) => {
     const doc = new jsPDF({ orientation: "landscape" });
 

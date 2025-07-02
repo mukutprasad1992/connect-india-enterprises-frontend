@@ -28,6 +28,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
                         backgroundPosition: "center",
                         backdropFilter: "blur(5px)",
                         minHeight: "100vh",
+                        width: '100%'
                     }}
                 >
                     {children}
