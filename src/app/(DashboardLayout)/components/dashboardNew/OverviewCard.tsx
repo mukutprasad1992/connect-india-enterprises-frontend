@@ -6,6 +6,8 @@ import {
     Box,
     LinearProgress,
     Tooltip,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import CountUp from "react-countup";
@@ -33,10 +35,18 @@ const OverviewCard: React.FC<Props> = ({
     sparklineData,
 }) => {
     const router = useRouter();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("xs"));
+    const isTablet = useMediaQuery(theme.breakpoints.between("xs", "sm"));
 
     const handleClick = () => {
         if (navigateTo) router.push(navigateTo);
     };
+
+    // Recharts requires an array of objects, not numbers
+    const chartData =
+        sparklineData?.map((val, idx) => ({ name: idx.toString(), value: val })) || [];
+
     return (
         <Card
             onClick={handleClick}
@@ -47,17 +57,26 @@ const OverviewCard: React.FC<Props> = ({
                 cursor: navigateTo ? "pointer" : "default",
                 height: "100%",
                 transition: "transform 0.2s ease-in-out",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
                 "&:hover": {
                     transform: navigateTo ? "scale(1.03)" : "none",
                     boxShadow: navigateTo ? 6 : 3,
                 },
             }}
         >
-            <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
+            <CardContent sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    flexWrap="wrap"
+                    gap={2}
+                >
                     <Box
                         sx={{
-                            fontSize: { xs: 32, sm: 40 },
+                            fontSize: isMobile ? 25 : isTablet ? 30 : 36,
                             display: "flex",
                             alignItems: "center",
                             color: "primary.main",
@@ -65,18 +84,22 @@ const OverviewCard: React.FC<Props> = ({
                     >
                         {icon}
                     </Box>
-                    <Box textAlign="right">
+
+                    <Box textAlign="right" flexGrow={1} minWidth={120}>
                         <Typography
                             variant="subtitle2"
                             color="text.secondary"
-                            sx={{ fontSize: { xs: 12, sm: 14 } }}
+                            sx={{
+                                fontSize: { xs: 9, sm: 11, md: 12 },
+                                whiteSpace: "nowrap",
+                            }}
                         >
                             {title}
                         </Typography>
                         <Typography
                             variant="h5"
                             fontWeight="bold"
-                            sx={{ fontSize: { xs: 18, sm: 24 } }}
+                            sx={{ fontSize: { xs: 14, sm: 18, md: 22 } }}
                         >
                             <Tooltip title={tooltip || ""}>
                                 <span>
@@ -102,20 +125,24 @@ const OverviewCard: React.FC<Props> = ({
                                 },
                             }}
                         />
-                        <Typography variant="caption" color="text.secondary" mt={1}>
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ mt: 1, display: "block" }}
+                        >
                             {progress}% achieved
                         </Typography>
                     </Box>
                 )}
 
-                {sparklineData && (
-                    <Box mt={2} height={50}>
+                {sparklineData && sparklineData.length > 0 && (
+                    <Box mt={2} flexGrow={1} minHeight={50}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={sparklineData}>
+                            <LineChart data={chartData}>
                                 <Line
                                     type="monotone"
                                     dataKey="value"
-                                    stroke="#3f51b5"
+                                    stroke={theme.palette.primary.main}
                                     strokeWidth={2}
                                     dot={false}
                                 />
