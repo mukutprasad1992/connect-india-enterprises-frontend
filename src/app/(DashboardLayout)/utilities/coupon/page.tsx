@@ -928,13 +928,13 @@ const VoucherTable: React.FC = () => {
   const exportToPDF = async (data: any[], userName: string) => {
     const doc = new jsPDF({ orientation: "landscape" });
 
-    const logoWidth = 80;
-    const logoHeight = 25;
+    const logoWidth = 60;
+    const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.getWidth();
     const dataTime = formatDateTime(new Date());
 
     const logoX = (pageWidth - logoWidth) / 2;
-    doc.addImage("/images/logos/logo.png", "PNG", logoX, 3, logoWidth, logoHeight);
+    doc.addImage("/images/logos/logo.png", "PNG", logoX, 7, logoWidth, logoHeight);
 
     doc.setFontSize(12);
     doc.text("COUPAN LIST", 14, 30);
@@ -1027,7 +1027,6 @@ const VoucherTable: React.FC = () => {
     });
 
     const url = URL.createObjectURL(blob);
-    window.open(url);
     saveAs(blob, "CoupanData.xlsx");
   };
   return (

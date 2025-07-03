@@ -2,21 +2,14 @@ import Link from "next/link";
 import { Box, styled } from "@mui/material";
 import Image from "next/image";
 
-const LinkStyled = styled(Link)(() => ({
-  height: "70px",
-  width: "180px",
-  overflow: "hidden",
-  display: "block",
-}));
-
 const Logo = () => {
   return (
     <Link href="/" passHref>
       <Box
         component="div"
         sx={{
-          width: 100,  // Adjust width as needed
-          height: 100, // Adjust height as needed
+          width: 100,
+          height: 100,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -25,10 +18,9 @@ const Logo = () => {
         <Image
           src="/images/logos/smallLogo.png"
           alt="logo"
-          width={400} // Define a fixed width to ensure the image scales appropriately.
-          height={130} // Maintain the aspect ratio by setting height.
+          width={400}
+          height={130}
           priority
-        // style={{ width: 'auto', height: 'auto' }}
         />
       </Box>
     </Link>

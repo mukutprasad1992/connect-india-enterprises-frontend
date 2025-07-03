@@ -16,7 +16,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
+import Logo from "../../(DashboardLayout)/components/layout/Logo";
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 
 const ResetPassword = () => {

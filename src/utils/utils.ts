@@ -47,9 +47,17 @@ export const formatDateToIST = (dateString: string | number | Date) => {
   const date = new Date(dateString);
   return dateFormat.format(date).replace(',', ' T');
 };
-export const formatDateTime = (date: Date) => {
+export const formatDateTime = (input?: Date | string | null): string => {
+  if (!input) return "";
+
+  const date = typeof input === "string" ? new Date(input) : input;
+
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return "";
+  }
+
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // 0-based
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
 
   let hours = date.getHours();

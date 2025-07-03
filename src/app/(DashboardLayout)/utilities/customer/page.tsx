@@ -459,12 +459,12 @@ const User = () => {
 
     doc.setFontSize(12);
     doc.text("INVESTMENT LIST", 14, 30);
-    const logoWidth = 80;
-    const logoHeight = 25;
+    const logoWidth = 40;
+    const logoHeight = 10;
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoX = (pageWidth - logoWidth) / 2;
     const dataTime = formatDateTime(new Date())
-    doc.addImage('/images/logos/logo.png', "PNG", logoX, 3, logoWidth, logoHeight);
+    doc.addImage('/images/logos/logo.png', "PNG", logoX, 7, logoWidth, logoHeight);
     doc.setFontSize(12);
     doc.text("Name: " + userName, 14, 40);
     doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
@@ -537,7 +537,6 @@ const User = () => {
     });
 
     const fileURL = URL.createObjectURL(blob);
-    window.open(fileURL);
     saveAs(blob, "customers.xlsx");
   }
   return (
