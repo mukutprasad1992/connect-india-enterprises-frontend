@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Box, Grid, Typography, Slider, Stack } from "@mui/material";
+import {
+    Box,
+    Grid,
+    Typography,
+    Slider,
+    Stack,
+    Paper,
+    useTheme,
+    useMediaQuery,
+} from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -15,6 +24,8 @@ const PieChartPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
 
     const router = useRouter();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
     const [stats, setStats] = useState<{
@@ -86,37 +97,34 @@ const PieChartPage = () => {
                     },
                 });
             } else {
-                // Gracefully fallback to zero stats
-                setStats({
-                    Investment: { totalAmount: 0, totalServices: 0 },
-                    Policy: { totalAmount: 0, totalServices: 0 },
-                    Insurance: { totalAmount: 0, totalServices: 0 },
-                    Loan: { totalAmount: 0, totalServices: 0 },
-                });
+                resetStats();
             }
         } catch (error) {
-            // Unexpected error fallback
             setHasError(true);
-            setStats({
-                Investment: { totalAmount: 0, totalServices: 0 },
-                Policy: { totalAmount: 0, totalServices: 0 },
-                Insurance: { totalAmount: 0, totalServices: 0 },
-                Loan: { totalAmount: 0, totalServices: 0 },
-            });
+            resetStats();
         } finally {
             setLoading(false);
         }
     };
 
+    const resetStats = () => {
+        setStats({
+            Investment: { totalAmount: 0, totalServices: 0 },
+            Policy: { totalAmount: 0, totalServices: 0 },
+            Insurance: { totalAmount: 0, totalServices: 0 },
+            Loan: { totalAmount: 0, totalServices: 0 },
+        });
+    };
+
     useEffect(() => {
         fetchServiceData();
-    }, [fetchServiceData]);
+    }, []);
 
     const colorMap: Record<string, string> = {
-        Investment: "#d2e8f7",
-        Policy: "#d5f5d7",
-        Insurance: "#f4daf7",
-        Loan: "#fce3e7",
+        Investment: "#a4d4f5",
+        Policy: "#b4fab8",
+        Insurance: "#efabf7",
+        Loan: "#faa7b5",
     };
 
     const amountData = Object.entries(stats)
@@ -129,44 +137,58 @@ const PieChartPage = () => {
         .slice(0, itemNb);
 
     const serviceData = [
-        { label: "Asset", value: stats.Investment.totalServices, color: "#d2e8f7" },
+        { label: "Asset", value: stats.Investment.totalServices, color: "#a4d4f5" },
         {
             label: "Protection",
             value: stats.Policy.totalServices + stats.Insurance.totalServices,
-            color: "#d5f5d7",
+            color: "#99cc9c",
         },
-        { label: "Liability", value: stats.Loan.totalServices, color: "#fce3e7" },
+        { label: "Liability", value: stats.Loan.totalServices, color: "#faa7b5" },
     ]
         .filter((item) => item.value > 0)
         .slice(0, itemNb);
 
     const renderPieOrMessage = (title: string, data: any[]) => {
         return (
-            <Box
-
+            <Paper
+                elevation={3}
+                sx={{
+                    p: 3,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    borderRadius: 3,
+                    height: "100%",
+                }}
             >
-                <Typography sx={{ textAlign: 'center' }}  >
+                <Typography
+                    variant="h6"
+                    sx={{ mb: 2, fontWeight: 600, textAlign: "center" }}
+                >
                     {title}
                 </Typography>
 
                 {data.length > 0 ? (
                     <PieChart
-                        height={300}
-                        width={300}
+                        height={isMobile ? 220 : 300}
+                        width={isMobile ? 220 : 300}
                         series={[
                             {
-                                data: data,
+                                data,
                                 innerRadius: radius,
                                 arcLabel: (params) => `${params.label}`,
-                                arcLabelMinAngle: 10,
+                                arcLabelMinAngle: 20,
+                                highlightScope: {
+                                    fade: "global",
+                                },
                             },
                         ]}
                         skipAnimation={skipAnimation}
                     />
                 ) : (
                     <Box
-                        height={300}
-                        width={300}
+                        height={isMobile ? 220 : 300}
+                        width={isMobile ? 220 : 300}
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
@@ -174,65 +196,78 @@ const PieChartPage = () => {
                         borderRadius={2}
                         color="gray"
                     >
-                        <Typography variant="body1">No data available</Typography>
+                        <Typography variant="body2">No data available</Typography>
                     </Box>
                 )}
-            </Box>
+            </Paper>
         );
     };
 
     return (
-        <Box sx={{ width: "100%", mt: 5 }}>
-            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center' }}>
+        <Box sx={{ width: "100%", p: { xs: 2, sm: 4 }, mt: 3 }}>
+            <Typography
+                variant="h4"
+                gutterBottom
+                sx={{ textAlign: "center", fontWeight: 700, mb: 6 }}
+            >
                 Pie Chart Overview
             </Typography>
 
-            <Grid container spacing={3} sx={{ mt: 3 }}>
+            <Grid container spacing={4} justifyContent="center">
                 <Grid item xs={12} md={6}>
                     {renderPieOrMessage("Total Amount by Category", amountData)}
                 </Grid>
                 <Grid item xs={12} md={6}>
                     {renderPieOrMessage("Number of Services by Category", serviceData)}
                 </Grid>
-
             </Grid>
 
-            <Stack mt={4} spacing={3}>
-                {(stats.Investment.totalAmount > 0 ||
-                    stats.Policy.totalAmount > 0 ||
-                    stats.Loan.totalAmount > 0 ||
-                    stats.Insurance.totalAmount > 0) && (
-                        <Box>
-                            <Typography gutterBottom>Number of Items</Typography>
-                            <Slider
-                                value={itemNb}
-                                onChange={(_, value) =>
-                                    typeof value === "number" && setItemNb(value)
-                                }
-                                valueLabelDisplay="auto"
-                                min={1}
-                                max={[
-                                    stats.Investment.totalAmount > 0,
-                                    stats.Policy.totalAmount > 0,
-                                    stats.Loan.totalAmount > 0,
-                                    stats.Insurance.totalAmount > 0,
-                                ].filter(Boolean).length}
-                            />
-                        </Box>
-                    )}
-                <Box>
-                    <Typography gutterBottom>Radius</Typography>
-                    <Slider
-                        value={radius}
-                        onChange={(_, value) =>
-                            typeof value === "number" && setRadius(value)
-                        }
-                        valueLabelDisplay="auto"
-                        min={5}
-                        max={100}
-                    />
-                </Box>
-            </Stack>
+            <Paper
+                elevation={2}
+                sx={{ mt: 5, p: { xs: 2, sm: 4 }, borderRadius: 3 }}
+            >
+                <Stack spacing={4}>
+                    {(stats.Investment.totalAmount > 0 ||
+                        stats.Policy.totalAmount > 0 ||
+                        stats.Loan.totalAmount > 0 ||
+                        stats.Insurance.totalAmount > 0) && (
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                                    Number of Items
+                                </Typography>
+                                <Slider
+                                    value={itemNb}
+                                    onChange={(_, value) =>
+                                        typeof value === "number" && setItemNb(value)
+                                    }
+                                    valueLabelDisplay="auto"
+                                    min={1}
+                                    max={[
+                                        stats.Investment.totalAmount > 0,
+                                        stats.Policy.totalAmount > 0,
+                                        stats.Loan.totalAmount > 0,
+                                        stats.Insurance.totalAmount > 0,
+                                    ].filter(Boolean).length}
+                                />
+                            </Box>
+                        )}
+
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                            Radius
+                        </Typography>
+                        <Slider
+                            value={radius}
+                            onChange={(_, value) =>
+                                typeof value === "number" && setRadius(value)
+                            }
+                            valueLabelDisplay="auto"
+                            min={5}
+                            max={100}
+                        />
+                    </Box>
+                </Stack>
+            </Paper>
         </Box>
     );
 };

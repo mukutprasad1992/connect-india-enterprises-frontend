@@ -369,12 +369,12 @@ const InquiryPage = () => {
         const doc = new jsPDF({ orientation: "landscape" });
 
         const pageWidth = doc.internal.pageSize.getWidth();
-        const logoWidth = 80;
-        const logoHeight = 25;
+        const logoWidth = 60;
+        const logoHeight = 15;
         const logoX = (pageWidth - logoWidth) / 2;
 
         const dataTime = formatDateTime(new Date());
-        doc.addImage('/images/logos/logo.png', "PNG", logoX, 3, logoWidth, logoHeight);
+        doc.addImage('/images/logos/logo.png', "PNG", logoX, 7, logoWidth, logoHeight);
         doc.setFontSize(12);
         doc.text("INQUIRY LIST", 14, 35);
         doc.text("Name: " + userName, 14, 43);
@@ -458,7 +458,6 @@ const InquiryPage = () => {
         });
 
         const fileURL = URL.createObjectURL(blob);
-        window.open(fileURL);
         saveAs(blob, "Inquiry.xlsx");
     };
 

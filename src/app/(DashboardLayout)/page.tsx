@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Grid, Box, CircularProgress, Typography, Tabs, Tab } from "@mui/material";
 import PageContainer from "./components/container/PageContainer";
-import AnalyticCard from "./components/dashboard/AnalyticCard";
 import PieAnimationPage from "./components/dashboard/pieChart";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import OverviewCard from "./components/dashboardNew/OverviewCard";
+import OverviewCard from "./components/dashboard/OverviewCard";
 
 type ServiceType = "Investment" | "Policy" | "Insurance" | "Loan";
 

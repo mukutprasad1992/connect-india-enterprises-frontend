@@ -598,13 +598,13 @@ const Collaborator = () => {
   }
   const exportToPDF = async (vendorList: any[], userName: string) => {
     const doc = new jsPDF({ orientation: "landscape" });
-    const logoWidth = 80;
-    const logoHeight = 25;
+    const logoWidth = 60;
+    const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoX = (pageWidth - logoWidth) / 2;
     const dataTime = formatDateTime(new Date());
 
-    doc.addImage('/images/logos/logo.png', 'PNG', logoX, 3, logoWidth, logoHeight);
+    doc.addImage('/images/logos/logo.png', 'PNG', logoX, 7, logoWidth, logoHeight);
     doc.setFontSize(12);
     doc.text("VENDOR LIST", 14, 30);
     doc.text(`Name: ${userName}`, 14, 40);
@@ -683,7 +683,6 @@ const Collaborator = () => {
     });
 
     const fileURL = URL.createObjectURL(blob);
-    window.open(fileURL);
     saveAs(blob, "vendors.xlsx");
   }
 

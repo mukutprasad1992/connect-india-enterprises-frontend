@@ -10,7 +10,7 @@ import {
     useMediaQuery,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import CountUp from "react-countup";
+import CountUp from 'react-countup';
 import { ResponsiveContainer, LineChart, Line } from "recharts";
 
 interface Props {
