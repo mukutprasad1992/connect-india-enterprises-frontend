@@ -18,9 +18,13 @@ import {
   Alert,
   Snackbar,
 } from "@mui/material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import Tooltip from '@mui/material/Tooltip';
 import {
   DataGrid,
+  GridToolbar,
   GridToolbarColumnsButton,
   GridToolbarContainer,
 } from "@mui/x-data-grid";
@@ -126,7 +130,6 @@ const VoucherTable: React.FC = () => {
   }
   const user = getUser();
   const userObj = user ? JSON.parse(user) : null;
-  console.log(userObj?.firstName);
   const userName = `${userObj?.firstName}  ${userObj?.lastName}`
 
   useEffect(() => {
@@ -1046,24 +1049,23 @@ const VoucherTable: React.FC = () => {
       )}
       <PageContainer title="Voucher" description="This is the voucher page">
         <Box>
-          <Grid container spacing={3}>
+          <Grid container spacing={1}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={1}>
+              <Box display="flex" justifyContent="flex-end" >
                 {roleId === 1 && (
-                  <Button
-                    variant="contained"
-                    color="primary"
+                  <IconButton
+                    sx={{ color: "#44a7a2" }}
                     onClick={handleGenerateButton}
                   >
-                    Generate
-                  </Button>
+                    <LocalOfferIcon />
+                  </IconButton>
                 )}
-                <Button variant="outlined" onClick={() => exportToExcel(rows)}>
-                  Export to Excel
-                </Button>
-                <Button variant="contained" onClick={() => exportToPDF(rows, userName)}>
-                  Export to PDF
-                </Button>
+                <IconButton onClick={() => exportToExcel(rows)}>
+                  <GridOnIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
+                <IconButton onClick={() => exportToPDF(rows, userName)}>
+                  <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -1077,20 +1079,33 @@ const VoucherTable: React.FC = () => {
                   >
                     <Typography variant="h4">Voucher</Typography>
                   </Grid>
-                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "65vh", display: "flex" }}>
+                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={rows}
+                      rows={rows || []}
                       columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
                       disableRowSelectionOnClick
                       autoHeight
-                      sx={{ width: "100%" }}
-                      slots={{
-                        toolbar: () => <CustomToolbar />,
-                      }}
                       sortModel={[{ field: "id", sort: "desc" }]}
+                      slots={{
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
+                      }}
                     />
                   </Box>
                 </Container>

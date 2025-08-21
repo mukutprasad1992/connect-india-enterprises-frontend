@@ -59,7 +59,7 @@ export default function VoucherPdfView({ viewSelectedVocher }: any) {
           <Grid container spacing={2} alignItems="center">
             {/* Logo Section */}
             <Grid item xs={3} sx={{ display: "flex", alignItems: "center" }}>
-              <img src="/images/logos/logo-png.png" alt="Profile" style={{ maxWidth: "200px", height: "auto" }} />
+              <Image src="/images/logos/logo-png.png" alt="Profile" style={{ maxWidth: "200px", height: "auto" }} />
             </Grid>
 
             {/* Trip Details Section */}

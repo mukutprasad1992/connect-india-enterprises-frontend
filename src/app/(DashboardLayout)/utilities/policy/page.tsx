@@ -29,6 +29,10 @@ import PageContainer from "@/app/(DashboardLayout)/components/container/PageCont
 import { useEffect, useState } from "react";
 import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
 import EditIcon from "@mui/icons-material/Edit";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import CloseIcon from "@mui/icons-material/Close";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -36,7 +40,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
 import DashboardCard from "../../components/shared/DashboardCard";
-import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 // import PolicyDialog from "../../components/AI/AIAssistantPolicyDialog"
@@ -813,24 +817,26 @@ const Policy = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={1}>
+              <Box display="flex" justifyContent="flex-end">
                 {/* <PolicyDialog onConfirmYes={handleConfirmYes} /> */}
-                <Button
-                  variant="contained"
-                  sx={{ textTransform: "none" }}
-                  onClick={() => {
-                    setIsEdit(false);
-                    setOpenAddPolicyDialog(true);
-                  }}
-                >
-                  Add
-                </Button>
-                <Button variant="outlined" onClick={exportToExcel}>
-                  Export to Excel
-                </Button>
-                <Button variant="contained" onClick={exportToPDF}>
-                  Export to PDF
-                </Button>
+                <Tooltip title="Add">
+                  <IconButton
+                    sx={{ textTransform: "none", color: "#44a7a2" }}
+                    onClick={() => setOpenAddPolicyDialog(true)}
+                  >
+                    <AddCircleOutlineIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export Excel'>
+                  <IconButton onClick={exportToExcel} sx={{ color: "#44a7a2" }}>
+                    <GridOnIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export PDF'>
+                  <IconButton onClick={exportToPDF} sx={{ color: "#44a7a2" }}>
+                    <PictureAsPdfIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -844,21 +850,32 @@ const Policy = () => {
                   >
                     <Typography variant="h4">Policy</Typography>
                   </Grid>
-                  <Box
-                    sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}
-                  >
+                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={Policies}
+                      rows={Policies || []}
                       columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
                       disableRowSelectionOnClick
                       autoHeight
-                      sx={{ flexGrow: 1 }}
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: () => <CustomToolbar />,
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
                       }}
                     />
                   </Box>

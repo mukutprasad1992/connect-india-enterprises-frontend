@@ -5,16 +5,21 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { Box } from "@mui/material";
 import { baselightTheme } from "@/utils/theme/DefaultColors";
-import React from "react";
+import { useEffect, useState } from "react";
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+    const [isAuthPage, setIsAuthPage] = useState(false);
     const pathname = usePathname();
-    const isAuthPage = [
-        "/authentication/register",
-        "/authentication/login",
-        "/authentication/forgotPassword",
-        "/authentication/resetPassword",
-    ].includes(pathname);
+
+    useEffect(() => {
+        const authPaths = [
+            "/authentication/register",
+            "/authentication/login",
+            "/authentication/forgotPassword",
+            "/authentication/resetPassword",
+        ];
+        setIsAuthPage(pathname ? authPaths.includes(pathname) : false);
+    }, [pathname]);
 
     return (
         <ThemeProvider theme={baselightTheme}>

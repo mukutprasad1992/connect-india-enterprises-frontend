@@ -143,11 +143,20 @@ const Notification = () => {
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
-    function extractMessageBody(htmlString: string): string {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlString, 'text/html');
-        const messageBody = doc.querySelector('.header');
-        return messageBody ? messageBody.outerHTML : 'No message available.';
+    function extractMessageBody(data: any): string {
+        console.log("Data:", data);
+
+        // Case 1: if response is an object with "message"
+        if (data && typeof data === "object" && "message" in data) {
+            return String(data.message);
+        }
+
+        // Case 2: if response is already a string
+        if (typeof data === "string") {
+            return data;
+        }
+
+        return "No message available.";
     }
     return (
         <>
@@ -245,8 +254,8 @@ const Notification = () => {
                     {selectedNotification && (
                         <>
                             <Box mb={2}>
-                                <Typography variant="h6" color="primary">Notification</Typography>
-                                <Divider sx={{ marginY: 1 }} />
+                                {/* <Typography variant="h6" color="primary"></Typography> */}
+                                {/* <Divider sx={{ marginY: 1 }} /> */}
                                 <Typography variant="body1" dangerouslySetInnerHTML={{ __html: selectedNotification.message }} />
                             </Box>
                             {/* <Box mb={2}>

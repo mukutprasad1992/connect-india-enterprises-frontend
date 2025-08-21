@@ -17,8 +17,11 @@ import {
   Container,
   Tooltip
 } from "@mui/material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import axios from 'axios';
-import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DashboardCard from "../../components/shared/DashboardCard";
 import AddIcon from "@mui/icons-material/Add";
@@ -94,7 +97,6 @@ const User = () => {
   }
   const user = getUser();
   const userObj = user ? JSON.parse(user) : null;
-  console.log(userObj?.firstName);
   const userName = `${userObj?.firstName}  ${userObj?.lastName}`
 
   useEffect(() => {
@@ -556,24 +558,23 @@ const User = () => {
       )}
       <PageContainer title="Customer" description="This is the customer page">
         <Box >
-          <Grid container spacing={3}>
+          <Grid container spacing={1}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={1}>
+              <Box display="flex" justifyContent="flex-end" >
                 {roleId === 2 && (
-                  <Button
-                    variant="contained"
-                    color="primary"
+                  <IconButton
+                    sx={{ color: "#44a7a2" }}
                     onClick={handleAddUser}
                   >
-                    Add
-                  </Button>
+                    <AddCircleOutlineIcon />
+                  </IconButton>
                 )}
-                <Button variant="outlined" onClick={exportToExcel}>
-                  Export to Excel
-                </Button>
-                <Button variant="contained" onClick={exportToPDF}>
-                  Export to PDF
-                </Button>
+                <IconButton onClick={exportToExcel}>
+                  <GridOnIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
+                <IconButton onClick={exportToPDF}>
+                  <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -589,17 +590,30 @@ const User = () => {
                   </Grid>
                   <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={rows}
+                      rows={rows || []}
                       columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
                       disableRowSelectionOnClick
                       autoHeight
-                      sx={{ width: "100%" }}
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: () => <CustomToolbar />,
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
                       }}
                     />
                   </Box>

@@ -30,10 +30,10 @@ const ICONS: Record<ServiceType, React.ReactNode> = {
 };
 
 const BG_COLORS: Record<ServiceType, string> = {
-  Investment: "#E3F2FD",
-  Policy: "#E8F5E9",
-  Insurance: "#F3E5F5",
-  Loan: "#FFEBEE",
+  Investment: "#c0dff4",
+  Policy: "#f1c8f7",
+  Insurance: "#cbface",
+  Loan: "#f9d3da",
 };
 
 const LINKS: Record<ServiceType, string> = {

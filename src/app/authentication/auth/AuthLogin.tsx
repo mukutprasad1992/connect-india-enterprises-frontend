@@ -121,93 +121,98 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
   return (
     <>
-      {title && (
-        <Typography fontWeight="700" variant="h2" mb={1}>
-          {title}
-        </Typography>
-      )}
-      {subtext}
-
-      <Stack component="form" onSubmit={handleSubmit}>
-        <Box>
-          <Typography
-            variant="subtitle1"
-            fontWeight={600}
-            component="label"
-            htmlFor="email"
-            mb="5px"
-          >
-            Email
+      <Box
+      >
+        {title && (
+          <Typography fontWeight="700" variant="h4" mb={2} textAlign="center">
+            {title}
           </Typography>
-          <CustomTextField
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={email}
-            onChange={handleEmailChange}
-            error={!!emailError}
-            helperText={emailError}
-            onBlur={validateEmailInput}
-            sx={{
-              "& .MuiFormHelperText-root": {
-                textAlign: "left",
-                marginLeft: "5px",
-              },
-            }}
-          />
-        </Box>
-
-        <Box mt="25px">
-          <Typography
-            variant="subtitle1"
-            fontWeight={600}
-            component="label"
-            htmlFor="password"
-            mb="5px"
-          >
-            Password
+        )}
+        {subtext && (
+          <Typography variant="body2" color="text.secondary" textAlign="center" mb={3}>
+            {subtext}
           </Typography>
-          <CustomTextField
-            type="password"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={password}
-            onChange={(e: any) => handlePasswordChange(e.target.value)}
-            error={!!passwordError}
-            helperText={passwordError}
-            onBlur={validatePasswordInput}
-            sx={{
-              "& .MuiFormHelperText-root": {
-                textAlign: "left",
-                marginLeft: "5px",
-              },
-            }}
-          />
-        </Box>
-        <Stack
-          justifyContent="space-between"
-          direction="row"
-          alignItems="center"
-          my={2}
-        >
-          <FormGroup>
-            <FormControlLabel
-              control={<Checkbox defaultChecked />}
-              label="Remember this Device"
+        )}
+
+        <Stack component="form" onSubmit={handleSubmit} spacing={3}>
+          <Box>
+            <Typography
+              variant="subtitle2"
+              fontWeight={600}
+              component="label"
+              htmlFor="email"
+              mb="5px"
+              display="block"
+            >
+              Email
+            </Typography>
+            <CustomTextField
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={email}
+              onChange={handleEmailChange}
+              error={!!emailError}
+              helperText={emailError}
+              onBlur={validateEmailInput}
+              sx={{
+                borderRadius: 2,
+                "& .MuiFormHelperText-root": {
+                  textAlign: "left",
+                  marginLeft: "5px",
+                },
+              }}
             />
-          </FormGroup>
-          <Typography
-            component={Link}
-            href="/authentication/forgotPassword"
-            fontWeight="500"
-            sx={{ textDecoration: "none", color: "primary.main" }}
-          >
-            Forgot Password ?
-          </Typography>
-        </Stack>
+          </Box>
 
-        <Box>
+          <Box>
+            <Typography
+              variant="subtitle2"
+              fontWeight={600}
+              component="label"
+              htmlFor="password"
+              mb="5px"
+              display="block"
+            >
+              Password
+            </Typography>
+            <CustomTextField
+              type="password"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={password}
+              onChange={(e: any) => handlePasswordChange(e.target.value)}
+              error={!!passwordError}
+              helperText={passwordError}
+              onBlur={validatePasswordInput}
+              sx={{
+                borderRadius: 2,
+                "& .MuiFormHelperText-root": {
+                  textAlign: "left",
+                  marginLeft: "5px",
+                },
+              }}
+            />
+          </Box>
+
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <FormGroup>
+              <FormControlLabel
+                control={<Checkbox defaultChecked />}
+                label="Remember this Device"
+              />
+            </FormGroup>
+            <Typography
+              component={Link}
+              href="/authentication/forgotPassword"
+              fontWeight="500"
+              sx={{ textDecoration: "none", color: "primary.main" }}
+            >
+              Forgot Password?
+            </Typography>
+          </Stack>
+
           <Button
             color="primary"
             variant="contained"
@@ -215,17 +220,26 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
             fullWidth
             type="submit"
             disabled={loading}
-            sx={{ backgroundColor: "brown" }}
+            sx={{
+              borderRadius: 2,
+              py: 1.5,
+              fontWeight: 600,
+              backgroundColor: "brown",
+              ":hover": {
+                backgroundColor: "#5d2d2d",
+              },
+            }}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Sign In"
-            )}
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
           </Button>
-        </Box>
-        {subtitle}
-      </Stack>
+
+          {subtitle && (
+            <Box mt={2} textAlign="center">
+              {subtitle}
+            </Box>
+          )}
+        </Stack>
+      </Box>
 
       <Snackbar
         open={snackbarOpen}

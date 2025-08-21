@@ -19,60 +19,43 @@ import {
   Divider,
   Snackbar,
   Tooltip,
-  CircularProgress
+  CircularProgress,
+  InputLabel,
+  MenuItem,
+  Select,
+  Link
 } from "@mui/material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { SetStateAction, useEffect, useState } from "react";
-import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from "@mui/icons-material/Edit";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import CloseIcon from "@mui/icons-material/Close";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { useRouter } from 'next/navigation';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-// import InsuranceDialogDialog from '../../components/AI/AIAssistantInsurance';
 import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
+import LifeInsuranceFormDialog from "../../components/serviceTypeForm/lifeInsuranceFormDialog";
 
-const durations = [
-  { value: "6 Months" },
-  { value: "12 Months" },
-  { value: "18 Months" },
-  { value: "24 Months" },
-  { value: "30 Months" },
-  { value: "36 Months" }
-];
 const Insurance = () => {
   const [insurances, setInsurances] = useState<any>(null);
-
   const [selectedId, setSelectedId] = useState("");
-  const [date, setDate] = useState("");
-  const [amount, setAmount] = useState("");
-  const [insuranceType, setInsuranceType] = useState<string | null>(null);
-  const [others, setOthers] = useState<{ value: string } | null>(null);
-  const [openAddInsuranceDialog, setOpenAddInsuranceDialog] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("");
   const [openDeleteInsuranceDialog, setOpenDeleteInsuranceDialog] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [preferredCallTime, setPreferredCallTime] = useState<Date | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [fromTime, setFromTime] = useState<any>(null);
-  const [toTime, setToTime] = useState<any>(null);
-  const [amountError, setAmountError] = useState("");
-  const [toTimeError, setToTimeError] = useState("");
-  const [insuranceTypeError, setInsuranceTypeError] = useState("");
-  const [durationError, setDurationError] = useState("");
-  const [callTimeError, setCallTimeError] = useState("");
-  const [othersError, setOthersError] = useState("");
   const router = useRouter();
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
   const [loading, setLoading] = useState(false);
@@ -80,38 +63,22 @@ const Insurance = () => {
   const [insuranceUpdated, setInsuranceUpdated] = useState(false);
   const [insuranceOptions, setInsuranceOptions] = useState([]);
   const [insuranceErrorMessage, setInsuranceErrorMessage] = useState(false);
-  const [openAddInsurancementDialog, setOpenAddInsurancetDialog] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [openViewDialog, setOpenViewDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openInsuranceFormDialog, setOpenInsuranceFormDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [editData, setEditData] = useState<any>(null);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
-  const handleOpen = (event: React.MouseEvent<HTMLDivElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-  const displayTimeRange =
-    fromTime && toTime
-      ? `${dayjs(fromTime).format("hh:mm A")} - ${dayjs(toTime).format(
-        "hh:mm A"
-      )}`
-      : "Select time";
-
+  const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
   const handleCloseAddInsuranceDialog = () => {
-    setAmount("");
-    setOthers(null);
-    setDate("");
-    setFromTime(null);
-    setToTime(null);
-    setComment("");
-    setAmountError("");
-    setInsuranceTypeError("");
-    setDurationError("");
-    setCallTimeError("");
-    setOpenAddInsuranceDialog(false);
-    setInsuranceType(null);
-    setInsuranceTypeError("");
-    setInsuranceErrorMessage(false);
+    setSelectedOption('');
+    setOpenInsuranceFormDialog(false);
+    setOpenDialog(false);
+    setIsEdit(false);
+    setSelectedRow(null);
   };
 
   const getToken = () => {
@@ -138,7 +105,6 @@ const Insurance = () => {
   }
   const user = getUser();
   const userObj = user ? JSON.parse(user) : null;
-  console.log(userObj?.firstName);
   const userName = `${userObj?.firstName}  ${userObj?.lastName}`
 
   useEffect(() => {
@@ -161,9 +127,6 @@ const Insurance = () => {
       router.push("/authentication/login");
     }
   }, [router, token]);
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   const fetchInsurancesData = async () => {
     setInsuranceErrorMessage(false);
@@ -178,15 +141,30 @@ const Insurance = () => {
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
-          type: item.serviceSubType,
-          amount: item.amount,
-          duration: item.duration,
-          fromTime: item.fromTime,
-          toTime: item.toTime,
+          email: item.email,
+          aadharNumber: item.aadharNumber,
+          panNumber: item.panNumber,
+          alcohol: item.alcohol,
+          annualIncome: item.annualIncome,
+          mobile: item.mobile,
+          heightCM: item.heightCM,
+          motherName: item.motherName,
+          nomineeDOB: item.nomineeDOB,
+          nomineeName: item.nomineeName,
+          nomineeRelation: item.nomineeRelation,
+          occupation: item.occupation,
+          placeOfBirth: item.placeOfBirth,
+          smoker: item.smoker,
+          weightKG: item.weightKG,
           status: item.status,
           comment: item.comment,
+          serviceSubType: item.serviceSubType,
+          panCardFileKey: item.panCardFileKey,
+          aadhaarCardFileKey: item.aadhaarCardFileKey,
+          bankProofFileKey: item.bankProofFileKey,
+          itrDcumentsFileKey: item.itrDcumentsFileKey,
+          salarySlipsFileKey: item.salarySlipsFileKey,
         }));
-
         setInsurances(formattedData);
         setLoading(false)
       }
@@ -194,6 +172,7 @@ const Insurance = () => {
       setLoading(false)
     }
   };
+
   useEffect(() => {
     fetchInsurancesData();
   }, [insuranceUpdated, token]);
@@ -207,8 +186,6 @@ const Insurance = () => {
           router.push("/authentication/login");
         }
       }
-      setInsuranceTypeError("")
-      setInsuranceErrorMessage(false);
       setLoading(true)
       const response = await axios.get(
         `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${3}`,
@@ -228,183 +205,27 @@ const Insurance = () => {
         setLoading(false)
       } else {
         setLoading(false)
-        console.error("Failed to fetch  insurance options:", response.data);
+        console.error("Failed to fetch insurance options:", response.data);
       }
     } catch (error) {
       setLoading(false)
-      console.error("Error fetching  insurance options:", error);
+      console.error("Error fetching insurance options:", error);
     }
   };
+
   useEffect(() => {
     fetchInsuranceOptions();
   }, [insuranceUpdated, token]);
-  const addInsurance = async () => {
-    if (!token) {
-      localStorage.clear();
-      router.push("/authentication/login");
-    }
-    if (!amount.trim()) {
-      setAmountError("Insurance amount is required.");
-      return;
-    }
-
-    setAmountError("");
-    const formattedFromTime = fromTime ? fromTime.format("hh:mm ss") : "";
-
-    const formattedToTime = toTime ? toTime.format("hh:mm ss") : "";
-
-    const newInsurance = {
-      id: insurances,
-      type: insuranceType || "",
-      amount,
-      date,
-      duration: others,
-      fromTime: formattedFromTime,
-      toTime: formattedToTime,
-      status: "Pending",
-      comment,
-    };
-    const insurancePayload = {
-      amount: Number(newInsurance.amount),
-      serviceSubType: newInsurance.type,
-      duration: newInsurance.duration?.value || newInsurance.duration,
-      status: "Pending",
-      comment: newInsurance.comment,
-      fromTime: newInsurance.fromTime,
-      toTime: newInsurance.toTime,
-      serviceId: 3,
-    };
-    try {
-      if (token) {
-        const decoded: any = jwtDecode(token);
-        if (decoded.exp * 1000 < Date.now()) {
-          localStorage.clear();
-          router.push("/authentication/login");
-        }
-      }
-      setInsuranceErrorMessage(false)
-      setLoading(true)
-      const response = await axios.post(
-        `${BASE_URL}/serviceType/createServiceType`,
-        insurancePayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.status === 201) {
-        setSnackbarOpen(true);
-        setSnackbarMessage(response.data.notification.message)
-        setInsurances(response.data.data);
-        setInsuranceUpdated(prev => !prev);
-        handleCloseAddInsuranceDialog();
-        setLoading(false)
-      } else {
-        setLoading(false)
-        setInsuranceErrorMessage(response.data.message)
-        console.error("API error:", response.data);
-      }
-    } catch (error: any) {
-      setLoading(false)
-      setInsuranceErrorMessage(error.response.data.message)
-      console.error("Error during voucher deletion:", error);
-      if (error.response) {
-        setLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("API Error Response:", error.response.data.message);
-      } else if (error.request) {
-        setLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("No response from server.");
-      } else {
-        setLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("Unexpected error:", error.message);
-      }
-    }
-  };
-
-  const editInsurance = async () => {
-    try {
-      if (!token) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-      if (token) {
-        const decoded: any = jwtDecode(token);
-        if (decoded.exp * 1000 < Date.now()) {
-          localStorage.clear();
-          router.push("/authentication/login");
-        }
-      }
-      const UpdateInsurancePayload = {
-        amount,
-        comment,
-        fromTime: fromTime ? dayjs(fromTime).format("hh:mm ss") : null,
-        toTime: toTime ? dayjs(toTime).format("hh:mm ss") : null,
-        duration: others?.value,
-        type: insuranceType,
-        status: status || "Pending",
-      };
-      setInsuranceErrorMessage(false)
-      setLoading(true)
-      const response = await axios.put(
-        `http://localhost:4000/serviceType/updateServiceTypeById/${selectedId}`,
-        UpdateInsurancePayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.data.status) {
-        setOpenAddInsuranceDialog(false);
-        fetchInsurancesData();
-        setInsuranceUpdated(prev => !prev);
-        setLoading(false)
-      } else {
-        setLoading(false)
-        console.error("Update failed:", response.data.message);
-      }
-    } catch (error: any) {
-      setLoading(false)
-      setInsuranceErrorMessage(error.response.data.message)
-      console.error("Error during voucher deletion:", error);
-      if (error.response) {
-        setLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("API Error Response:", error.response.data.message);
-      } else if (error.request) {
-        setLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("No response from server.");
-      } else {
-        setLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("Unexpected error:", error.message);
-      }
-    }
-  };
 
   const deleteInsurance = async () => {
-    if (!token) {
-      return
-    }
-    if (!selectedId) {
-      console.error("No  insurance selected for deletion.");
+    if (!token || !selectedId) {
+      console.error("No insurance selected for deletion.");
       return;
     }
+
     setInsuranceErrorMessage(false)
     setDialogLoading(true)
     try {
-      if (!token) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
       if (token) {
         const decoded: any = jwtDecode(token);
         if (decoded.exp * 1000 < Date.now()) {
@@ -412,11 +233,13 @@ const Insurance = () => {
           router.push("/authentication/login");
         }
       }
+
       await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       setInsuranceUpdated(prev => !prev);
       setInsurances((prevAllInsurance: any[]) => {
         const updatedAllInsurance = prevAllInsurance
@@ -431,116 +254,13 @@ const Insurance = () => {
       console.log(`Insurance with ID ${selectedId} deleted successfully.`);
     } catch (error: any) {
       setDialogLoading(false)
-      setInsuranceErrorMessage(error.response.data.message)
-      console.error("Error during voucher deletion:", error);
-      if (error.response) {
-        setDialogLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("API Error Response:", error.response.data.message);
-      } else if (error.request) {
-        setDialogLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("No response from server.");
-      } else {
-        setDialogLoading(false)
-        setInsuranceErrorMessage(error.response.data.message)
-        console.error("Unexpected error:", error.message);
-      }
+      setInsuranceErrorMessage(error.response?.data?.message || "Error deleting insurance")
+      console.error("Error during insurance deletion:", error);
     }
 
     setOpenDeleteInsuranceDialog(false);
   };
 
-  const [comment, setComment] = useState("");
-
-  const handleCommentChange = (event: any) => {
-    const newComment = event.target.value;
-    setComment(newComment);
-  };
-
-  const validateAmount = () => {
-    if (!amount.trim()) {
-      setAmountError(" insurance amount is required.");
-    } else if (!/^\d+$/.test(amount)) {
-      setAmountError("Only numeric values are allowed.");
-    } else {
-      setAmountError("");
-    }
-  };
-
-  const validateInsuranceType = () => {
-    if (!insuranceType) {
-      setInsuranceTypeError("Insurance type is required.");
-    } else {
-      setInsuranceTypeError("");
-    }
-  };
-
-  const validateOthers = () => {
-    if (!others) {
-      setDurationError("Duration of insurance is required.");
-    } else {
-      setDurationError("");
-    }
-  };
-
-  const validateCallTime = () => {
-    if (!fromTime || !toTime) {
-      setCallTimeError("Both from and to time are required.");
-
-      return false;
-    } else if (dayjs(toTime).isBefore(dayjs(fromTime))) {
-      setCallTimeError("The 'to' time cannot be before the 'from' time.");
-      setToTimeError("The 'to' time cannot be before the 'from' time.");
-      return false;
-    } else {
-      setCallTimeError("");
-      setToTimeError("");
-    }
-
-    return true;
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-
-    if (!amount.trim()) {
-      setAmountError("Insurance amount is required");
-      isValid = false;
-    }
-
-    if (!insuranceType) {
-      setInsuranceTypeError("Insurance type is required");
-      isValid = false;
-    }
-
-    if (!others) {
-      setDurationError("Duration of  insurance is required");
-      isValid = false;
-    }
-
-    if (!fromTime || !toTime) {
-      setCallTimeError("Preferable call time is required");
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleSubmit = () => {
-    setInsuranceErrorMessage(false);
-    const isValid = validateCallTime();
-
-    if (!isValid) return;
-
-    if (!validateForm()) return;
-
-    if (isEdit) {
-      editInsurance();
-    } else {
-      addInsurance();
-    }
-  };
   const handleViewButton = (row: any) => {
     setSelectedRow(row);
     setOpenViewDialog(true);
@@ -550,34 +270,25 @@ const Insurance = () => {
     setOpenViewDialog(false);
     setSelectedRow(null);
   };
-  const formatTime = (time: string | null) => {
-    if (!time) return "N/A";
-    const [hours, minutes] = time.split(":");
-    let hourNum = parseInt(hours, 10);
-    const amPm = hourNum >= 12 ? "PM" : "AM";
-    hourNum = hourNum % 12 || 12;
-    return `${hourNum}:${minutes} ${amPm}`;
-  };
+
   const columns = [
     { field: "id", headerName: "ID", flex: 0.12 },
-    { field: "type", headerName: "Type", flex: 0.12 },
-    { field: "amount", headerName: "Amount", flex: 0.12 },
-    {
-      field: "duration",
-      headerName: "Duration",
-      flex: 0.12,
-      renderCell: (params: any) => `${params.value} Months`,
-    },
-    {
-      field: "fromTime",
-      headerName: "Contact Timing",
-      flex: 0.12,
-      renderCell: (params: any) => {
-        const fromTime = formatTime(params.row.fromTime);
-        const toTime = formatTime(params.row.toTime);
-        return fromTime !== "N/A" && toTime !== "N/A" ? `${fromTime} - ${toTime}` : "N/A";
-      },
-    },
+    { field: "email", headerName: "email", flex: 0.12 },
+    { field: "mobile", headerName: "Mobile", flex: 0.12 },
+    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
+    { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
+    { field: "alcohol", headerName: "Alcohol", flex: 0.12 },
+    { field: "annualIncome", headerName: "Annual Income", flex: 0.12 },
+    { field: "motherName", headerName: "Mother Name", flex: 0.12 },
+    { field: "heightCM", headerName: "Height CM", flex: 0.12 },
+    { field: "weightKG", headerName: "Weight KG", flex: 0.12 },
+    { field: "smoker", headerName: "Smoker", flex: 0.12 },
+    { field: "occupation", headerName: "Occupation", flex: 0.12 },
+    { field: "nomineeName", headerName: "Nominee Name", flex: 0.12 },
+    { field: "nomineeDOB", headerName: "Nominee DOB", flex: 0.12 },
+    { field: "nomineeRelation", headerName: "Nominee Relation", flex: 0.12 },
+    { field: "placeOfBirth", headerName: "Place Of Birth", flex: 0.12 },
+    { field: "nomineeRelation", headerName: "Nominee Relation", flex: 0.12 },
     {
       field: "status",
       headerName: "Status",
@@ -629,8 +340,9 @@ const Insurance = () => {
       renderCell: (params: any) => {
         const status = params.row.status;
         const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
-
+        console.log("  params ", params.row)
         return (
+
           <Box display="flex" width="100%" height="100%">
             <Tooltip title="View">
               <IconButton
@@ -669,21 +381,18 @@ const Insurance = () => {
     }
   ];
 
-  const handleEditButton = (formDataInsurance: any) => {
+  const handleEditButton = (rowData: any) => {
+    setEditData(rowData);
     setIsEdit(true);
-    setSelectedId(formDataInsurance.id);
-    setAmount(formDataInsurance.amount);
-    setComment(formDataInsurance.comment);
-    setFromTime(
-      formDataInsurance.fromTime ? dayjs(formDataInsurance.fromTime, "HH:mm:ss") : null
-    );
-    setToTime(
-      formDataInsurance.toTime ? dayjs(formDataInsurance.toTime, "HH:mm:ss") : null
-    );
-    const selectedDuration = durations.find((d: any) => d.value === formDataInsurance.duration) || null;
-    setOthers(selectedDuration);
-    setOpenAddInsuranceDialog(true);
-    setInsuranceType(formDataInsurance.type);
+    setSelectedOption("lifeInsurance");
+    setOpenDialog(true);
+  };
+
+  const handleAddButton = () => {
+    setIsEdit(false);
+    setSelectedRow(null);
+    setSelectedOption('');
+    setOpenInsuranceFormDialog(true);
   };
 
   const handleDeleteButton = (id: any) => {
@@ -691,19 +400,13 @@ const Insurance = () => {
     setOpenDeleteInsuranceDialog(true);
   };
 
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
-  }
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   }
+
   const handleConfirmYes = () => {
     setIsEdit(false);
-    setOpenAddInsuranceDialog(true)
+    setOpenInsuranceFormDialog(true)
   };
 
   let getStatusColor = (status: any) => {
@@ -722,51 +425,115 @@ const Insurance = () => {
   };
 
   const exportToPDF = async () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: 'landscape',  // Changed to landscape for better fit
+      unit: 'mm'
+    });
 
+    // Set document properties
+    doc.setProperties({
+      title: 'Insurance List Report',
+      subject: 'Insurance Data Export',
+      author: 'Your Application Name',
+      keywords: 'insurance, report, data',
+      creator: 'Your Application Name'
+    });
+
+    // Add header with logo and timestamp
     doc.setFontSize(12);
-    doc.text("INSURANCE LIST", 14, 30);
-    const logoWidth = 40;
-    const logoHeight = 10;
+    doc.text("INSURANCE LIST", 14, 20);
+
+    const logoWidth = 60;
+    const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoX = (pageWidth - logoWidth) / 2;
-    const dataTime = formatDateTime(new Date())
+    const dataTime = formatDateTime(new Date());
+
     doc.addImage('/images/logos/logo.png', "PNG", logoX, 7, logoWidth, logoHeight);
-    doc.setFontSize(12);
-    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
-    doc.setFontSize(12);
-    doc.text(`Name: ${userName}`, 14, 40);
+    doc.setFontSize(10);
+    doc.text(dataTime, pageWidth - 14, 20, { align: "right" });
+    doc.text(`Name: ${userName}`, 14, 30);
+    const headers = [
+      "ID",
+      "Email",
+      "Aadhar Number",
+      "PAN Number",
+      "Alcohol",
+      "Income",
+      "Mobile",
+      "Height (CM)",
+      "Mother's Name",
+      "Nominee DOB",
+      "Nominee Name",
+      "Nominee Relation",
+      "Occupation",
+    ];
+
+    const bodyData = (insurances || []).map((row: any) => [
+      row.id || 'N/A',
+      row.email || 'N/A',
+      row.aadharNumber || 'N/A',
+      row.panNumber || 'N/A',
+      row.alcohol === 1 ? 'Yes' : 'No',
+      row.annualIncome || 'N/A',
+      row.mobile || 'N/A',
+      row.heightCM || 'N/A',
+      row.motherName || 'N/A',
+      row.nomineeDOB || 'N/A',
+      row.nomineeName || 'N/A',
+      row.nomineeRelation || 'N/A',
+      row.occupation || 'N/A'
+    ]);
+
     autoTable(doc, {
-      startY: 50,
-      head: [
-        ["ID", "Type", "Amount", "Duration", "From Time", "To Time", "Status", "Comment"]
-      ],
-      body: (insurances || []).map((row: any) => [
-        row.id,
-        row.type,
-        row.amount,
-        row.duration,
-        row.fromTime,
-        row.toTime,
-        row.status,
-        row.comment,
-      ]),
+      startY: 40,
+      head: [headers],
+      body: bodyData,
       headStyles: {
         fillColor: [165, 42, 42],
         textColor: 255,
-        halign: "center",
-        fontStyle: "bold",
-        fontSize: 10
+        halign: 'center',
+        fontStyle: 'bold',
+        fontSize: 8
       },
       bodyStyles: {
-        halign: "center",
+        halign: 'center',
+        fontSize: 7,
+        cellPadding: 2,
+        overflow: 'linebreak'
       },
+      styles: {
+        cellWidth: 'wrap',
+        valign: 'middle'
+      },
+      margin: { top: 40 },
+      tableWidth: 'auto',
+      didDrawPage: function (data) {
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(
+          `Page ${doc.getNumberOfPages()}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      },
+      willDrawCell: function (data) {
+        if (data.section === 'body') {
+          const cellValue = data.cell.raw != null ? String(data.cell.raw) : '';
+          const lines = doc.splitTextToSize(cellValue, data.cell.width - 4);
+          if (lines.length > 1) {
+            data.row.height = lines.length * 5;
+          }
+        }
+      }
     });
 
-    const pdfBlob = doc.output("blob");
+    const fileName = `Insurance_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
+    const pdfBlob = doc.output('blob');
     const fileURL = URL.createObjectURL(pdfBlob);
     window.open(fileURL);
-    doc.save("AllInsuranceData.pdf");
   };
 
   const exportToExcel = () => {
@@ -800,38 +567,144 @@ const Insurance = () => {
     });
 
     const blob = new Blob([excelBuffer], {
-      type:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
     const fileURL = URL.createObjectURL(blob);
     saveAs(blob, "insurances.xlsx");
   };
 
+  const handleSelectChange = (event: any) => {
+    setSelectedOption(event.target.value);
+  };
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setEditData(null);
+    setIsEdit(false);
+  };
+  const handleFormSubmit = async (data: any, isEdit: boolean) => {
+    try {
+      setLoading(true);
+
+      // Prepare the payload with correct field names
+      const payload = {
+        aadhaarCardFileKey: data.aadhaarCardFileKey,
+        panCardFileKey: data.panCardFileKey,
+        aadharNumber: data.aadharNumber,
+        panNumber: data.panNumber,
+        alcohol: data.alcohol,
+        annualIncome: data.annualIncome,
+        bankProofFileKey: data.bankProofFileKey,
+        mobile: data.mobile,
+        email: data.email,
+        heightCM: data.heightCM,
+        itrDocumentsFileKey: data.itrDocumentsFileKey, // Fixed typo from itrDcumentsFileKey
+        motherName: data.motherName,
+        nomineeDOB: data.nomineeDOB,
+        nomineeName: data.nomineeName,
+        nomineeRelation: data.nomineeRelation,
+        occupation: data.occupation,
+        placeOfBirth: data.placeOfBirth,
+        salarySlipsFileKey: data.salarySlipsFileKey,
+        smoker: data.smoker,
+        weightKG: data.weightKG,
+        serviceId: 3,
+        serviceSubType: isEdit ? data.serviceSubType : selectedOption,
+        status: 'Pending',
+        comment: data.comment || '',
+      };
+
+      console.log("Submitting payload:", payload);
+
+      let response;
+      const url = isEdit
+        ? `${BASE_URL}/serviceType/updateServiceTypeById/${data.id}`
+        : `${BASE_URL}/serviceType/createServiceType`;
+
+      const method = isEdit ? 'put' : 'post';
+
+      response = await axios[method](url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data.status) {
+        setSnackbarOpen(true);
+        setSnackbarSeverity('success');
+        setSnackbarMessage(isEdit
+          ? 'Insurance updated successfully'
+          : 'Insurance created successfully');
+        setInsuranceUpdated(prev => !prev);
+        handleDialogClose();
+        return true;
+      } else {
+        throw new Error(response.data.message || 'Operation failed');
+      }
+    } catch (error: any) {
+      console.error("Error during insurance operation:", error);
+      const errorMessage = error.response?.data?.message
+        || error.message
+        || 'An error occurred';
+
+      setSnackbarOpen(true);
+      setSnackbarSeverity('error');
+      setSnackbarMessage(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDocumentName = (key: any) => {
+    const documentNames = {
+      aadhaarCardFileKey: 'View Aadhaar Card',
+      panCardFileKey: 'View PAN Card',
+      bankProofFileKey: 'View Bank Proof',
+      salarySlipsFileKey: 'View Salary Slips',
+      itrDcumentsFileKey: 'View ITR Documents'
+    };
+    return documentNames[key as keyof typeof documentNames] || 'View Document';
+  };
   return (
     <>
+      {loading && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 1000,
+          }}
+        >
+          <CircularProgress />
+        </div>
+      )}
       <PageContainer title="Insurance" description="this is insurance page">
         <Box>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={1}>
-                {/* <InsuranceDialogDialog onConfirmYes={handleConfirmYes} /> */}
-                <Button
-                  variant="contained"
-                  sx={{ textTransform: "none" }}
-                  onClick={() => {
-                    setIsEdit(false);
-                    setOpenAddInsuranceDialog(true);
-                  }}
-                >
-                  Add
-                </Button>
-                <Button variant="outlined" onClick={exportToExcel}>
-                  Export to Excel
-                </Button>
-                <Button variant="contained" onClick={exportToPDF}>
-                  Export to PDF
-                </Button>
+          <Grid container spacing={1}>
+            <Grid item xs={12} sx={{ mb: 2 }}>
+              <Box display="flex" justifyContent="flex-end" >
+                <Tooltip title='Add'>
+                  <IconButton
+                    sx={{ textTransform: "none", color: "#44a7a2" }}
+                    onClick={handleAddButton}
+                  >
+                    <AddCircleOutlineIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export to excel'>
+                  <IconButton onClick={exportToExcel}>
+                    <GridOnIcon sx={{ color: "#44a7a2" }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export to PDF'>
+                  <IconButton onClick={exportToPDF}>
+                    <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Grid>
 
@@ -846,11 +719,9 @@ const Insurance = () => {
                   >
                     <Typography variant="h4">Insurance</Typography>
                   </Grid>
-                  <Box
-                    sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}
-                  >
+                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={insurances}
+                      rows={insurances || []}
                       columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
@@ -859,7 +730,21 @@ const Insurance = () => {
                       autoHeight
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: () => <CustomToolbar />,
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
                       }}
                     />
                   </Box>
@@ -868,261 +753,6 @@ const Insurance = () => {
             </Grid>
           </Grid>
         </Box>
-        <Dialog
-          open={openAddInsuranceDialog}
-          onClose={handleCloseAddInsuranceDialog}
-          maxWidth="sm"
-          fullWidth
-        >
-          {loading && (
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-              }}
-            >
-              <CircularProgress />
-            </div>
-          )}
-          <DialogTitle>
-            <Typography variant="h3" component="h2">
-              {isEdit ? "Edit insurance" : "Add insurance"}
-            </Typography>
-          </DialogTitle>
-          {insuranceErrorMessage && (
-            <Grid item>
-              <Box sx={{
-                border: 1,
-                borderColor: '#ff9999',
-                p: 0,
-                m: 2,
-                backgroundColor: '#f8bbd0'
-              }}>
-                <Alert severity="error">{insuranceErrorMessage}</Alert>
-              </Box>
-            </Grid>
-          )}
-          <Divider></Divider>
-          <DialogContent sx={{ overflow: "visible", minHeight: "120px" }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label={
-                    <span>
-                      Insurance amount <span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={amount}
-                  error={!!amountError}
-                  helperText={amountError}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const isValid = /^\d*\.?\d*$/.test(value);
-
-                    if (isValid && value.length <= 8) {
-                      setAmount(value);
-                      if (value.trim()) {
-                        setAmountError("");
-                      }
-                    }
-                  }}
-                  onBlur={validateAmount}
-                  inputProps={{
-                    inputMode: "decimal",
-                    pattern: "[0-9.]*",
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Autocomplete
-                  options={insuranceOptions}
-                  getOptionLabel={(option: any) => option.label || ""}
-                  value={insuranceOptions.find((opt: any) => opt.label === insuranceType) || null}
-                  onChange={(_, newValue: any) => {
-                    setInsuranceType(newValue ? newValue.label : null);
-                    setInsuranceTypeError("");
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={
-                        <span>
-                          Insurance type <span style={{ color: "red" }}>*</span>
-                        </span>
-                      }
-                      variant="outlined"
-                      error={!!insuranceTypeError}
-                      helperText={insuranceTypeError}
-                    />
-                  )}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!durationError}>
-                  <Autocomplete
-                    options={durations}
-                    getOptionLabel={(option) => (option && option.value ? option.value : "")}
-                    isOptionEqualToValue={(option, value) => option?.value === value?.value}
-                    value={others}
-                    onChange={(event, newValue: any) => {
-                      setOthers(newValue);
-                      setDurationError("");
-                    }}
-                    onBlur={validateOthers}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label=
-                        {
-                          <span>
-                            Duration of insurance{" "}
-                            <span style={{ color: "red" }}>*</span>
-                          </span>
-                        }
-                        variant="outlined"
-                        fullWidth
-                        error={!!durationError}
-                        helperText={durationError}
-                      />
-                    )}
-                  />
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TextField
-                    label={
-                      <span>
-                        Preferable call time{" "}
-                        <span style={{ color: "red" }}>*</span>
-                      </span>
-                    }
-                    value={displayTimeRange}
-                    onClick={handleOpen}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    error={!!callTimeError}
-                    helperText={callTimeError}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        if (!fromTime || !toTime) validateCallTime();
-                      }, 10);
-                    }}
-                  />
-                  <Popover
-                    open={Boolean(anchorEl)}
-                    anchorEl={anchorEl}
-                    onClose={() => {
-                      handleClose();
-                      if (fromTime && toTime) {
-                        setCallTimeError("");
-                        setToTimeError("");
-                      } else {
-                        validateCallTime();
-                      }
-                    }}
-                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-                  >
-                    <Dialog open={Boolean(anchorEl)} onClose={handleClose}>
-                      <DialogTitle>Select time</DialogTitle>
-                      <DialogContent sx={{ overflow: "visible" }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={6}>
-                            <TimePicker
-                              label="From"
-                              value={fromTime}
-                              onChange={(timeValue) => {
-                                setFromTime(timeValue);
-                                setCallTimeError("");
-                              }}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  variant: "outlined",
-                                  sx: { overflow: "visible", height: "auto" },
-                                },
-                              }}
-                            />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <TimePicker
-                              label="To"
-                              value={toTime}
-                              onChange={(timeValue) => {
-                                if (!fromTime || !timeValue) {
-                                  setToTime(timeValue);
-                                  setToTimeError("");
-                                  return;
-                                }
-
-                                const from = dayjs(fromTime);
-                                const to = dayjs(timeValue);
-
-                                if (to.isBefore(from.add(5, "minute"))) {
-                                  setToTimeError(
-                                    "The 'to' time cannot be before the 'from' time."
-                                  );
-
-                                } else {
-                                  setToTime(timeValue);
-                                  setToTimeError("");
-                                  setCallTimeError("");
-                                }
-                              }}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  variant: "outlined",
-                                  sx: { overflow: "visible", height: "auto" },
-                                  error: !!toTimeError,
-                                  helperText: toTimeError,
-
-                                },
-                              }}
-                            />
-                          </Grid>
-                        </Grid>
-                      </DialogContent>
-                    </Dialog>
-                  </Popover>
-                </LocalizationProvider>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  label="Comment"
-                  placeholder="Enter your comments (Max 300 words)"
-                  multiline
-                  rows={4}
-                  fullWidth
-                  variant="outlined"
-                  inputProps={{ maxLength: 300 }}
-                  value={comment}
-                  onChange={handleCommentChange}
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={handleCloseAddInsuranceDialog}>
-              Close
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleSubmit}>
-              {isEdit ? "Update" : "Add"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Delet button */}
 
         <Dialog
           open={openDeleteInsuranceDialog}
@@ -1159,43 +789,138 @@ const Insurance = () => {
             </Button>
           </DialogActions>
         </Dialog>
-      </PageContainer>
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Insurance Details</DialogTitle>
+      </PageContainer >
+      {/* View Dialog */}
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
+        <Grid container spacing={2} sx={{ padding: 2 }}>
+          <Grid item xs={12}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h6">Insurance Details</Typography>
+              <IconButton onClick={handleCloseViewDialog} size="small">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Grid>
+        </Grid>
         <DialogContent dividers>
-          <Grid container spacing={0.1}>
+          <Grid container spacing={2}>
             {selectedRow &&
               Object.entries(selectedRow).map(([key, value]) => {
                 const isStatus = key.toLowerCase() === "status";
-                const statusColor = isStatus ? getStatusColor(value) : undefined;
+                const isDocumentKey = [
+                  'aadhaarCardFileKey',
+                  'panCardFileKey',
+                  'bankProofFileKey',
+                  'salarySlipsFileKey',
+                  'itrDcumentsFileKey'
+                ].includes(key);
+
+                const statusColor = isStatus ? getStatusColor(String(value)) : undefined;
 
                 return (
                   <React.Fragment key={key}>
                     <Grid item xs={6}>
                       <Typography variant="body2">
                         <Box component="span" sx={{ fontWeight: 'bold' }}>
-                          {key}:
-                        </Box>{' '}
-                        <Box
-                          component="span"
-                          sx={{
-                            fontWeight: 'normal',
-                            color: isStatus ? statusColor : 'inherit',
-                          }}
-                        >
-                          {String(value)}
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                         </Box>
                       </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      {isDocumentKey && value ? (
+                        <Link
+                          href={`${AWS_S3_BUCKET_URL}/${value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            wordBreak: 'break-all'
+                          }}
+                        >
+                          {getDocumentName(key)}
+                        </Link>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: isStatus ? statusColor : 'inherit' }}>
+                          {String(value || 'N/A')}
+                        </Typography>
+                      )}
                     </Grid>
                   </React.Fragment>
                 );
               })}
           </Grid>
         </DialogContent>
+
+      </Dialog>
+      <Dialog
+        open={openInsuranceFormDialog}
+        onClose={(event, reason) => {
+          if (reason !== 'backdropClick') handleCloseAddInsuranceDialog();
+        }}
+        maxWidth="xs"
+        fullWidth
+        disableEscapeKeyDown
+      >
+        {dialogLoading && (
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1000,
+            }}
+          >
+            <CircularProgress />
+          </div>
+        )}
+
+        <DialogTitle>Select Insurance Type</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Choose Option</InputLabel>
+            <Select
+              value={selectedOption}
+              onChange={handleSelectChange}
+              label="Choose Option"
+            >
+              <MenuItem value="lifeInsurance">Life Insurance</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseViewDialog}>Close</Button>
+          <Button onClick={handleCloseAddInsuranceDialog} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (!selectedOption) {
+                setSnackbarOpen(true);
+                setSnackbarSeverity('error');
+                setSnackbarMessage("Please select an insurance type");
+                return;
+              }
+              setOpenInsuranceFormDialog(false);
+              setOpenDialog(true);
+            }}
+            disabled={!selectedOption}
+          >
+            Next
+          </Button>
         </DialogActions>
       </Dialog>
+      <LifeInsuranceFormDialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        onSubmit={handleFormSubmit}
+        initialData={editData}
+        mode={isEdit ? 'edit' : 'create'}
+        setOpenDialog={setOpenDialog}
+      />
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -1207,8 +932,6 @@ const Insurance = () => {
           severity={snackbarSeverity}
           sx={{
             width: "100%",
-            backgroundColor: "green",
-            color: "white",
           }}
         >
           {snackbarMessage}

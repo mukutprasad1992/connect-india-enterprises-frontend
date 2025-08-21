@@ -22,7 +22,8 @@ import {
   Divider,
   Alert,
   Snackbar,
-  Tooltip
+  Tooltip,
+  Link
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { SetStateAction, useEffect, useState } from "react";
@@ -34,9 +35,13 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import CloseIcon from "@mui/icons-material/Close";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { useRouter } from 'next/navigation';
 import axios from "axios";
-import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer, GridToolbar } from "@mui/x-data-grid";
 
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
@@ -47,38 +52,19 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
-
-const durations = [
-  { value: "6 Months" },
-  { value: "12 Months" },
-  { value: "18 Months" },
-  { value: "24 Months" },
-  { value: "30 Months" },
-  { value: "36 Months" }
-];
-
+import PersonalLoanFormDialog from "../../components/serviceTypeForm/personalLoanFormDialog";
 const Loan = () => {
   const [loans, setLoans] = useState<any>(null);
 
 
   const [selectedId, setSelectedId] = useState("");
-  const [date, setDate] = useState("");
-  const [amount, setAmount] = useState("");
   const [loanType, setLoanType] = useState<string | null>(null);
-  const [others, setOthers] = useState<{ value: string } | null>(null);
   const [openAddLoanDialog, setOpenAddLoanDialog] = useState(false);
   const [openDeleteLoanDialog, setOpenDeleteLoanDialog] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [preferredCallTime, setPreferredCallTime] = useState<Date | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [fromTime, setFromTime] = useState<any>(null);
-  const [toTime, setToTime] = useState<any>(null);
-  const [amountError, setAmountError] = useState("");
-  const [toTimeError, setToTimeError] = useState("");
   const [loanTypeError, setLoanTypeError] = useState("");
-  const [durationError, setDurationError] = useState("");
-  const [callTimeError, setCallTimeError] = useState("");
-  const [othersError, setOthersError] = useState("");
   const [loanOptions, setLoanOptions] = useState([]);
   const router = useRouter();
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
@@ -90,44 +76,19 @@ const Loan = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
+  const [selectedOption, setSelectedOption] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [openLoanFormDialog, setOpenLoanFormDialog] = useState(false);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
-  const handleOpen = (event: any) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-  const displayTimeRange =
-    fromTime && toTime
-      ? `${dayjs(fromTime).format("hh:mm A")} - ${dayjs(toTime).format(
-        "hh:mm A"
-      )}`
-      : "Select time";
-
+  const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
   const handleCloseAddLoanDialog = () => {
-    setAmountError("");
-    setAmount("");
     setLoanType(null);
-    setOthers(null);
-    setDate("");
-    setFromTime(null);
-    setToTime(null);
     setOpenAddLoanDialog(false);
-    setComment("");
-    setAmountError("");
-
     setLoanTypeError("");
-
-    setDurationError("");
-
-    setCallTimeError("");
-
     setOpenAddLoanDialog(false);
-
     setLoanType(null);
-
     setLoanTypeError("");
   };
   const getToken = () => {
@@ -201,15 +162,35 @@ const Loan = () => {
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
-          type: item.serviceSubType,
-          amount: item.amount,
-          duration: item.duration,
-          fromTime: item.fromTime,
-          toTime: item.toTime,
+          motherName: item.motherName,
+          landmark: item.landmark,
+          email: item.email,
+          currentAddress: item.currentAddress,
+          cityYears: item.cityYears,
+          alternateNo: item.alternateNo,
+          maritalStatus: item.maritalStatus,
+          designation: item.designation,
+          companyExp: item.companyExp,
+          totalWorkExp: item.totalWorkExp,
+          officeAddress: item.officeAddress,
+          officeMobile: item.officeMobile,
+          ref1Name: item.ref1Name,
+          ref1Mobile: item.ref1Mobile,
+          ref1Address: item.ref1Address,
+          ref2Name: item.ref2Name,
+          ref2Mobile: item.ref2Mobile,
+          ref2Address: item.ref2Address,
+          panNumber: item.panNumber,
+          aadharNumber: item.aadharNumber,
+          photoFileKey: item.photoFileKey,
+          panCardFileKey: item.panCardFileKey,
+          aadhaarCardFileKey: item.aadhaarCardFileKey,
+          salarySlipsFileKey: item.salarySlipsFileKey,
+          bankStatementFileKey: item.bankStatementFileKey,
+          serviceId: item.serviceId,
+          serviceSubType: item.serviceSubType,
           status: item.status,
-          comment: item.comment,
         }));
-
         setLoans(formattedData);
         setLoading(false)
       }
@@ -222,187 +203,6 @@ const Loan = () => {
     fetchLoansData();
   }, [loanUpdated, token]);
 
-  const fetchLoanOptions = async () => {
-    if (!token) {
-      localStorage.clear();
-      router.push("/authentication/login");
-    }
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      if (decoded.exp * 1000 < Date.now()) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-    }
-    try {
-      setLoading(true)
-      const response = await axios.get(
-        `${BASE_URL}/serviceSubType/getServiceSubTypeByServiceId/${4}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200 && response.data.result) {
-        const options = response.data.result.map((item: any) => ({
-          id: item.id,
-          label: item.ledgerType,
-        }));
-        setLoanOptions(options);
-        setLoading(false)
-      } else {
-        setLoading(false)
-        console.error("Failed to loan options:", response.data);
-      }
-    } catch (error) {
-      setLoading(false)
-      console.error("Error fetching loan options:", error);
-    }
-  };
-  useEffect(() => {
-    fetchLoanOptions();
-  }, [loanUpdated, token]);
-  const addLoan = async () => {
-    if (!token) {
-      localStorage.clear();
-      router.push("/authentication/login");
-    }
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      if (decoded.exp * 1000 < Date.now()) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-    }
-    if (!amount.trim()) {
-      setAmountError("Loan Amount is required.");
-      return;
-    }
-
-    setAmountError("");
-    const formattedFromTime = fromTime ? fromTime.format("hh:mm ss") : "";
-
-    const formattedToTime = toTime ? toTime.format("hh:mm ss") : "";
-
-    const newLoan = {
-      id: loans,
-      type: loanType || "",
-      amount,
-      date,
-      duration: others,
-      fromTime: formattedFromTime,
-      toTime: formattedToTime,
-      status: "Pending",
-      comment,
-    };
-    const loanPayload = {
-      amount: newLoan.amount,
-      serviceSubType: newLoan.type,
-      duration: newLoan.duration?.value,
-      status: "Pending",
-      comment: newLoan.comment,
-      fromTime: newLoan.fromTime,
-      toTime: newLoan.toTime,
-      serviceId: 4,
-    };
-    try {
-      setLoanErrorMessage(false)
-      setLoading(true)
-      const response = await axios.post(
-        `${BASE_URL}/serviceType/createServiceType`,
-        loanPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.status === 201) {
-        setSnackbarOpen(true);
-        setSnackbarMessage(response.data.notification.message)
-        setLoans(response.data.data);
-        setLoanUpdated(prev => !prev);
-        handleCloseAddLoanDialog();
-        setLoading(false)
-      } else {
-        setLoading(false)
-        setLoanErrorMessage(response.data.message)
-        console.error("API error:", response.data);
-      }
-    } catch (error: any) {
-      setLoading(false)
-      setLoanErrorMessage(error.response.data.message)
-      console.error("Error during loan creation:", error);
-      if (error.response) {
-        setLoading(false)
-        setLoanErrorMessage(error.response.data.message)
-        console.error("API Error Response:", error.response.data.message);
-      } else if (error.request) {
-        setLoading(false)
-        setLoanErrorMessage(error.response.data.message)
-        console.error("No response from server.");
-      } else {
-        setLoading(false)
-        setLoanErrorMessage(error.response.data.message)
-        console.error("Unexpected error:", error.message);
-      }
-    }
-  };
-  const editLoan = async () => {
-    if (!token) {
-      localStorage.clear();
-      router.push("/authentication/login");
-    }
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      if (decoded.exp * 1000 < Date.now()) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-    }
-    try {
-      const UpdateLoanPayload = {
-        amount,
-        comment,
-        fromTime: fromTime ? dayjs(fromTime).format("hh:mm A") : null,
-        toTime: toTime ? dayjs(toTime).format("hh:mm A") : null,
-        duration: others?.value,
-        type: loanType,
-        status: status || "Pending",
-      };
-      setLoanErrorMessage(false)
-      setLoading(true)
-      const response = await axios.put(
-        `${BASE_URL}/serviceType/updateServiceTypeById/${selectedId}`,
-        UpdateLoanPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.data.status) {
-        console.log("Loan updated successfully:", response.data);
-        handleCloseAddLoanDialog();
-        fetchLoansData();
-        setLoanUpdated(prev => !prev);
-        setLoading(false)
-      } else {
-        setLoading(false)
-        setLoanErrorMessage(response.data.message)
-        console.error("Update failed:", response.data.message);
-      }
-    } catch (error: any) {
-      setLoading(false)
-      setLoanErrorMessage(error.response.data.message)
-      console.error("Error updating loan:", error);
-    }
-  };
   const deleteLoan = async () => {
     if (!token) {
       localStorage.clear();
@@ -444,112 +244,6 @@ const Loan = () => {
     }
     setOpenDeleteLoanDialog(false);
   };
-
-  const [comment, setComment] = useState("");
-
-  const handleCommentChange = (event: any) => {
-    const newComment = event.target.value;
-    setComment(newComment);
-  };
-
-  const validateAmount = () => {
-    if (!amount.trim()) {
-      setAmountError("Loan amount is required.");
-    } else if (!/^\d+$/.test(amount)) {
-      setAmountError("Only numeric values are allowed.");
-    } else {
-      setAmountError("");
-    }
-  };
-
-  const validateLoanType = () => {
-    if (!loanType) {
-      setLoanTypeError("Loan type is required.");
-    } else {
-      setLoanTypeError("");
-    }
-  };
-
-  const validateOthers = () => {
-    if (!others) {
-      setDurationError("Duration of loan is required.");
-    } else {
-      setDurationError("");
-    }
-  };
-
-  const validateCallTime = () => {
-    if (!fromTime || !toTime) {
-      setCallTimeError("Both from and to time are required.");
-
-      return false;
-    } else if (dayjs(toTime).isBefore(dayjs(fromTime))) {
-      setCallTimeError("The 'to' time cannot be before the 'from' time.");
-      setToTimeError("The 'to' time cannot be before the 'from' time.");
-
-      return false;
-    } else {
-      setCallTimeError("");
-      setToTimeError("");
-    }
-
-    // setCallTimeError("");
-
-    return true;
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-
-    if (!amount.trim()) {
-      setAmountError("Loan amount is required");
-
-      isValid = false;
-    }
-
-    if (!loanType) {
-      setLoanTypeError("Loan type is required");
-
-      isValid = false;
-    }
-
-    if (!others) {
-      setDurationError("Duration of loan is required");
-
-      isValid = false;
-    }
-
-    if (!fromTime || !toTime) {
-      setCallTimeError("Preferable call time is required");
-
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleSubmit = () => {
-    const isValid = validateCallTime();
-
-    if (!isValid) return;
-
-    if (!validateForm()) return;
-
-    if (isEdit) {
-      editLoan();
-    } else {
-      addLoan();
-    }
-  };
-
-  const formatTime = (time: string | null) => {
-    if (!time) return "N/A";
-    const [hours, minutes] = time.split(":");
-    let hourNum = parseInt(hours, 10);
-    const amPm = hourNum >= 12 ? "PM" : "AM";
-    hourNum = hourNum % 12 || 12;
-    return `${hourNum}:${minutes} ${amPm}`;
-  };
   const handleViewButton = (row: any) => {
     setSelectedRow(row);
     setOpenViewDialog(true);
@@ -561,24 +255,15 @@ const Loan = () => {
   };
   const columns = [
     { field: "id", headerName: "ID", flex: 0.12 },
-    { field: "type", headerName: "Type", flex: 0.12 },
-    { field: "amount", headerName: "Amount", flex: 0.12 },
-    {
-      field: "duration",
-      headerName: "Duration",
-      flex: 0.12,
-      renderCell: (params: any) => `${params.value} Months`,
-    },
-    {
-      field: "fromTime",
-      headerName: "Contact Timing",
-      flex: 0.12,
-      renderCell: (params: any) => {
-        const fromTime = formatTime(params.row.fromTime);
-        const toTime = formatTime(params.row.toTime);
-        return fromTime !== "N/A" && toTime !== "N/A" ? `${fromTime} - ${toTime}` : "N/A";
-      },
-    },
+    { field: "serviceSubType", headerName: "Type", flex: 0.12 },
+    { field: "email", headerName: "Email", flex: 0.12 },
+    { field: "landmark", headerName: "Landmark", flex: 0.12 },
+    { field: "motherName", headerName: "Mother Name", flex: 0.12 },
+    { field: "cityYears", headerName: "City Years", flex: 0.12 },
+    { field: "alternateNo", headerName: "Alternate No", flex: 0.12 },
+    { field: "maritalStatus", headerName: "Marital Status", flex: 0.12 },
+    { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
+    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
     {
       field: "status",
       headerName: "Status",
@@ -669,21 +354,11 @@ const Loan = () => {
       },
     }
   ];
-  const handleEditButton = (formDataLoan: any) => {
+  const handleEditButton = (rowData: any) => {
+    setEditData(rowData);
     setIsEdit(true);
-    setSelectedId(formDataLoan.id);
-    setAmount(formDataLoan.amount);
-    setComment(formDataLoan.comment);
-    setFromTime(
-      formDataLoan.fromTime ? dayjs(formDataLoan.fromTime, "HH:mm:ss") : null
-    );
-    setToTime(
-      formDataLoan.toTime ? dayjs(formDataLoan.toTime, "HH:mm:ss") : null
-    );
-    const selectedDuration = durations.find((d: any) => d.value === formDataLoan.duration) || null;
-    setOthers(selectedDuration);
-    setOpenAddLoanDialog(true);
-    setLoanType(formDataLoan.type);
+    setSelectedOption("personalLoan");
+    setOpenDialog(true);
   };
 
   const handleDeleteButton = (id: any) => {
@@ -721,53 +396,111 @@ const Loan = () => {
         return "#fbf774";
     }
   };
-
   const exportToPDF = async () => {
-    const doc = new jsPDF();
-
-    doc.setFontSize(12);
-    doc.text("LOAN LIST", 14, 30);
-    const logoWidth = 40;
-    const logoHeight = 10;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const logoX = (pageWidth - logoWidth) / 2;
-    const dataTime = formatDateTime(new Date())
-    doc.addImage('/images/logos/logo.png', "PNG", logoX, 7, logoWidth, logoHeight);
-    doc.setFontSize(12);
-    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
-    doc.setFontSize(12);
-    doc.text(`Name: ${userName}`, 14, 40);
-    autoTable(doc, {
-      startY: 50,
-      head: [
-        ["ID", "Type", "Amount", "Duration", "From Time", "To Time", "Status", "Comment"]
-      ],
-      body: (loans || []).map((row: any) => [
-        row.id,
-        row.type,
-        row.amount,
-        row.duration,
-        row.fromTime,
-        row.toTime,
-        row.status,
-        row.comment,
-      ]),
-      headStyles: {
-        fillColor: [165, 42, 42],
-        textColor: 255,
-        halign: "center",
-        fontStyle: "bold",
-        fontSize: 10
-      },
-      bodyStyles: {
-        halign: "center",
-      },
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm'
+    });
+    doc.setProperties({
+      title: 'Loan List Report',
+      subject: 'Loan Data Export',
+      author: 'Your Application Name',
+      keywords: 'loan, report, data',
+      creator: 'Your Application Name'
     });
 
-    const pdfBlob = doc.output("blob");
+    // Add header with logo and timestamp
+    doc.setFontSize(12);
+    doc.text("LOAN LIST", 14, 20);
+
+    const logoWidth = 60;
+    const logoHeight = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoX = (pageWidth - logoWidth) / 2;
+    const dataTime = formatDateTime(new Date());
+
+    doc.addImage('/images/logos/logo.png', "PNG", logoX, 7, logoWidth, logoHeight);
+    doc.setFontSize(10);
+    doc.text(dataTime, pageWidth - 14, 20, { align: "right" });
+    doc.text(`Name: ${userName}`, 14, 30);
+
+    const headers = [
+      "ID",
+      "Type",
+      "PAN Number",
+      "Aadhar Number",
+      "Email",
+      "Landmark",
+      "City Years",
+      "Mother Name",
+      "Alternate No",
+      "Status",
+      "Comment"
+    ];
+
+    const bodyData = (loans || []).map((row: any) => [
+      row.id || 'N/A',
+      row.serviceSubType || 'N/A',
+      row.panNumber || 'N/A',
+      row.aadharNumber || 'N/A',
+      row.email || 'N/A',
+      row.landmark || 'N/A',
+      row.cityYears || 'N/A',
+      row.motherName || 'N/A',
+      row.alternateNo || 'N/A',
+      row.status || 'N/A',
+      row.comment || 'N/A'
+    ]);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [headers],
+      body: bodyData,
+      headStyles: {
+        fillColor: [165, 42, 42], // Brown color
+        textColor: 255,
+        halign: 'center',
+        fontStyle: 'bold',
+        fontSize: 8
+      },
+      bodyStyles: {
+        halign: 'center',
+        fontSize: 7,
+        cellPadding: 2,
+        overflow: 'linebreak'
+      },
+      styles: {
+        cellWidth: 'wrap',
+        valign: 'middle'
+      },
+      margin: { top: 40 },
+      tableWidth: 'auto',
+      didDrawPage: function (data) {
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(
+          `Page ${doc.getNumberOfPages()}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      },
+      willDrawCell: function (data) {
+        if (data.section === 'body') {
+          const cellValue = data.cell.raw != null ? String(data.cell.raw) : '';
+          const lines = doc.splitTextToSize(cellValue, data.cell.width - 4);
+          if (lines.length > 1) {
+            data.row.height = lines.length * 5;
+          }
+        }
+      }
+    });
+
+    const fileName = `Loan_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
+    const pdfBlob = doc.output('blob');
     const fileURL = URL.createObjectURL(pdfBlob);
     window.open(fileURL);
-    doc.save("AllLoanData.pdf");
   };
 
   const exportToExcel = () => {
@@ -809,6 +542,61 @@ const Loan = () => {
     saveAs(blob, "Loans.xlsx");
   };
 
+  const handleSelectChange = (event: any) => {
+    setSelectedOption(event.target.value);
+  };
+  const handleFormSubmit = async (formData: any, isEditMode: boolean) => {
+    setDialogLoading(true);
+    try {
+      const url = isEditMode
+        ? `${BASE_URL}/serviceType/updateServiceTypeById/${formData.id}`
+        : `${BASE_URL}/serviceType/createServiceType`;
+
+      const method = isEditMode ? 'put' : 'post';
+      const payload = JSON.stringify({
+        ...formData,
+        serviceId: 4,
+        ServiceSubType: selectedOption,
+        status: "Pending",
+      });
+      console.log("Payload:", payload);
+      const response = await axios[method](url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setSnackbarMessage(response.data.message);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      fetchLoansData();
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.errors?.body ||
+        (isEditMode ? "Failed to update service type" : "Failed to create service type");
+
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      console.error('API Error:', error.response?.data || error.message);
+    } finally {
+      setDialogLoading(false);
+      setOpenDialog(false);
+      setEditData(null);
+      setIsEdit(false);
+    }
+  };
+  const getDocumentName = (key: any) => {
+    const documentNames = {
+      aadhaarCardFileKey: 'View Aadhaar Card',
+      panCardFileKey: 'View PAN Card',
+      salarySlipsFileKey: 'View Salary Slip',
+      bankStatementFileKey: 'View bank Statement',
+    };
+    return documentNames[key as keyof typeof documentNames] || 'View Document';
+  };
+
   return (
     <>
       {loading && (
@@ -828,24 +616,26 @@ const Loan = () => {
         <Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={1}>
+              <Box display="flex" justifyContent="flex-end">
                 {/* <LoanDialog onConfirmYes={handleConfirmYes} /> */}
-                <Button
-                  variant="contained"
-                  sx={{ textTransform: "none" }}
-                  onClick={() => {
-                    setIsEdit(false);
-                    setOpenAddLoanDialog(true);
-                  }}
-                >
-                  Add
-                </Button>
-                <Button variant="outlined" onClick={exportToExcel}>
-                  Export to Excel
-                </Button>
-                <Button variant="contained" onClick={exportToPDF}>
-                  Export to PDF
-                </Button>
+                <Tooltip title="Add">
+                  <IconButton
+                    sx={{ textTransform: "none", color: "#44a7a2" }}
+                    onClick={() => setOpenLoanFormDialog(true)}
+                  >
+                    <AddCircleOutlineIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export Excel'>
+                  <IconButton onClick={exportToExcel} sx={{ color: "#44a7a2" }}>
+                    <GridOnIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export PDF'>
+                  <IconButton onClick={exportToPDF} sx={{ color: "#44a7a2" }}>
+                    <PictureAsPdfIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Grid>
 
@@ -860,11 +650,9 @@ const Loan = () => {
                   >
                     <Typography variant="h4">Loan</Typography>
                   </Grid>
-                  <Box
-                    sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}
-                  >
+                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={loans}
+                      rows={loans || []}
                       columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
@@ -873,7 +661,21 @@ const Loan = () => {
                       autoHeight
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: () => <CustomToolbar />,
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
                       }}
                     />
                   </Box>
@@ -882,260 +684,6 @@ const Loan = () => {
             </Grid>
           </Grid>
         </Box>
-
-        <Dialog
-          open={openAddLoanDialog}
-          onClose={handleCloseAddLoanDialog}
-          maxWidth="sm"
-          fullWidth
-        >
-          {loading && (
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-              }}
-            >
-              <CircularProgress />
-            </div>
-          )}
-          <DialogTitle>
-            <Typography variant="h3" component="h2">
-              {isEdit ? "Edit Loan" : "Add Loan"}
-            </Typography>
-          </DialogTitle>
-          {loanErrorMessage && (
-            <Grid item>
-              <Box sx={{
-                border: 1,
-                borderColor: '#ff9999',
-                p: 0,
-                m: 2,
-                backgroundColor: '#f8bbd0'
-              }}>
-                <Alert severity="error">{loanErrorMessage}</Alert>
-              </Box>
-            </Grid>
-          )}
-          <Divider></Divider>
-          <DialogContent sx={{ overflow: "visible", minHeight: "120px" }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label={
-                    <span>
-                      Loan amount <span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={amount}
-                  error={!!amountError}
-                  helperText={amountError}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const isValid = /^\d*\.?\d*$/.test(value);
-
-                    if (isValid && value.length <= 8) {
-                      setAmount(value);
-                      if (value.trim()) {
-                        setAmountError("");
-                      }
-                    }
-                  }}
-                  onBlur={validateAmount}
-                  inputProps={{
-                    inputMode: "decimal",
-                    pattern: "[0-9.]*",
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Autocomplete
-                  options={loanOptions}
-                  getOptionLabel={(option: any) => option.label || ""}
-                  value={loanOptions.find((opt: any) => opt.label === loanType) || null}
-                  onChange={(_, newValue: any) => {
-                    setLoanType(newValue ? newValue.label : null);
-                    setLoanTypeError("");
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={
-                        <span>
-                          Loan type <span style={{ color: "red" }}>*</span>
-                        </span>
-                      }
-                      variant="outlined"
-                      error={!!loanTypeError}
-                      helperText={loanTypeError}
-                    />
-                  )}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!durationError}>
-                  <Autocomplete
-                    options={durations}
-                    getOptionLabel={(option) => (option && option.value ? option.value : "")}
-                    isOptionEqualToValue={(option, value) => option?.value === value?.value}
-                    value={others}
-                    onChange={(event, newValue: any) => {
-                      setOthers(newValue);
-                      setDurationError("");
-                    }}
-                    onBlur={validateOthers}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label=
-                        {
-                          <span>
-                            Duration of loan{" "}
-                            <span style={{ color: "red" }}>*</span>
-                          </span>
-                        }
-                        variant="outlined"
-                        fullWidth
-                        error={!!durationError}
-                        helperText={durationError}
-                      />
-                    )}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TextField
-                    label={
-                      <span>
-                        Preferable call time{" "}
-                        <span style={{ color: "red" }}>*</span>
-                      </span>
-                    }
-                    value={displayTimeRange}
-                    onClick={handleOpen}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    error={!!callTimeError}
-                    helperText={callTimeError}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        if (!fromTime || !toTime) validateCallTime();
-                      }, 10);
-                    }}
-                  />
-                  <Popover
-                    open={Boolean(anchorEl)}
-                    anchorEl={anchorEl}
-                    onClose={() => {
-                      handleClose();
-                      if (fromTime && toTime) {
-                        setCallTimeError("");
-                        setToTimeError("");
-                      } else {
-                        validateCallTime();
-                      }
-                    }}
-                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-                  >
-                    <Dialog open={Boolean(anchorEl)} onClose={handleClose}>
-                      <DialogTitle>Select time</DialogTitle>
-                      <DialogContent sx={{ overflow: "visible" }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={6}>
-                            <TimePicker
-                              label="From"
-                              value={fromTime}
-                              onChange={(timeValue) => {
-                                setFromTime(timeValue);
-
-                                setCallTimeError("");
-                              }}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  variant: "outlined",
-                                  sx: { overflow: "visible", height: "auto" },
-                                },
-                              }}
-                            />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <TimePicker
-                              label="To"
-                              value={toTime}
-                              onChange={(timeValue) => {
-                                if (!fromTime || !timeValue) {
-                                  setToTime(timeValue);
-                                  setToTimeError("");
-                                  return;
-                                }
-                                const from = dayjs(fromTime);
-                                const to = dayjs(timeValue);
-                                if (to.isBefore(from.add(5, "minute"))) {
-                                  setToTimeError(
-                                    "The 'to' time cannot be before the 'from' time."
-                                  );
-                                } else {
-                                  setToTime(timeValue);
-                                  setToTimeError("");
-                                  setCallTimeError("");
-                                }
-                              }}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  variant: "outlined",
-                                  sx: { overflow: "visible", height: "auto" },
-                                  error: !!toTimeError,
-                                  helperText: toTimeError,
-                                },
-                              }}
-                            />
-                          </Grid>
-                        </Grid>
-                      </DialogContent>
-                    </Dialog>
-                  </Popover>
-                </LocalizationProvider>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  label="Comment"
-                  placeholder="Enter your comments (Max 300 words)"
-                  multiline
-                  rows={4}
-                  fullWidth
-                  variant="outlined"
-                  inputProps={{ maxLength: 300 }}
-                  value={comment}
-                  onChange={handleCommentChange}
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={handleCloseAddLoanDialog}>
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-            >
-              {isEdit ? "Update" : "Add"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
         {/* Delet button */}
 
         <Dialog
@@ -1174,43 +722,114 @@ const Loan = () => {
           </DialogActions>
         </Dialog>
       </PageContainer>
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Loan Details</DialogTitle>
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
+        <Grid container spacing={2} sx={{ padding: 2 }}>
+          <Grid item xs={12}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h6">Loan Details</Typography>
+              <IconButton onClick={handleCloseViewDialog} size="small">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Grid>
+        </Grid>
         <DialogContent dividers>
-          <Grid container spacing={0.1}>
+          <Grid container spacing={1}>
             {selectedRow &&
               Object.entries(selectedRow).map(([key, value]) => {
                 const isStatus = key.toLowerCase() === "status";
-                const statusColor = isStatus ? getStatusColor(value) : undefined;
+                const isDocumentKey = [
+                  'aadhaarCardFileKey',
+                  'panCardFileKey',
+                  'salarySlipsFileKey',
+                  'bankStatementFileKey'
+                ].includes(key);
+
+                const statusColor = isStatus ? getStatusColor(String(value)) : undefined;
+                const displayKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
                 return (
                   <React.Fragment key={key}>
                     <Grid item xs={6}>
-                      <Typography variant="body2">
-                        <Box component="span" sx={{ fontWeight: 'bold' }}>
-                          {key}:
-                        </Box>{' '}
-                        <Box
-                          component="span"
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {displayKey}:
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      {isDocumentKey && value ? (
+                        <Link
+                          href={`${AWS_S3_BUCKET_URL}/${value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           sx={{
-                            fontWeight: 'normal',
-                            color: isStatus ? statusColor : 'inherit',
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            wordBreak: 'break-all'
                           }}
                         >
-                          {String(value)}
-                        </Box>
-                      </Typography>
+                          {getDocumentName(key)}
+                        </Link>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: isStatus ? statusColor : 'inherit' }}>
+                          {String(value || 'N/A')}
+                        </Typography>
+                      )}
                     </Grid>
                   </React.Fragment>
                 );
               })}
           </Grid>
         </DialogContent>
+      </Dialog>
+      <Dialog
+        open={openLoanFormDialog}
+        onClose={handleCloseAddLoanDialog}
+        maxWidth="xs"
+        fullWidth
+        disableEscapeKeyDown
+      >
+        <DialogTitle>Select Loan Type</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Choose Option</InputLabel>
+            <Select
+              value={selectedOption}
+              onChange={handleSelectChange}
+              label="Choose Option"
+            >
+              <MenuItem value="personalLoan">Personal Loan</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseViewDialog}>Close</Button>
+          <Button onClick={handleCloseAddLoanDialog} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (!selectedOption) return;
+              setOpenLoanFormDialog(false);
+              setOpenDialog(true);
+            }}
+            disabled={!selectedOption}
+          >
+            Next
+          </Button>
         </DialogActions>
       </Dialog>
-
+      <PersonalLoanFormDialog
+        open={openDialog}
+        onClose={() => {
+          setOpenDialog(false);
+          setEditData(null);
+          setIsEdit(false);
+        }}
+        onSubmit={handleFormSubmit}
+        initialData={editData}
+        mode={isEdit ? 'edit' : 'create'}
+      />
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}

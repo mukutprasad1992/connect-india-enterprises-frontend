@@ -8,132 +8,77 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  Autocomplete,
   Typography,
   MenuItem,
   CircularProgress,
   Select,
   InputLabel,
   FormControl,
-  Popover,
-  FormHelperText,
   Container,
-  Divider,
   Alert,
   Snackbar,
-  Tooltip
+  Tooltip,
+  Link
 } from "@mui/material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import axios from "axios";
+import CloseIcon from "@mui/icons-material/Close";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import { SetStateAction, useEffect, useState } from "react";
-import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
+import { useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRouter } from 'next/navigation';
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
-// import InvestmentDialog from '../../components/AI/AIAssistantInvestment';
-import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
+import MutualFundFormDialog from "../../components/serviceTypeForm/mutualFundFormDialog";
+import React from "react";
+import { stat } from "fs";
 
-const durations = [
-  { value: "6 Months" },
-  { value: "12 Months" },
-  { value: "18 Months" },
-  { value: "24 Months" },
-  { value: "30 Months" },
-  { value: "36 Months" }
-];
 const Investment = () => {
   const [allInvestment, setAllInvestment] = useState<any>(null);
-
+  const [selectedOption, setSelectedOption] = useState("");
   const [selectedId, setSelectedId] = useState("");
-  const [date, setDate] = useState("");
-  const [amount, setAmount] = useState("");
-  const [investmentType, setInvestmentType] = useState<string | null>(null);
-  const [others, setOthers] = useState<{ value: string } | null>(null);
-  const [openAddInvestmentDialog, setOpenAddInvestmentDialog] = useState(false);
-  const [openDeleteInvestmentDialog, setOpenDeleteInvestmentDialog] =
-    useState(false);
+  const [openDeleteInvestmentDialog, setOpenDeleteInvestmentDialog] = useState(false);
+  const [openInvestmentFormDialog, setOpenInvestmentFormDialog] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
-  const [preferredCallTime, setPreferredCallTime] = useState<Date | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [fromTime, setFromTime] = useState<any>(null);
-  const [toTime, setToTime] = useState<any>(null);
-
-  const [toTimeError, setToTimeError] = useState("");
-  const [amountError, setAmountError] = useState("");
-  const [investmentTypeError, setInvestmentTypeError] = useState("");
-  const [durationError, setDurationError] = useState("");
-  const [callTimeError, setCallTimeError] = useState("");
-  const [investmentOptions, setInvestmentOptions] = useState([]);
-  const [othersError, setOthersError] = useState("");
-  const [investmentUpdated, setInvestmentUpdated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
-
   const router = useRouter();
-  const [investmentErrorMessage, setInvestmentErrorMessage] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
-  const handleOpen = (event: any) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [declarationChecked, setDeclarationChecked] = useState(false);
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-  const displayTimeRange =
-    fromTime && toTime
-      ? `${dayjs(fromTime).format("hh:mm A")} - ${dayjs(toTime).format(
-        "hh:mm A"
-      )}`
-      : "Select time";
-
-  const handleCloseAddInvestmentDialog = () => {
-    setAmount("");
-    setOthers(null);
-    setDate("");
-    setFromTime(null);
-    setToTime(null);
-    setComment("");
-    setAmountError("");
-    setInvestmentTypeError("");
-    setDurationError("");
-    setCallTimeError("");
-    setOpenAddInvestmentDialog(false);
-    setInvestmentType(null);
-    setInvestmentTypeError("");
-  };
-
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
   const getToken = () => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem('accessToken');
-      return token;
+      return localStorage.getItem('accessToken');
     }
   }
   const token = getToken();
+
   const getRoleId = () => {
     if (typeof window !== "undefined") {
       const storedRole = localStorage.getItem("roleId");
-      const roleId = storedRole ? parseInt(storedRole, 10) : null;
-      return roleId;
+      return storedRole ? parseInt(storedRole, 10) : null;
     }
   }
   const roleId = getRoleId();
@@ -162,348 +107,90 @@ const Investment = () => {
   const getUser = () => {
     if (typeof window !== "undefined") {
       const user = localStorage.getItem('user');
-      return user;
+      return user ? JSON.parse(user) : null;
     }
   }
-  const user = getUser();
-  const userObj = user ? JSON.parse(user) : null;
-  console.log(userObj?.firstName);
-  const userName = `${userObj?.firstName}  ${userObj?.lastName}`
+  const userObj = getUser();
+  const userName = `${userObj?.firstName}  ${userObj?.lastName}`;
+
   const fetchAllInvestmentData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${1}`, {
         headers: {
-          Authorization: `Bearer ${token} `,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
-          type: item.serviceSubType,
-          amount: item.amount,
-          duration: item.duration,
-          fromTime: item.fromTime,
-          toTime: item.toTime,
-          status: item.status,
-          comment: item.comment,
-        }));
+          email: item.email || "N/A",
+          aadharNumber: item.aadharNumber || "N/A",
+          aadhaarCardFileKey: item.aadhaarCardFileKey || null,
+          panCardFileKey: item.panCardFileKey || null,
+          bankProofFileKey: item.bankProofFileKey || null,
+          salarySlipsFileKey: item.salarySlipsFileKey || null,
+          itrDcumentsFileKey: item.itrDcumentsFileKey || null,
 
+          panNumber: item.panNumber || "N/A",
+          mobile: item.mobile || "N/A",
+          income: item.income || "N/A",
+          occupation: item.occupation || "N/A",
+          placeOfBirth: item.placeOfBirth || "N/A",
+          nomineeId: item.nomineeId || "N/A",
+          nomineeMobile: item.nomineeMobile || "N/A",
+          nomineeRelation: item.nomineeRelation || "N/A",
+          status: item.status,
+        }));
         setAllInvestment(formattedData);
-        setLoading(false)
       }
     } catch (error) {
-      setLoading(false)
       console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchAllInvestmentData();
-  }, [investmentUpdated, token]);
-
-  const fetchInvestmentOptions = async () => {
-    try {
-      if (!token) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-      if (token) {
-        const decoded: any = jwtDecode(token);
-        if (decoded.exp * 1000 < Date.now()) {
-          localStorage.clear();
-          router.push("/authentication/login");
-        }
-      }
-      setLoading(true)
-      const response = await axios.get(
-        `${BASE_URL} /serviceSubType/getServiceSubTypeByServiceId / ${1} `,
-        {
-          headers: {
-            Authorization: `Bearer ${token} `,
-          },
-        }
-      );
-
-      if (response.status === 200 && response.data.result) {
-        const options = response.data.result.map((item: any) => ({
-          id: item.id,
-          label: item.ledgerType,
-        }));
-        setInvestmentOptions(options);
-        setLoading(false)
-      } else {
-        setLoading(false)
-        console.error("Failed to fetch investment options:", response.data);
-      }
-    } catch (error) {
-      setLoading(false)
-      console.error("Error fetching investment options:", error);
-    }
-  };
-  useEffect(() => {
-    fetchInvestmentOptions();
   }, [token]);
-  const addInvestment = async () => {
-    if (!token) {
-      localStorage.clear();
-      router.push("/authentication/login");
-    }
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      if (decoded.exp * 1000 < Date.now()) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-    }
-    if (!amount.trim()) {
-      setAmountError("Investment amount is required.");
-      return;
-    }
-
-    setAmountError("");
-    const formattedFromTime = fromTime ? fromTime.format("hh:mm A") : "";
-    const formattedToTime = toTime ? toTime.format("hh:mm A") : "";
-
-    const newInvestment = {
-      id: allInvestment,
-      type: investmentType || "",
-      amount,
-      date,
-      duration: others,
-      fromTime: formattedFromTime,
-      toTime: formattedToTime,
-      status: "Pending",
-      comment,
-    };
-
-    const investmentPayload = {
-      amount: newInvestment.amount,
-      serviceSubType: newInvestment.type,
-      duration: newInvestment.duration?.value,
-      status: "Pending",
-      comment: newInvestment.comment,
-      fromTime: newInvestment.fromTime,
-      toTime: newInvestment.toTime,
-      serviceId: 1,
-    };
-    try {
-      setInvestmentErrorMessage(false)
-      setLoading(true)
-      const response = await axios.post(
-        `${BASE_URL} /serviceType/createServiceType`,
-        investmentPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token} `,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.status === 201) {
-        setSnackbarOpen(true);
-        setSnackbarMessage(response.data.notification.message)
-        setAllInvestment(response.data.data);
-        setInvestmentUpdated(prev => !prev);
-        handleCloseAddInvestmentDialog();
-        setLoading(false)
-
-      } else {
-        setLoading(false)
-        setInvestmentErrorMessage(response.data.message)
-        console.error("API error:", response.data);
-      }
-    } catch (error: any) {
-      setLoading(false)
-      console.error("Error during investment creation:", error);
-      if (error.response) {
-        setLoading(false)
-        setInvestmentErrorMessage(error.response.data.message)
-        console.error("API Error Response:", error.response.data.message);
-      } else if (error.request) {
-        setLoading(false)
-        setInvestmentErrorMessage(error.response.data.message)
-        console.error("No response from server.");
-      } else {
-        setLoading(false)
-        setInvestmentErrorMessage(error.response.data.message)
-        console.error("Unexpected error:", error.message);
-      }
-    }
-  };
-
-  const editInvestment = async () => {
-    if (!token) {
-      localStorage.clear();
-      router.push("/authentication/login");
-    }
-    if (token) {
-      const decoded: any = jwtDecode(token);
-      if (decoded.exp * 1000 < Date.now()) {
-        localStorage.clear();
-        router.push("/authentication/login");
-      }
-    }
-    try {
-
-      const UpdateInvestmentPayload = {
-        amount,
-        comment,
-        fromTime: fromTime ? dayjs(fromTime).format("hh:mm A") : null,
-        toTime: toTime ? dayjs(toTime).format("hh:mm A") : null,
-        duration: others?.value,
-        type: investmentType,
-        status: status || "Pending",
-      };
-      setInvestmentErrorMessage(false)
-      setLoading(true)
-      const response = await axios.put(
-        `${BASE_URL} /serviceType/updateServiceTypeById / ${selectedId} `,
-        UpdateInvestmentPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token} `,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.data.status) {
-        setOpenAddInvestmentDialog(false);
-        fetchAllInvestmentData();
-        setInvestmentUpdated(prev => !prev);
-        setLoading(false)
-      } else {
-        setInvestmentErrorMessage(response.data.message)
-        setLoading(false)
-        console.error("Update failed:", response.data.message);
-      }
-    } catch (error: any) {
-      setLoading(false)
-      setInvestmentErrorMessage(error.response.data.message)
-      console.error("Error updating investment:", error);
-    }
-  };
 
   const deleteInvestment = async () => {
     if (!selectedId) {
-      console.error("No investment selected for deletion.");
-
       setSnackbarMessage("No investment selected for deletion.");
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
       return;
     }
 
     setDialogLoading(true);
-
     try {
-      const serviceDeleted = await axios.delete(
-        `${BASE_URL} /serviceType/deleteServiceTypeById / ${selectedId} `,
+      const response = await axios.delete(
+        `${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`,
         {
           headers: {
-            Authorization: `Bearer ${token} `,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      setInvestmentUpdated(prev => !prev);
-      setAllInvestment((prevAllInvestment: any[]) =>
-        prevAllInvestment.filter((investment) => investment.id !== selectedId)
-      );
-      setSnackbarOpen(true)
-      setSnackbarMessage(serviceDeleted.data.message);
+
+      setSnackbarMessage(response.data.message);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      fetchAllInvestmentData();
     } catch (error: any) {
-      console.error("Error deleting investment:", error);
-      setSnackbarOpen(true)
       setSnackbarMessage(
         error?.response?.data?.message || "Failed to delete investment. Please try again."
       );
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     } finally {
       setDialogLoading(false);
       setOpenDeleteInvestmentDialog(false);
     }
   };
 
-  const [comment, setComment] = useState("");
-  const handleCommentChange = (event: any) => {
-    const newComment = event.target.value;
-    setComment(newComment);
-  };
-
-  const validateAmount = () => {
-    if (!amount.trim()) {
-      setAmountError("Investment amount is required.");
-    } else if (!/^\d+$/.test(amount)) {
-      setAmountError("Only numeric values are allowed.");
-    } else {
-      setAmountError("");
-    }
-  };
-  const validateOthers = () => {
-    if (!others) {
-      setDurationError("Duration of investment is required.");
-    } else {
-      setDurationError("");
-    }
-  };
-
-  const validateCallTime = () => {
-    if (!fromTime || !toTime) {
-      setCallTimeError("Both from and to time are required.");
-      return false;
-    } else if (dayjs(toTime).isBefore(dayjs(fromTime))) {
-      setCallTimeError("The 'to' time cannot be before the 'from' time.");
-      setToTimeError("The 'to' time cannot be before the 'from' time.");
-      return false;
-    } else {
-      setCallTimeError("");
-      setToTimeError("");
-    }
-    return true;
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-
-    if (!amount.trim()) {
-      setAmountError("Investment amount is required");
-      isValid = false;
-    }
-
-    if (!investmentType) {
-      setInvestmentTypeError("Investment type is required");
-      isValid = false;
-    }
-
-    if (!others) {
-      setDurationError("Duration of investment is required");
-      isValid = false;
-    }
-
-    if (!fromTime || !toTime) {
-      setCallTimeError("Preferable call time is required");
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleSubmit = () => {
-    const isValid = validateCallTime();
-    if (!isValid) return;
-    if (!validateForm()) return;
-    if (isEdit) {
-      editInvestment();
-    } else {
-      addInvestment();
-    }
-  };
-  const formatTime = (time: string | null) => {
-    if (!time) return "N/A";
-    const [hours, minutes] = time.split(":");
-    let hourNum = parseInt(hours, 10);
-    const amPm = hourNum >= 12 ? "PM" : "AM";
-    hourNum = hourNum % 12 || 12;
-    return `${hourNum}:${minutes} ${amPm} `;
-  };
   const handleViewButton = (row: any) => {
     setSelectedRow(row);
     setOpenViewDialog(true);
@@ -513,64 +200,29 @@ const Investment = () => {
     setOpenViewDialog(false);
     setSelectedRow(null);
   };
+
   const columns = [
     { field: "id", headerName: "ID", flex: 0.12 },
-    { field: "type", headerName: "Type", flex: 0.12 },
-    { field: "amount", headerName: "Amount", flex: 0.12 },
-    {
-      field: "duration",
-      headerName: "Duration",
-      flex: 0.12,
-      renderCell: (params: any) => `${params.value} Months`,
-    },
-    {
-      field: "fromTime",
-      headerName: "Contact Timing",
-      flex: 0.12,
-      renderCell: (params: any) => {
-        const fromTime = formatTime(params.row.fromTime);
-        const toTime = formatTime(params.row.toTime);
-        return fromTime !== "N/A" && toTime !== "N/A" ? `${fromTime} - ${toTime} ` : "N/A";
-      },
-    },
+    { field: "email", headerName: "Email", flex: 0.12 },
+    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
+    { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
+    { field: "mobile", headerName: "Mobile", flex: 0.12 },
+    { field: "income", headerName: "Income", flex: 0.12 },
+    { field: "occupation", headerName: "Occupation", flex: 0.12 },
+    { field: "placeOfBirth", headerName: "Place Of Birth", flex: 0.12 },
+    { field: "nomineeId", headerName: "Nominee Pan or Aadhar", flex: 0.12 },
+    { field: "nomineeMobile", headerName: "Nominee Mobile", flex: 0.12 },
+    { field: "nomineeRelation", headerName: "Nominee Relation", flex: 0.12 },
     {
       field: "status",
       headerName: "Status",
       flex: 0.12,
       renderCell: (params: any) => {
         const status = params.row.status;
-        let color = "#fbf774";
-
-        switch (status) {
-          case "Pending":
-            color = "#fbf774";
-            break;
-          case "In Progress":
-            color = "#fbe06f";
-            break;
-          case "Approved":
-            color = "#8df1b4";
-            break;
-          case "Rejected":
-            color = "#ff8780";
-            break;
-          default:
-            color = "#fbf774";
-        }
-
+        const color = getStatusColor(status);
         return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Typography
-              variant="body1"
-              sx={{ color, textAlign: "center" }}
-            >
+          <Box sx={{ display: "flex", alignItems: "center", width: "100%", height: "100%" }}>
+            <Typography variant="body1" sx={{ color, textAlign: "center" }}>
               {status}
             </Typography>
           </Box>
@@ -618,212 +270,286 @@ const Investment = () => {
                 </Tooltip>
               </>
             )}
-
           </Box>
         );
       },
     }
   ];
-  let getStatusColor = (status: any) => {
+
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "#fbf774";
-      case "In Progress":
-        return "#fbe06f";
-      case "Approved":
-        return "#8df1b4";
-      case "Rejected":
-        return "#ff8780";
-      default:
-        return "#fbf774";
+      case "Pending": return "#fbf774";
+      case "In Progress": return "#fbe06f";
+      case "Approved": return "#8df1b4";
+      case "Rejected": return "#ff8780";
+      default: return "#fbf774";
     }
   };
 
-  const handleEditButton = (formDataInvestment: any) => {
+  const handleEditButton = (rowData: any) => {
+    setEditData(rowData);
     setIsEdit(true);
-    setSelectedId(formDataInvestment.id);
-    setAmount(formDataInvestment.amount || "");
-    setComment(formDataInvestment.comment || "");
-    setFromTime(dayjs(formDataInvestment.fromTime, "hh:mm A"));
-    setToTime(dayjs(formDataInvestment.toTime, "hh:mm A"));
-    setOthers({ value: formDataInvestment.duration });
-    setInvestmentType(formDataInvestment.type);
-    setOpenAddInvestmentDialog(true);
+    setSelectedOption("mutualFund");
+    setOpenDialog(true);
   };
 
-  const handleDeleteButton = (id: any) => {
+  const handleDeleteButton = (id: string) => {
     setSelectedId(id);
     setOpenDeleteInvestmentDialog(true);
   };
 
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
-  }
-
-  const handleConfirmYes = () => {
-    setIsEdit(false);
-    setOpenAddInvestmentDialog(true);
-  };
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  }
-
-  const exportToPDF = async () => {
-    const doc = new jsPDF();
-
+  const exportToPDF = () => {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm'
+    });
+    doc.setProperties({
+      title: 'Investment List Report',
+      subject: 'Investment Data Export',
+      author: 'Your Application Name',
+      keywords: 'investment, report, data'
+    });
     doc.setFontSize(12);
-    doc.text("INVESTMENT LIST", 14, 30);
-    const logoWidth = 40;
-    const logoHeight = 10;
+    doc.text("INVESTMENT LIST", 14, 20);
+
+    const logoWidth = 60;
+    const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoX = (pageWidth - logoWidth) / 2;
-    const dataTime = formatDateTime(new Date())
+    const dataTime = formatDateTime(new Date());
+
     doc.addImage('/images/logos/logo.png', "PNG", logoX, 7, logoWidth, logoHeight);
-    doc.setFontSize(12);
-    doc.text("Name: " + userName, 14, 40);
-    doc.text(dataTime, pageWidth - 14, 30, { align: "right" });
+    doc.setFontSize(10);
+    doc.text(dataTime, pageWidth - 14, 20, { align: "right" });
+    doc.text(`Name: ${userName}`, 14, 30);
+    const headers = [
+      "ID",
+      "Email",
+      "Aadhar",
+      "PAN",
+      "Mobile",
+      "Income",
+      "Occupation",
+      "Place of Birth",
+      "Nominee ID",
+      "Nominee Mobile",
+      "Nominee Relation",
+      "Status",
+    ];
+
+    const bodyData = (allInvestment || []).map((row: any) => [
+      row.id || 'N/A',
+      row.email || 'N/A',
+      row.aadharNumber || 'N/A',
+      row.panNumber || 'N/A',
+      row.mobile || 'N/A',
+      row.income || 'N/A',
+      row.occupation || 'N/A',
+      row.placeOfBirth || 'N/A',
+      row.nomineeId || 'N/A',
+      row.nomineeMobile || 'N/A',
+      row.nomineeRelation || 'N/A',
+      row.status || 'N/A',
+    ]);
 
     autoTable(doc, {
-      startY: 50,
-      head: [
-        ["ID", "Type", "Amount", "Duration", "From Time", "To Time", "Status", "Comment"]
-      ],
-      body: (allInvestment || []).map((row: any) => [
-        row.id,
-        row.type,
-        row.amount,
-        row.duration,
-        row.fromTime,
-        row.toTime,
-        row.status,
-        row.comment,
-      ]),
+      startY: 40,
+      head: [headers],
+      body: bodyData,
       headStyles: {
         fillColor: [165, 42, 42],
         textColor: 255,
-        halign: "center",
-        fontStyle: "bold",
-        fontSize: 10
+        halign: 'center',
+        fontStyle: 'bold',
+        fontSize: 8,
+        cellPadding: 3
       },
       bodyStyles: {
-        halign: "center",
+        halign: 'center',
+        fontSize: 7,
+        cellPadding: 2,
+        overflow: 'linebreak'
       },
+      columnStyles: {
+        1: { cellWidth: 25 },
+        2: { cellWidth: 20 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 20 },
+        11: { cellWidth: 15 },
+        12: { cellWidth: 10 },
+        13: { cellWidth: 10 },
+        14: { cellWidth: 10 },
+        15: { cellWidth: 10 },
+        16: { cellWidth: 10 }
+      },
+      styles: {
+        cellPadding: 1,
+        valign: 'middle'
+      },
+      margin: { top: 40 },
+      didDrawPage: function (data) {
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(
+          `Page ${doc.getNumberOfPages()}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      },
+      willDrawCell: function (data) {
+        if (data.section === 'body') {
+          const cellValue = data.cell.raw != null ? String(data.cell.raw) : '';
+          const lines = doc.splitTextToSize(cellValue, data.cell.width - 4);
+          if (lines.length > 1) {
+            data.row.height = lines.length * 5;
+          }
+        }
+      }
     });
 
-    const pdfBlob = doc.output("blob");
-    const fileURL = URL.createObjectURL(pdfBlob);
-    window.open(fileURL);
-    doc.save("AllInvestmentData.pdf");
+    const fileName = `Investment_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
   };
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(allInvestment || []);
-
-    const headerKeys = Object.keys(allInvestment[0] || {});
-    headerKeys.forEach((key, idx) => {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: idx });
-      worksheet[cellAddress].s = {
-        fill: {
-          patternType: "solid",
-          fgColor: { rgb: "A52A2A" },
-        },
-        font: {
-          bold: true,
-          color: { rgb: "FFFFFF" },
-        },
-        alignment: {
-          horizontal: "center",
-          vertical: "center",
-        },
-      };
-    });
-
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Investments");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([excelBuffer], {
-      type:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const fileURL = URL.createObjectURL(blob);
-    saveAs(blob, "investments.xlsx");
+    XLSX.writeFile(workbook, "investments.xlsx");
   };
+
+  const handleSelectChange = (event: any) => {
+    setSelectedOption(event.target.value);
+  };
+
+  const handleFormSubmit = async (formData: any, isEditMode: boolean): Promise<boolean> => {
+    setDialogLoading(true);
+    try {
+      const url = isEditMode
+        ? `${BASE_URL}/serviceType/updateServiceTypeById/${formData.id}`
+        : `${BASE_URL}/serviceType/createServiceType`;
+
+      const method = isEditMode ? 'put' : 'post';
+      const payload = JSON.stringify({
+        ...formData,
+        serviceId: 1,
+        ServiceSubType: selectedOption,
+        status: "Pending",
+      });
+
+      const response = await axios[method](url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setSnackbarMessage(response.data.message);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      fetchAllInvestmentData();
+      return true;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.errors?.body ||
+        (isEditMode ? "Failed to update service type" : "Failed to create service type");
+
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      console.error('API Error:', error.response?.data || error.message);
+      return false;
+    } finally {
+      setDialogLoading(false);
+    }
+  };
+
+  const handleCloseAddInvestmentDialog = () => {
+    setSelectedOption('');
+    setOpenInvestmentFormDialog(false);
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setEditData(null);
+    setIsEdit(false);
+  };
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+  const getDocumentName = (key: any) => {
+    const documentNames = {
+      aadhaarCardFileKey: 'View Aadhaar Card',
+      panCardFileKey: 'View PAN Card',
+      bankProofFileKey: 'View Bank Proof',
+      salarySlipsFileKey: 'View Salary Slips',
+      itrDcumentsFileKey: 'View ITR Documents'
+    };
+    return documentNames[key as keyof typeof documentNames] || 'View Document';
+  };
+
 
   return (
     <>
-      {loading && (
-        <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 1000,
-          }}
-        >
-          <CircularProgress />
-        </div>
-      )}
       <PageContainer title="Investment" description="This is investment page">
         <Box>
-          <Grid container spacing={3}>
-
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
-                {/* <InvestmentDialog onConfirmYes={handleConfirmYes} /> */}
-                <Button
-                  variant="contained"
-                  sx={{ textTransform: "none" }}
-                  onClick={() => {
-                    setIsEdit(false);
-                    setOpenAddInvestmentDialog(true);
-                  }}
-                >
-                  Add
-                </Button>
-                <Button variant="outlined" onClick={exportToExcel}>
-                  Export to Excel
-                </Button>
-                <Button variant="contained" onClick={exportToPDF}>
-                  Export to PDF
-                </Button>
+          <Grid container spacing={1}>
+            <Grid item xs={12} sx={{ mb: 2 }}>
+              <Box display="flex" justifyContent="flex-end" alignItems="center">
+                <Tooltip title="Add">
+                  <IconButton
+                    sx={{ textTransform: "none", color: "#44a7a2" }}
+                    onClick={() => setOpenInvestmentFormDialog(true)}
+                  >
+                    <AddCircleOutlineIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export Excel'>
+                  <IconButton onClick={exportToExcel} sx={{ color: "#44a7a2" }}>
+                    <GridOnIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Export PDF'>
+                  <IconButton onClick={exportToPDF} sx={{ color: "#44a7a2" }}>
+                    <PictureAsPdfIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Grid>
+
             <Grid item xs={12}>
-              <DashboardCard >
+              <DashboardCard>
                 <Container>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{ mb: 2 }}
-                  >
+                  <Grid container justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                     <Typography variant="h4">Investment</Typography>
                   </Grid>
-                  <Box
-                    sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}
-                  >
+                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={allInvestment}
+                      rows={allInvestment || []}
                       columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
+                      disableRowSelectionOnClick
                       autoHeight
-                      loading={loading}
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: () => <CustomToolbar />,
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
                       }}
                     />
                   </Box>
@@ -833,285 +559,16 @@ const Investment = () => {
           </Grid>
         </Box>
 
-        {/* Add Investment Dialog */}
-        <Dialog
-          open={openAddInvestmentDialog}
-          onClose={handleCloseAddInvestmentDialog}
-          maxWidth="sm"
-          fullWidth
-        >
-          {loading && (
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-              }}
-            >
-              <CircularProgress />
-            </div>
-          )}
-          <DialogTitle>
-            <Typography variant="h3" component="h3">
-              {isEdit ? "Edit investment" : "Add investment"}
-            </Typography>
-          </DialogTitle>
-          {investmentErrorMessage && (
-            <Grid item>
-              <Box sx={{
-                border: 1,
-                borderColor: '#ff9999',
-                p: 0,
-                m: 2,
-                backgroundColor: '#f8bbd0'
-              }}>
-                <Alert severity="error">{investmentErrorMessage}</Alert>
-              </Box>
-            </Grid>
-          )}
-          <Divider></Divider>
-          <DialogContent sx={{ overflow: "visible", minHeight: "120px" }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label={
-                    <span>
-                      Investment amount <span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={amount}
-                  error={!!amountError}
-                  helperText={amountError}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const isValid = /^\d*\.?\d*$/.test(value);
-
-                    if (isValid && value.length <= 8) {
-                      setAmount(value);
-                      if (value.trim()) {
-                        setAmountError("");
-                      }
-                    }
-                  }}
-                  onBlur={validateAmount}
-                  inputProps={{
-                    inputMode: "numeric",
-                    pattern: "[0-9]*",
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Autocomplete
-                  options={investmentOptions}
-                  getOptionLabel={(option: any) => option.label || ""}
-                  value={investmentOptions.find((opt: any) => opt.label === investmentType) || null}
-                  onChange={(_, newValue: any) => {
-                    setInvestmentType(newValue ? newValue.label : null);
-                    setInvestmentTypeError("");
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={
-                        <span>
-                          Investment type <span style={{ color: "red" }}>*</span>
-                        </span>
-                      }
-                      variant="outlined"
-                      error={!!investmentTypeError}
-                      helperText={investmentTypeError}
-                    />
-                  )}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={!!durationError}>
-                  <Autocomplete
-                    options={durations}
-                    getOptionLabel={(option) => (option && option.value ? option.value : "")}
-                    isOptionEqualToValue={(option, value) => option?.value === value?.value}
-                    value={others}
-                    onChange={(event, newValue: any) => {
-                      setOthers(newValue);
-                      setDurationError("");
-                    }}
-                    onBlur={validateOthers}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label=
-                        {
-                          <span>
-                            Duration of investment{" "}
-                            <span style={{ color: "red" }}>*</span>
-                          </span>
-                        }
-                        variant="outlined"
-                        fullWidth
-                        error={!!durationError}
-                        helperText={durationError}
-                      />
-                    )}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TextField
-                    label={
-                      <span>
-                        Preferable call time{" "}
-                        <span style={{ color: "red" }}>*</span>
-                      </span>
-                    }
-                    value={displayTimeRange}
-                    onClick={handleOpen}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    error={!!callTimeError}
-                    helperText={callTimeError}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        if (!fromTime || !toTime) validateCallTime();
-                      }, 10);
-                    }}
-                  />
-                  <Popover
-                    open={Boolean(anchorEl)}
-                    anchorEl={anchorEl}
-                    onClose={() => {
-                      handleClose();
-                      if (fromTime && toTime) {
-                        setCallTimeError("");
-                        setToTimeError("");
-                      } else {
-                        validateCallTime();
-                      }
-                    }}
-                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-                  >
-                    <Dialog open={Boolean(anchorEl)} onClose={handleClose}>
-                      <DialogTitle>Select time</DialogTitle>
-                      <DialogContent sx={{ overflow: "visible" }}>
-                        <Grid container spacing={2}>
-                          <Grid item xs={6}>
-                            <TimePicker
-                              label="From"
-                              value={fromTime}
-                              onChange={(timeValue) => {
-                                setFromTime(timeValue);
-                                setCallTimeError("");
-                              }}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  variant: "outlined",
-                                  sx: { overflow: "visible", height: "auto" },
-                                },
-                              }}
-                            />
-                          </Grid>
-                          <Grid item xs={6}>
-                            <TimePicker
-                              label="To"
-                              value={toTime}
-                              onChange={(timeValue) => {
-                                if (!fromTime || !timeValue) {
-                                  setToTime(timeValue);
-                                  setToTimeError("");
-                                  return;
-                                }
-
-                                const from = dayjs(fromTime);
-                                const to = dayjs(timeValue);
-
-                                if (to.isBefore(from.add(5, "minute"))) {
-                                  setToTimeError(
-                                    "The 'to' time cannot be before the 'from' time."
-                                  );
-
-                                } else {
-                                  setToTime(timeValue);
-                                  setToTimeError("");
-                                  setCallTimeError("");
-                                }
-                              }}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  variant: "outlined",
-                                  sx: { overflow: "visible", height: "auto" },
-                                  error: !!toTimeError,
-                                  helperText: toTimeError,
-
-                                },
-                              }}
-                            />
-                          </Grid>
-                        </Grid>
-                      </DialogContent>
-                    </Dialog>
-                  </Popover>
-                </LocalizationProvider>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  label="Comment"
-                  placeholder="Enter your comments (Max 300 words)"
-                  multiline
-                  rows={4}
-                  fullWidth
-                  variant="outlined"
-                  inputProps={{ maxLength: 300 }}
-                  value={comment}
-                  onChange={handleCommentChange}
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={handleCloseAddInvestmentDialog}>
-              Close
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-            >
-              {isEdit ? "Update" : "Add"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
+        {/* Delete Confirmation Dialog */}
         <Dialog
           open={openDeleteInvestmentDialog}
           onClose={() => setOpenDeleteInvestmentDialog(false)}
           maxWidth="xs"
           fullWidth
         >
-          {dialogLoading && (
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-              }}
-            >
-              <CircularProgress />
-            </div>
-          )}
           <DialogTitle>Delete investment</DialogTitle>
           <DialogContent>
-            <Typography>Are you sure you want to delete ?</Typography>
+            <Typography>Are you sure you want to delete?</Typography>
           </DialogContent>
           <DialogActions>
             <Button
@@ -1124,71 +581,139 @@ const Investment = () => {
               onClick={deleteInvestment}
               variant="contained"
               color="primary"
+              disabled={dialogLoading}
             >
-              Delete
+              {dialogLoading ? <CircularProgress size={24} /> : "Delete"}
             </Button>
           </DialogActions>
         </Dialog>
-      </PageContainer >
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Investment Details</DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={0.1}>
-            {selectedRow &&
-              Object.entries(selectedRow).map(([key, value], index) => {
-                const isStatus = key.toLowerCase() === "status";
-                const statusColor = isStatus ? getStatusColor(value) : undefined;
 
-                return (
-                  <React.Fragment key={key}>
-                    <Grid item xs={6}>
-                      <Typography variant="body2">
-                        <Box component="span" sx={{ fontWeight: 'bold' }}>
-                          {key}:
-                        </Box>{' '}
-                        <Box
-                          component="span"
-                          sx={{
-                            fontWeight: 'normal',
-                            color: isStatus ? statusColor : 'inherit',
-                          }}
-                        >
-                          {String(value)}
-                        </Box>
-                      </Typography>
-                    </Grid>
-                  </React.Fragment>
-                );
-              })}
+        {/* View Dialog */}
+        <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
+          <Grid container spacing={2} sx={{ padding: 2 }}>
+            <Grid item xs={12}>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">Investment Details</Typography>
+                <IconButton onClick={handleCloseViewDialog} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseViewDialog}>Close</Button>
-        </DialogActions>
-      </Dialog>
+          <DialogContent dividers>
+            <Grid container spacing={2}>
+              {selectedRow &&
+                Object.entries(selectedRow).map(([key, value]) => {
+                  const isStatus = key.toLowerCase() === "status";
+                  const isDocumentKey = [
+                    'aadhaarCardFileKey',
+                    'panCardFileKey',
+                    'bankProofFileKey',
+                    'salarySlipsFileKey',
+                    'itrDcumentsFileKey'
+                  ].includes(key);
 
-      <Snackbar
-        open={snackbarOpen}
-        // open={true}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity}
-          sx={{
-            width: "100%",
-            backgroundColor: "green",
-            color: "white",
-          }}
+                  const statusColor = isStatus ? getStatusColor(String(value)) : undefined;
+
+                  return (
+                    <React.Fragment key={key}>
+                      <Grid item xs={6}>
+                        <Typography variant="body2">
+                          <Box component="span" sx={{ fontWeight: 'bold' }}>
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                          </Box>
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        {isDocumentKey && value ? (
+                          <Link
+                            href={`${AWS_S3_BUCKET_URL}/${value}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                              color: 'primary.main',
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              wordBreak: 'break-all'
+                            }}
+                          >
+                            {getDocumentName(key)}
+                          </Link>
+                        ) : (
+                          <Typography variant="body2" sx={{ color: isStatus ? statusColor : 'inherit' }}>
+                            {String(value || 'N/A')}
+                          </Typography>
+                        )}
+                      </Grid>
+                    </React.Fragment>
+                  );
+                })}
+            </Grid>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={openInvestmentFormDialog}
+          onClose={handleCloseAddInvestmentDialog}
+          maxWidth="xs"
+          fullWidth
+          disableEscapeKeyDown
         >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+          <DialogTitle>Select Investment Type</DialogTitle>
+          <DialogContent>
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Choose Option</InputLabel>
+              <Select
+                value={selectedOption}
+                onChange={handleSelectChange}
+                label="Choose Option"
+              >
+                <MenuItem value="mutualFund">Mutual Fund / SIP</MenuItem>
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAddInvestmentDialog} variant="outlined">
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (!selectedOption) return;
+                setOpenInvestmentFormDialog(false);
+                setOpenDialog(true);
+              }}
+              disabled={!selectedOption}
+            >
+              Next
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <MutualFundFormDialog
+          open={openDialog}
+          onClose={handleDialogClose}
+          onSubmit={handleFormSubmit}
+          initialData={editData}
+          mode={isEdit ? 'edit' : 'create'}
+          setOpenDialog={setOpenDialog} // Add this
+        />
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity={snackbarSeverity}
+            sx={{ width: '100%' }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+      </PageContainer>
     </>
   );
 };
 
 export default Investment;
-

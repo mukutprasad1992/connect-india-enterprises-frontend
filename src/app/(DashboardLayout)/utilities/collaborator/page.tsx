@@ -16,6 +16,9 @@ import {
   Snackbar,
   Avatar,
 } from "@mui/material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import Tooltip from '@mui/material/Tooltip';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
@@ -28,7 +31,7 @@ import axios from 'axios';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 import { formatDate } from "../../../../utils/utils";
-import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarContainer, } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer, } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { formatDateToIST } from '../../../../utils/utils';
 import { useRouter } from 'next/navigation';
@@ -135,7 +138,6 @@ const Collaborator = () => {
   }
   const user = getUser();
   const userObj = user ? JSON.parse(user) : null;
-  console.log(userObj?.firstName);
   const userName = `${userObj?.firstName}  ${userObj?.lastName}`
 
   useEffect(() => {
@@ -703,12 +705,11 @@ const Collaborator = () => {
       )}
       <PageContainer title="Vendor" description="This is Vendor page">
         <Box>
-          <Grid container spacing={3}>
+          <Grid container spacing={1}>
             <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" gap={1}>
-                <Button
-                  variant="contained"
-                  color="primary"
+              <Box display="flex" justifyContent="flex-end">
+                <IconButton
+                  sx={{ color: "#44a7a2" }}
                   onClick={() => {
                     setIsEdit(false);
                     generateUniqueCode();
@@ -736,17 +737,16 @@ const Collaborator = () => {
                   }}
 
                 >
-                  Add
-                </Button>
-                <Button variant="outlined" onClick={exportToExcel}>
-                  Export to Excel
-                </Button>
-                <Button
-                  variant="contained"
+                  <AddCircleOutlineIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
+                <IconButton onClick={exportToExcel}>
+                  <GridOnIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
+                <IconButton
                   onClick={() => exportToPDF(vendorList, userName)}
                 >
-                  Export to PDF
-                </Button>
+                  <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
+                </IconButton>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -761,21 +761,32 @@ const Collaborator = () => {
                     <Typography variant="h4">Vendor</Typography>
                   </Grid>
 
-                  <Box
-                    sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}
-                  >
+                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
-                      rows={vendorList}
+                      rows={vendorList || []}
                       columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
-                      sortModel={[{ field: "id", sort: "desc", }]}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
                       disableRowSelectionOnClick
                       autoHeight
-                      sx={{ flexGrow: 1 }}
+                      sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: () => <CustomToolbar />,
+                        toolbar: GridToolbar,
+                      }}
+                      slotProps={{
+                        toolbar: {
+                          showQuickFilter: true,
+                          quickFilterProps: { debounceMs: 500 },
+                          sx: {
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: "4px",
+                            padding: "8px",
+                            '& .MuiButton-text': {
+                              color: '#44a7a2',
+                            },
+                          },
+                        },
                       }}
                     />
                   </Box>
