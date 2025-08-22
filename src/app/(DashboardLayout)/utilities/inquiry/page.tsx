@@ -45,7 +45,7 @@ const InquiryPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [actionType, setActionType] = useState<'approve' | 'reject' | 'in progress' | null>(null);
+    const [actionType, setActionType] = useState<'approve' | 'reject' | 'in progress' | 'pending' | null>(null);
     const [selectedInquiryId, setSelectedInquiryId] = useState<number | null>(null);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
@@ -61,7 +61,7 @@ const InquiryPage = () => {
         }
     }
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-    const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
+    const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
     const DOCUMENT_KEYS = [
         'panCardFileKey',
         'aadhaarCardFileKey',
@@ -156,26 +156,26 @@ const InquiryPage = () => {
     const handleApproveClick = (row: any) => {
         setActionType('approve');
         setSelectedInquiryId(row.id);
-        setSelectedInquiry(row); // ✅ Add this
+        setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
 
     const handleInProgressClick = (row: any) => {
         setActionType('in progress');
         setSelectedInquiryId(row.id);
-        setSelectedInquiry(row);   // ✅ keeps dialog in sync with row status
+        setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
 
     const handleRejectClick = (row: any) => {
         setActionType('reject');
         setSelectedInquiryId(row.id);
-        setSelectedInquiry(row); // ✅ Add this
+        setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
 
     const updateInquiryStatus = async (
-        action: 'approve' | 'reject' | 'in progress',
+        action: 'approve' | 'reject' | 'in progress' | 'pending',
         id: number,
         currentStatus: string
     ) => {
@@ -183,41 +183,32 @@ const InquiryPage = () => {
         try {
             let newStatus = "";
 
-            if (action === 'approve') {
-                newStatus = "Approved";
-            } else if (action === 'reject') {
-                newStatus = "Rejected";
-            } else if (action === 'in progress') {
-                newStatus = currentStatus === "In Progress" ? "Pending" : "In Progress";
-            }
+            if (action === "approve") newStatus = "Approved";
+            else if (action === "reject") newStatus = "Rejected";
+            else if (action === "in progress") newStatus = currentStatus === "In Progress" ? "Pending" : "In Progress";
 
-            if (token) {
-                const decoded: any = jwtDecode(token);
-                if (decoded.exp * 1000 < Date.now()) {
-                    localStorage.clear();
-                    router.push("/authentication/login");
-                    return;
-                }
-            }
+            // ✅ update locally for instant UI response
+            // setInquiries((prev) =>
+            //     prev.map((inq) =>
+            //         inq.id === id ? { ...inq, status: newStatus } : inq
+            //     )
+            // );
 
             const response = await axios.put(
                 `${BASE_URL}/serviceType/updateStatus/${id}`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            if (response.data.status) {
-                // ✅ Refresh data from API
-                await fetchInquiries();
 
-                // ✅ Show success message
+            if (response.data.status) {
+                await fetchInquiries(); // sync with backend again
                 setSnackbarSeverity("success");
                 setSnackbarMessage(response.data.message || "Status updated successfully");
-                setSnackbarOpen(true);
             } else {
                 setSnackbarSeverity("error");
                 setSnackbarMessage(response.data.message || "Failed to update status");
-                setSnackbarOpen(true);
             }
+            setSnackbarOpen(true);
         } catch (error: any) {
             setSnackbarSeverity("error");
             setSnackbarMessage(error?.response?.data?.message || "Something went wrong");
@@ -226,6 +217,7 @@ const InquiryPage = () => {
             setIsLoading(false);
         }
     };
+
     const columns = [
         { field: "id", headerName: "ID", flex: 0.1 },
         { field: "firstName", headerName: "First Name", flex: 0.1 },
@@ -288,11 +280,15 @@ const InquiryPage = () => {
         {
             field: "actions",
             headerName: "Actions",
-            flex: 0.8,
+            sortable: false,
+            filterable: false,
+            disableColumnMenu: true,
+            minWidth: 170,
+            flex: 0,
             renderCell: (params: any) => {
                 const status = params.row.status;
                 return (
-                    <>
+                    <Box sx={{ display: "flex", gap: 0.01, alignItems: "center" }}>
                         <Tooltip title="View">
                             <IconButton
                                 color="info"
@@ -304,6 +300,7 @@ const InquiryPage = () => {
                                 <Visibility />
                             </IconButton>
                         </Tooltip>
+
                         {status !== "Approved" && status !== "Rejected" && (
                             <>
                                 <Tooltip title="Approve">
@@ -311,21 +308,21 @@ const InquiryPage = () => {
                                         <CheckCircle />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title="Inprogress/Pending">
+
+                                <Tooltip title={status === "Pending" ? "Pending" : "In Progress"}>
                                     <IconButton
+                                        key={`${params.id}-${status}`}
+                                        color="inherit"
                                         onClick={() => handleInProgressClick(params.row)}
-                                        sx={{
-                                            color:
-                                                params.row.status === "Pending"
-                                                    ? "#fbf774"
-                                                    : params.row.status === "In Progress"
-                                                        ? "#fbe06f"
-                                                        : "inherit",
-                                        }}
+                                        sx={{ color: "unset !important" }}
                                     >
-                                        <Pending />
+                                        <Pending
+                                            htmlColor={status === "Pending" ? "#fbf774" : "#fbe06f"}
+                                            fontSize="medium"
+                                        />
                                     </IconButton>
                                 </Tooltip>
+
                                 <Tooltip title="Reject">
                                     <IconButton color="error" onClick={() => handleRejectClick(params.row)}>
                                         <Cancel />
@@ -333,11 +330,10 @@ const InquiryPage = () => {
                                 </Tooltip>
                             </>
                         )}
-                    </>
+                    </Box>
                 );
             },
         }
-
     ];
 
     const getActionText = (actionType: string | null, currentStatus?: string) => {
@@ -353,19 +349,12 @@ const InquiryPage = () => {
                 return "Approval";
             case "reject":
                 return "Rejection";
+            case "Pending":
+                return "Pending";
             default:
                 return "";
         }
     };
-
-
-    function CustomToolbar({ onButtonClick }: any) {
-        return (
-            <GridToolbarContainer>
-                <GridToolbarColumnsButton />
-            </GridToolbarContainer>
-        );
-    }
 
     const exportToPDF = async (inquiries: any[], userName: string) => {
         const doc = new jsPDF({ orientation: "landscape" });

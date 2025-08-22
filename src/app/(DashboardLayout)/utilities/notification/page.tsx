@@ -144,20 +144,19 @@ const Notification = () => {
         currentPage * ITEMS_PER_PAGE
     );
     function extractMessageBody(data: any): string {
-        console.log("Data:", data);
-
-        // Case 1: if response is an object with "message"
+        // If response is an object with "message"
         if (data && typeof data === "object" && "message" in data) {
-            return String(data.message);
+            return data.message as string;
         }
 
-        // Case 2: if response is already a string
+        // If response is already a string
         if (typeof data === "string") {
             return data;
         }
 
         return "No message available.";
     }
+
     return (
         <>
             <Tooltip title="Notification">
@@ -202,7 +201,7 @@ const Notification = () => {
                         >
                             <Typography
                                 variant="body2"
-                                dangerouslySetInnerHTML={{ __html: extractMessageBody(notification.message) }}
+                                dangerouslySetInnerHTML={{ __html: extractMessageBody(notification) }}
                                 sx={{
                                     fontSize: '0.8rem',
                                     whiteSpace: 'normal',

@@ -192,8 +192,10 @@ const Loan = () => {
           status: item.status,
         }));
         setLoans(formattedData);
+        console.log("Fetched loans data:", response.data);
         setLoading(false)
       }
+
     } catch (error) {
       setLoading(false)
       console.error("Error fetching data:", error);
@@ -311,7 +313,11 @@ const Loan = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 0.12,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      minWidth: 100,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
         const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
@@ -367,13 +373,6 @@ const Loan = () => {
     setOpenDeleteLoanDialog(true);
   };
 
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
-  }
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   }

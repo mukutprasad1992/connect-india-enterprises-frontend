@@ -618,7 +618,11 @@ const Policy = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 0.12,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      minWidth: 100,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
         const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
@@ -681,13 +685,6 @@ const Policy = () => {
     setOpenDeletePolicyDialog(true);
   };
 
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
-  }
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   }

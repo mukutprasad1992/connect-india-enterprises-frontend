@@ -64,10 +64,9 @@ const Investment = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [openDialog, setOpenDialog] = useState(false);
   const [editData, setEditData] = useState<any>(null);
-  const [declarationChecked, setDeclarationChecked] = useState(false);
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
+  const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
   const getToken = () => {
     if (typeof window !== "undefined") {
       return localStorage.getItem('accessToken');
@@ -131,7 +130,7 @@ const Investment = () => {
           panCardFileKey: item.panCardFileKey || null,
           bankProofFileKey: item.bankProofFileKey || null,
           salarySlipsFileKey: item.salarySlipsFileKey || null,
-          itrDcumentsFileKey: item.itrDcumentsFileKey || null,
+          itrDocumentsFileKey: item.itrDocumentsFileKey || null,
 
           panNumber: item.panNumber || "N/A",
           mobile: item.mobile || "N/A",
@@ -232,7 +231,11 @@ const Investment = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 0.12,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      minWidth: 100,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
         const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
@@ -484,7 +487,7 @@ const Investment = () => {
       panCardFileKey: 'View PAN Card',
       bankProofFileKey: 'View Bank Proof',
       salarySlipsFileKey: 'View Salary Slips',
-      itrDcumentsFileKey: 'View ITR Documents'
+      itrDocumentsFileKey: 'View ITR Documents'
     };
     return documentNames[key as keyof typeof documentNames] || 'View Document';
   };
@@ -610,7 +613,7 @@ const Investment = () => {
                     'panCardFileKey',
                     'bankProofFileKey',
                     'salarySlipsFileKey',
-                    'itrDcumentsFileKey'
+                    'itrDocumentsFileKey'
                   ].includes(key);
 
                   const statusColor = isStatus ? getStatusColor(String(value)) : undefined;

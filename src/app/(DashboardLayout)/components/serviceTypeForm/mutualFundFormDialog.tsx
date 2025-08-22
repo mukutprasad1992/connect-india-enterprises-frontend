@@ -39,7 +39,7 @@ interface MutualFundData {
     panCardFileKey: File | string | null;
     bankProofFileKey: File | string | null;
     salarySlipsFileKey: File | string | null;
-    itrDcumentsFileKey: File | string | null;
+    itrDocumentsFileKey: File | string | null;
     email: string;
     mobile: string;
     placeOfBirth: string;
@@ -58,7 +58,7 @@ const defaultFormData: MutualFundData = {
     panCardFileKey: null,
     bankProofFileKey: null,
     salarySlipsFileKey: null,
-    itrDcumentsFileKey: null,
+    itrDocumentsFileKey: null,
     email: "",
     mobile: "",
     placeOfBirth: "",
@@ -87,6 +87,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
 }) => {
     const router = useRouter();
     const [step, setStep] = useState(1);
+    console.log("<--initialData--->", initialData);
     const [formData, setFormData] = useState<MutualFundData>(defaultFormData);
     // const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -141,7 +142,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
 
     useEffect(() => {
         if (mode === 'edit' && initialData) {
-            setFormData(initialData);
+            const updatedFormData: any = { ...initialData };
             const urls: Record<string, string> = {};
 
             const documentKeys: (keyof MutualFundData)[] = [
@@ -149,15 +150,17 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 'panCardFileKey',
                 'bankProofFileKey',
                 'salarySlipsFileKey',
-                'itrDcumentsFileKey'
+                'itrDocumentsFileKey'
             ];
 
             documentKeys.forEach(key => {
-                if (typeof initialData[key] === 'string') {
+                if (typeof initialData[key] === 'string' && initialData[key] !== "") {
                     urls[key] = `${DOCUMENT_URL}/${initialData[key]}`;
+                    updatedFormData[key] = initialData[key];
                 }
             });
 
+            setFormData(updatedFormData);
             setFilePreviewUrls(urls);
         } else {
             setFormData(defaultFormData);
@@ -167,8 +170,9 @@ const MutualFundFormDialog: React.FC<Props> = ({
         setSuccess(false);
     }, [open, initialData, mode, DOCUMENT_URL]);
 
+
     // Validation functions
-    const validateField = useCallback((name: string, value: string | File | null): string => {
+    const validateField = useCallback((name: string, value: string | File | null): any => {
         switch (name) {
             case 'aadharNumber':
                 if (!value) return "Aadhar number is required";
@@ -193,7 +197,12 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 return "";
             case 'placeOfBirth':
                 if (!value) return "Place of birth is required";
-                if (typeof value !== 'string') return "Invalid place of birth input";
+                if (typeof value === "string" && value.length > 200) return "Place of birth cannot exceed 200 characters";
+
+                // Count only letters
+                const lettersCount = typeof value === "string" ? (value.match(/[A-Za-z]/g) || []).length : 0;
+                if (lettersCount < 5) return "Place of birth must contain at least 5 letters";
+
                 return "";
 
             case 'income': {
@@ -206,7 +215,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 return "";
             }
             case 'nomineeId':
-                return validateNomineeId(value as string, formData.panNumber, formData.aadharNumber);
+                return validateNomineeId(value as string);
             case 'nomineeRelation':
                 if (!value) return "This field is required";
                 return "";
@@ -221,39 +230,58 @@ const MutualFundFormDialog: React.FC<Props> = ({
             case 'panCardFileKey':
             case 'bankProofFileKey':
                 if (!value) return "This document is required";
+                if (!(typeof value === "string" || value instanceof File)) {
+                    return "Invalid file input";
+                }
                 return "";
+
             case 'salarySlipsFileKey':
-                if (formData.occupation === "Job" && !value) return "Salary slips are required for Job";
+                if (formData.occupation === "Job") {
+                    if (!value) return "Salary slips are required for Job";
+                    if (!(typeof value === "string" || value instanceof File)) {
+                        return "Invalid salary slips input";
+                    }
+                }
                 return "";
-            case 'itrDcumentsFileKey':
-                if (formData.occupation === "Business" && !value) return "ITR documents are required for Business";
-                return "";
-            default:
+
+            case 'itrDocumentsFileKey':
+                if (formData.occupation === "Business") {
+                    if (!value) return "ITR documents are required for Business";
+                    if (!(typeof value === "string" || value instanceof File)) {
+                        return "Invalid ITR document input";
+                    }
+                }
                 return "";
         }
     }, [formData.occupation]);
 
-    function validateNomineeId(nomineeId: string, panNumber: string, aadhaarNumber: string): string {
+    function validateNomineeId(nomineeId: string): string {
         if (!nomineeId) return "Nominee ID is required";
 
-        const trimmedNomineeId = nomineeId.trim();
-        if (!/^\d{10,12}$/.test(trimmedNomineeId)) {
-            return "Nominee ID must be 10 to 12 digits";
-        }
-        const normalizedPAN = panNumber?.trim()?.toUpperCase() || "";
-        const normalizedAadhaar = aadhaarNumber?.trim() || "";
+        const id = nomineeId.trim().toUpperCase();
 
-        if (trimmedNomineeId === normalizedPAN) {
-            return "Nominee ID should not be the same as PAN";
-        }
-
-        if (trimmedNomineeId === normalizedAadhaar) {
-            return "Nominee ID should not be the same as Aadhaar";
+        // If length is 10 → PAN validation
+        if (id.length === 10) {
+            if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(id)) {
+                return "Invalid PAN format (e.g., ABCDE1234F)";
+            }
+            return "";
         }
 
-        return "";
+        // If length is 12 → Aadhaar validation
+        if (id.length === 12) {
+            if (!/^\d{12}$/.test(id)) {
+                return "Invalid Aadhaar format (must be 12 digits)";
+            }
+            return "";
+        }
+
+        // Any other length
+        return "Nominee ID must be exactly 10 (PAN) or 12 (Aadhaar) characters";
     }
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+
+    const handleInputChange = (e: any) => {
         const { name, value } = e.target;
         let formattedValue = value;
         if (name === "panNumber") {
@@ -268,7 +296,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
         }
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleBlur = (e: any) => {
         const { name, value } = e.target;
         const error = validateField(name, value);
         if (error) {
@@ -276,7 +304,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: any) => {
         const { name, files } = e.target;
         if (!files?.length) return;
 
@@ -301,15 +329,38 @@ const MutualFundFormDialog: React.FC<Props> = ({
         const previewUrl = URL.createObjectURL(file);
         setFilePreviewUrls(prev => ({ ...prev, [name]: previewUrl }));
     };
+    const [fileCache, setFileCache] = useState<{
+        salarySlips?: File | string | null;
+        itrDocuments?: File | string | null;
+    }>({});
 
     const handleSelectChange = (event: SelectChangeEvent<string>) => {
         const { name, value } = event.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-            salarySlipsFileKey: value === "Job" ? prev.salarySlipsFileKey : null,
-            itrDcumentsFileKey: value === "Business" ? prev.itrDcumentsFileKey : null,
-        }));
+
+        setFormData(prev => {
+            const updatedData: any = { ...prev, [name]: value };
+
+            if (prev.occupation === "Job" && value !== "Job") {
+                setFileCache(cache => ({ ...cache, salarySlips: prev.salarySlipsFileKey }));
+                updatedData.salarySlipsFileKey = null;
+            }
+
+            if (prev.occupation === "Business" && value !== "Business") {
+                setFileCache(cache => ({ ...cache, itrDocuments: prev.itrDocumentsFileKey }));
+                updatedData.itrDocumentsFileKey = null;
+            }
+
+            if (value === "Job" && prev.occupation !== "Job" && fileCache.salarySlips) {
+                updatedData.salarySlipsFileKey = fileCache.salarySlips;
+            }
+
+            if (value === "Business" && prev.occupation !== "Business" && fileCache.itrDocuments) {
+                updatedData.itrDocumentsFileKey = fileCache.itrDocuments;
+            }
+
+            return updatedData;
+        });
+
         if (errors.occupation) {
             setErrors(prev => ({ ...prev, occupation: '' }));
         }
@@ -349,7 +400,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
             case 4:
                 const documentFields: (keyof MutualFundData)[] = ['aadhaarCardFileKey', 'panCardFileKey', 'bankProofFileKey'];
                 if (formData.occupation === "Job") documentFields.push('salarySlipsFileKey');
-                if (formData.occupation === "Business") documentFields.push('itrDcumentsFileKey');
+                if (formData.occupation === "Business") documentFields.push('itrDocumentsFileKey');
 
                 documentFields.forEach(field => {
                     const error = validateField(field, formData[field] as string | File | null);
@@ -405,26 +456,22 @@ const MutualFundFormDialog: React.FC<Props> = ({
         setErrors({});
         setStep(1);
         setSuccess(false);
-        onClose(); // This calls the parent's onClose which should handle setting open state
+        onClose();
     };
 
-    // In MutualFundFormDialog component
     const handleFormSubmit = async () => {
         if (!validateStep()) return;
 
-        // ✅ Checkbox validation
         if (!declarationIsDetailsConfirmed) {
             setErrors((prev) => ({
                 ...prev,
                 form: "You must accept the declaration before submitting the form."
             }));
-            return; // Stop submission
+            return;
         }
 
         setLoading(true);
-
         try {
-            // 1. First upload all documents
             const uploadPromises: Promise<{ field: string; key: string }>[] = [];
             const fileMappings = [
                 { field: "aadhaarCardFileKey", folder: "aadhar" },
@@ -434,7 +481,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     ? [{ field: "salarySlipsFileKey", folder: "salary-slips" }]
                     : []),
                 ...(formData.occupation === "Business"
-                    ? [{ field: "itrDcumentsFileKey", folder: "itr-documents" }]
+                    ? [{ field: "itrDocumentsFileKey", folder: "itr-documents" }]
                     : []),
             ];
 
@@ -442,27 +489,27 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 const file = formData[field as keyof MutualFundData];
                 if (file instanceof File) {
                     uploadPromises.push(
-                        uploadFileToServer(file, folder)
-                            .then((key) => ({ field, key }))
-                            .catch((error) => {
-                                console.error(`Error uploading ${field}:`, error);
-                                throw error;
-                            })
+                        uploadFileToServer(file, folder).then((key) => ({ field, key }))
                     );
                 }
             }
 
             const uploadResults = await Promise.all(uploadPromises);
 
-            // ✅ Final payload me checkbox bhi include karo
             const submissionData: MutualFundData = {
                 ...formData,
-                isDetailsConfirmed: declarationIsDetailsConfirmed, // ⬅️ yahan include
+                isDetailsConfirmed: declarationIsDetailsConfirmed,
             };
 
-            // Replace file objects with uploaded keys
             uploadResults.forEach(({ field, key }) => {
                 (submissionData as any)[field] = key;
+            });
+
+            fileMappings.forEach(({ field }) => {
+                if (submissionData[field as keyof MutualFundData] === null) {
+                    (submissionData as any)[field] =
+                        formData[field as keyof MutualFundData];
+                }
             });
 
             const isSuccessful = await onSubmit(submissionData, mode === "edit");
@@ -484,10 +531,12 @@ const MutualFundFormDialog: React.FC<Props> = ({
         }
     };
     const renderFileUpload = (label: string, name: keyof MutualFundData) => {
+        console.log("<---name--->", name);
+        console.log("<---formData--->", formData);
         const fileValue = formData[name];
         const error = errors[name];
         const previewUrl = filePreviewUrls[name] || (fileValue instanceof File ? URL.createObjectURL(fileValue) : null);
-
+        console.log("<---fileValue--->", fileValue);
         return (
             <Grid item {...gridSpacing}>
                 <FormControl fullWidth error={!!error}>
@@ -502,7 +551,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
                         startIcon={<AttachFileIcon />}
                         disabled={loading}
                     >
-                        {fileValue ? (fileValue instanceof File ? fileValue.name : 'Uploaded') : 'Choose File'}
+                        {fileValue
+                            ? (fileValue instanceof File ? fileValue.name : 'Uploaded')
+                            : filePreviewUrls[name]
+                                ? 'Uploaded'
+                                : 'Choose File'}
                         <input
                             hidden
                             type="file"
@@ -594,8 +647,8 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 {formData.bankProofFileKey && renderReviewItem("Bank Proof", formData.bankProofFileKey)}
                 {formData.occupation === "Job" && formData.salarySlipsFileKey &&
                     renderReviewItem("Salary Slips", formData.salarySlipsFileKey)}
-                {formData.occupation === "Business" && formData.itrDcumentsFileKey &&
-                    renderReviewItem("ITR Documents", formData.itrDcumentsFileKey)}
+                {formData.occupation === "Business" && formData.itrDocumentsFileKey &&
+                    renderReviewItem("ITR Documents", formData.itrDocumentsFileKey)}
             </Grid>
             <Box sx={{ mt: 4 }}>
                 <Typography
@@ -608,8 +661,10 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 <FormControlLabel
                     control={
                         <Checkbox
-                            checked={declarationIsDetailsConfirmed}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeclarationIsDetailsConfirmed(e.target.checked)}
+                            checked={formData.isDetailsConfirmed || declarationIsDetailsConfirmed}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setDeclarationIsDetailsConfirmed(e.target.checked)
+                            }
                             color="primary"
                         />
                     }
@@ -670,6 +725,15 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 value={formData.email}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
+                                inputProps={{
+                                    maxLength: 50,
+                                }}
+                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                    const input = e.currentTarget;
+                                    if (input?.value?.length > 50) {
+                                        input.value = input?.value.slice(0, 50);
+                                    }
+                                }}
                                 error={!!errors.email}
                                 helperText={errors.email}
                                 disabled={loading}
@@ -699,6 +763,15 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.placeOfBirth}
+                                inputProps={{
+                                    maxLength: 30,
+                                }}
+                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                    const input = e.currentTarget;
+                                    if (input?.value?.length > 30) {
+                                        input.value = input?.value.slice(0, 30);
+                                    }
+                                }}
                                 helperText={errors.placeOfBirth}
                                 disabled={loading}
                                 required
@@ -764,10 +837,20 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 value={formData.nomineeId}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
+                                inputProps={{
+                                    maxLength: 12,
+                                }}
+                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                    const input = e.currentTarget;
+                                    if (input?.value?.length > 12) {
+                                        input.value = input?.value.slice(0, 12);
+                                    }
+                                }}
                                 error={!!errors.nomineeId}
-                                helperText={errors.nomineeId}
+                                helperText={errors.nomineeId || "12 digits"}
                                 disabled={loading}
                                 required
+
                             />
                         </Grid>
                         <Grid item {...gridSpacing}>
@@ -807,9 +890,15 @@ const MutualFundFormDialog: React.FC<Props> = ({
                         {renderFileUpload("PAN Card", "panCardFileKey")}
                         {renderFileUpload("Bank Proof", "bankProofFileKey")}
                         {formData.occupation === "Job" &&
-                            renderFileUpload("Salary Slips", "salarySlipsFileKey")}
+                            <React.Fragment key="salarySlips">
+                                {renderFileUpload("Salary Slips", "salarySlipsFileKey")}
+                            </React.Fragment>
+                        }
                         {formData.occupation === "Business" &&
-                            renderFileUpload("ITR Documents", "itrDcumentsFileKey")}
+                            <React.Fragment key="itrDocuments">
+                                {renderFileUpload("ITR Documents", "itrDocumentsFileKey")}
+                            </React.Fragment>
+                        }
                     </Grid>
                 );
             case 5:
@@ -820,11 +909,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
             <DialogTitle>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6">
-                        {mode === 'edit' ? 'Edit Mutual Fund Application' : 'New Mutual Fund Application'}
+                        {mode === 'edit' ? 'Edit mutual fund' : 'New mutual fund'}
                     </Typography>
                     <IconButton onClick={handleClose} disabled={loading}>
                         <CloseIcon />

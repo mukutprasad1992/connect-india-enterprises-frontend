@@ -280,9 +280,9 @@ const Insurance = () => {
     { field: "alcohol", headerName: "Alcohol", flex: 0.12 },
     { field: "annualIncome", headerName: "Annual Income", flex: 0.12 },
     { field: "motherName", headerName: "Mother Name", flex: 0.12 },
-    { field: "heightCM", headerName: "Height CM", flex: 0.12 },
-    { field: "weightKG", headerName: "Weight KG", flex: 0.12 },
-    { field: "smoker", headerName: "Smoker", flex: 0.12 },
+    // { field: "heightCM", headerName: "Height CM", flex: 0.12 },
+    // { field: "weightKG", headerName: "Weight KG", flex: 0.12 },
+    // { field: "smoker", headerName: "Smoker", flex: 0.12 },
     { field: "occupation", headerName: "Occupation", flex: 0.12 },
     { field: "nomineeName", headerName: "Nominee Name", flex: 0.12 },
     { field: "nomineeDOB", headerName: "Nominee DOB", flex: 0.12 },
@@ -336,7 +336,11 @@ const Insurance = () => {
     {
       field: "actions",
       headerName: "Actions",
-      flex: 0.12,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      minWidth: 100,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
         const isEditDeleteHidden = status === "Approved" || status === "Rejected" || status === "In Progress";
