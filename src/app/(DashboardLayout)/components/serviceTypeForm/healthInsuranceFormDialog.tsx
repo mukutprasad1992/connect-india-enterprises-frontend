@@ -119,7 +119,7 @@ const HealthInsuranceFormDialog: React.FC<Props> = ({
     const [success, setSuccess] = useState(false);
     const [filePreviewUrls, setFilePreviewUrls] = useState<Record<string, string>>({});
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-    const DOCUMENT_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
+    const DOCUMENT_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
     const steps = ["Documents", "Personal Info", "Health Info", "Policy Details", "Review"];
     const gridSpacing = { xs: 12, sm: 6 };
 
@@ -899,7 +899,7 @@ const HealthInsuranceFormDialog: React.FC<Props> = ({
                             Application Submitted Successfully!
                         </Typography>
                         <Typography color="text.secondary">
-                            Your health insurance application has been received. We'll contact you shortly.
+                            Your health insurance application has been received. Well contact you shortly.
                         </Typography>
                     </Box>
                 ) : (

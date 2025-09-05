@@ -24,7 +24,7 @@ export default function Header({ toggleSidebar }: { toggleSidebar: () => void })
                     </Tooltip>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <MessageComponent />
+                    {/* <MessageComponent /> */}
                     <Box flexGrow={40} />
                     <Notification />
                     <Box />

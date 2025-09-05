@@ -877,7 +877,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                                 {mode === 'edit' ? 'Application Updated Successfully!' : 'Application Submitted Successfully!'}
                             </Typography>
                             <Typography color="text.secondary">
-                                Your life insurance application has been {mode === 'edit' ? 'updated' : 'received'}. We'll contact you shortly.
+                                Your life insurance application has been {mode === 'edit' ? 'updated' : 'received'}. Well contact you shortly.
                             </Typography>
                         </Box>
                     ) : (

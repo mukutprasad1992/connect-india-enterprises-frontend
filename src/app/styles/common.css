@@ -1,0 +1,187 @@
+/* styles/common.css */
+
+.customTextField .MuiInputBase-root {
+    height: 35px;
+    font-size: 14px;
+}
+
+.customTextField .MuiInputLabel-root {
+    top: -10px;
+    font-size: 14px;
+}
+
+.customTextField .MuiInputLabel-shrink {
+    top: 0px;
+    font-size: 12px;
+}
+
+.customTextField .MuiFormHelperText-root {
+    margin-top: 2px;
+    font-size: 11px;
+}
+
+.customTextField .MuiOutlinedInput-root {
+    height: 35px;
+    font-size: 14px;
+    background-color: transparent;
+}
+
+.customTextField .MuiOutlinedInput-input {
+    height: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+/* .customSelect .MuiSelect-select {
+    height: 35px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.customSelect .MuiFormHelperText-root {
+    margin-top: 0px;
+    font-size: 11px;
+}
+
+.customSelect .MuiInputLabel-root {
+    top: -10px;
+    /* transform: translateY(-50%); */
+/* font-size: 14px;
+pointer-events: none;
+} */
+
+.customSelect .MuiInputLabel-shrink {
+    /* top: 0; */
+    /* transform: translateY(-50%); */
+    font-size: 12px;
+}
+
+*/ .customSelect .MuiOutlinedInput-root {
+    height: 35px;
+    align-items: center;
+}
+
+.customSelect .MuiSelect-select {
+    height: 35px;
+    display: flex;
+    align-items: center;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    /* keep left/right padding as MUI default (14px) */
+}
+
+/* Helper text */
+.customSelect .MuiFormHelperText-root {
+    margin-top: 0;
+    font-size: 11px;
+}
+
+/* ===== Label fixes (Outlined variant uses transform) ===== */
+
+/* Default (not focused, no value): label centered inside the box */
+.customSelect label.MuiInputLabel-root {
+    transform: translate(14px, 7px) scale(1) !important;
+    /* ~center for 35px height */
+    transform-origin: left top;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+/* Shrunk (focused or has value): float to top */
+.customSelect label.MuiInputLabel-root.MuiInputLabel-shrink {
+    transform: translate(14px, -6px) scale(0.75) !important;
+    /* keep font-size at 14px; the scale handles visual size */
+}
+
+/* Optional: make the notch look right with custom label position */
+.customSelect .MuiOutlinedInput-notchedOutline legend {
+    max-width: 0.01px;
+    /* collapse when not shrunk */
+}
+
+.customSelect label.MuiInputLabel-shrink~.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend {
+    max-width: 1000px;
+    /* restore when shrunk */
+}
+
+.customAutocomplete .MuiInputBase-root {
+    height: 35px;
+    font-size: 14px;
+}
+
+.customAutocomplete .MuiInputLabel-root {
+    top: -10px;
+    font-size: 14px;
+}
+
+.customAutocomplete .MuiInputLabel-shrink {
+    top: 0px;
+    font-size: 12px;
+}
+
+.customAutocomplete .MuiFormHelperText-root {
+    margin-top: 2px;
+    font-size: 11px;
+}
+
+.customAutocomplete .MuiOutlinedInput-root {
+    height: 35px;
+    font-size: 14px;
+    background-color: transparent;
+}
+
+.customAutocomplete .MuiOutlinedInput-input {
+    height: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+/* Dropdown panel */
+.customAutocomplete .MuiAutocomplete-popupIndicator {
+    padding: 4px;
+}
+
+.customAutocomplete .MuiAutocomplete-clearIndicator {
+    padding: 4px;
+}
+
+/* Option list */
+.customAutocomplete .MuiAutocomplete-listbox {
+    max-height: 200px;
+    /* adjust as needed */
+    font-size: 14px;
+    padding: 0;
+}
+
+/* Individual option */
+.customAutocomplete .MuiAutocomplete-option {
+    min-height: 30px;
+    padding: 4px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.customUploadBtn {
+    text-transform: none;
+    width: 150;
+    background-color: rgb(236, 234, 234);
+    color: var(--mui-palette-primary-main);
+}
+
+.customUploadBtn.uploaded {
+    background-color: rgb(255, 255, 255);
+    color: rgb(93, 216, 77);
+}
+
+.customUploadBtn:hover {
+    background-color: #dbdbdb;
+}
+
+.customUploadBtn.uploaded:hover {
+    background-color: var(--mui-palette-success-dark);
+}

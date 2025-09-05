@@ -61,7 +61,7 @@ const InquiryPage = () => {
         }
     }
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-    const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
+    const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
     const DOCUMENT_KEYS = [
         'panCardFileKey',
         'aadhaarCardFileKey',

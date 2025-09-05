@@ -72,7 +72,7 @@ const Insurance = () => {
   const [editData, setEditData] = useState<any>(null);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-  const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
+  const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
   const handleCloseAddInsuranceDialog = () => {
     setSelectedOption('');
     setOpenInsuranceFormDialog(false);

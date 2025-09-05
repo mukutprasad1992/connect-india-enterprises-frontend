@@ -112,7 +112,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
     const steps = ["Personal Info", "Contact Info", "Employment", "References", "Documents", "Review"];
     const maritalStatusOptions = ["Single", "Married", "Divorced", "Widowed"];
     const gridSpacing = { xs: 12, sm: 6 };
-    const DOCUMENT_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
+    const DOCUMENT_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
     const getToken = () => {
         if (typeof window !== "undefined") {
             const token = localStorage.getItem('accessToken');
@@ -609,7 +609,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing} >
                             <TextField
                                 fullWidth
-                                label={<span>Mother's Name <span style={{ color: 'red' }}>*</span></span>}
+                                label={<span>Mothers Name <span style={{ color: 'red' }}>*</span></span>}
                                 name="motherName"
                                 value={formData.motherName}
                                 onChange={handleInputChange}
@@ -1013,7 +1013,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                             Application Submitted Successfully!
                         </Typography>
                         <Typography color="text.secondary">
-                            Your Loan application has been received. We'll contact you shortly.
+                            Your Loan application has been received. Well contact you shortly.
                         </Typography>
                     </Box>
                 ) : (

@@ -66,7 +66,7 @@ const Investment = () => {
   const [editData, setEditData] = useState<any>(null);
 
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  const AWS_S3_BUCKET_URL = process.env.AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
+  const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
   const getToken = () => {
     if (typeof window !== "undefined") {
       return localStorage.getItem('accessToken');
@@ -120,27 +120,35 @@ const Investment = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      console.log("<---response.data---->", response.data)
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
-          email: item.email || "N/A",
-          aadharNumber: item.aadharNumber || "N/A",
-          aadhaarCardFileKey: item.aadhaarCardFileKey || null,
+          email: item.email,
+          aadharNumber: item.aadharNumber,
+          aadharCardFileKey: item.aadharCardFileKey || null,
           panCardFileKey: item.panCardFileKey || null,
           bankProofFileKey: item.bankProofFileKey || null,
           salarySlipsFileKey: item.salarySlipsFileKey || null,
           itrDocumentsFileKey: item.itrDocumentsFileKey || null,
+          panNumber: item.panNumber,
 
-          panNumber: item.panNumber || "N/A",
-          mobile: item.mobile || "N/A",
-          income: item.income || "N/A",
-          occupation: item.occupation || "N/A",
-          placeOfBirth: item.placeOfBirth || "N/A",
-          nomineeId: item.nomineeId || "N/A",
-          nomineeMobile: item.nomineeMobile || "N/A",
-          nomineeRelation: item.nomineeRelation || "N/A",
+          mobile: item.mobile
+            ?.replace(/^\+91/, "")
+            .slice(-10),
+          income: item.income,
+          occupation: item.occupation,
+          placeOfBirth: item.placeOfBirth,
+          nomineeIdType: item.nomineeIdType,
+          nomineeId: item.nomineeId,
+          nomineeMobile: item.nomineeMobile
+            ?.replace(/^\+91/, "")
+            .slice(-10),
+
+          nomineeRelation: item.nomineeRelation,
           status: item.status,
+          stepStatus: item.activeSteps,
+          isDetailsConfirmed: item.submit || false,
         }));
         setAllInvestment(formattedData);
       }
@@ -208,7 +216,14 @@ const Investment = () => {
     { field: "mobile", headerName: "Mobile", flex: 0.12 },
     { field: "income", headerName: "Income", flex: 0.12 },
     { field: "occupation", headerName: "Occupation", flex: 0.12 },
-    { field: "placeOfBirth", headerName: "Place Of Birth", flex: 0.12 },
+    {
+      field: "placeOfBirth",
+      headerName: "Place Of Birth",
+      flex: 0.12,
+      valueGetter: (params: any) => {
+        return params?.city;
+      },
+    },
     { field: "nomineeId", headerName: "Nominee Pan or Aadhar", flex: 0.12 },
     { field: "nomineeMobile", headerName: "Nominee Mobile", flex: 0.12 },
     { field: "nomineeRelation", headerName: "Nominee Relation", flex: 0.12 },
@@ -341,18 +356,18 @@ const Investment = () => {
     ];
 
     const bodyData = (allInvestment || []).map((row: any) => [
-      row.id || 'N/A',
-      row.email || 'N/A',
-      row.aadharNumber || 'N/A',
-      row.panNumber || 'N/A',
-      row.mobile || 'N/A',
-      row.income || 'N/A',
-      row.occupation || 'N/A',
-      row.placeOfBirth || 'N/A',
-      row.nomineeId || 'N/A',
-      row.nomineeMobile || 'N/A',
-      row.nomineeRelation || 'N/A',
-      row.status || 'N/A',
+      row.id,
+      row.email,
+      row.aadharNumber,
+      row.panNumber,
+      row.mobile,
+      row.income,
+      row.occupation,
+      row.placeOfBirth,
+      row.nomineeId,
+      row.nomineeMobile,
+      row.nomineeRelation,
+      row.status,
     ]);
 
     autoTable(doc, {
@@ -426,48 +441,6 @@ const Investment = () => {
     setSelectedOption(event.target.value);
   };
 
-  const handleFormSubmit = async (formData: any, isEditMode: boolean): Promise<boolean> => {
-    setDialogLoading(true);
-    try {
-      const url = isEditMode
-        ? `${BASE_URL}/serviceType/updateServiceTypeById/${formData.id}`
-        : `${BASE_URL}/serviceType/createServiceType`;
-
-      const method = isEditMode ? 'put' : 'post';
-      const payload = JSON.stringify({
-        ...formData,
-        serviceId: 1,
-        ServiceSubType: selectedOption,
-        status: "Pending",
-      });
-
-      const response = await axios[method](url, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      setSnackbarMessage(response.data.message);
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-      fetchAllInvestmentData();
-      return true;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message ||
-        error.response?.data?.errors?.body ||
-        (isEditMode ? "Failed to update service type" : "Failed to create service type");
-
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      console.error('API Error:', error.response?.data || error.message);
-      return false;
-    } finally {
-      setDialogLoading(false);
-    }
-  };
-
   const handleCloseAddInvestmentDialog = () => {
     setSelectedOption('');
     setOpenInvestmentFormDialog(false);
@@ -475,6 +448,7 @@ const Investment = () => {
 
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setSelectedOption('');
     setEditData(null);
     setIsEdit(false);
   };
@@ -483,7 +457,7 @@ const Investment = () => {
   };
   const getDocumentName = (key: any) => {
     const documentNames = {
-      aadhaarCardFileKey: 'View Aadhaar Card',
+      aadharCardFileKey: 'View Aadhaar Card',
       panCardFileKey: 'View PAN Card',
       bankProofFileKey: 'View Bank Proof',
       salarySlipsFileKey: 'View Salary Slips',
@@ -592,7 +566,7 @@ const Investment = () => {
         </Dialog>
 
         {/* View Dialog */}
-        <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
+        <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
           <Grid container spacing={2} sx={{ padding: 2 }}>
             <Grid item xs={12}>
               <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -609,7 +583,7 @@ const Investment = () => {
                 Object.entries(selectedRow).map(([key, value]) => {
                   const isStatus = key.toLowerCase() === "status";
                   const isDocumentKey = [
-                    'aadhaarCardFileKey',
+                    'aadharCardFileKey',
                     'panCardFileKey',
                     'bankProofFileKey',
                     'salarySlipsFileKey',
@@ -656,26 +630,36 @@ const Investment = () => {
         </Dialog>
         <Dialog
           open={openInvestmentFormDialog}
-          onClose={handleCloseAddInvestmentDialog}
+          onClose={() => {
+            setSelectedOption("");
+            setOpenInvestmentFormDialog(false)
+          }}
           maxWidth="xs"
           fullWidth
           disableEscapeKeyDown
         >
           <DialogTitle>Select Investment Type</DialogTitle>
           <DialogContent>
-            <FormControl fullWidth sx={{ mt: 2 }}>
+            <FormControl fullWidth sx={{ mt: 2 }} className="customSelect">
               <InputLabel>Choose Option</InputLabel>
               <Select
                 value={selectedOption}
                 onChange={handleSelectChange}
                 label="Choose Option"
+                className="customSelect"
               >
                 <MenuItem value="mutualFund">Mutual Fund / SIP</MenuItem>
               </Select>
             </FormControl>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseAddInvestmentDialog} variant="outlined">
+            <Button
+              onClick={() => {
+                setSelectedOption("");
+                setOpenInvestmentFormDialog(false);
+              }}
+              variant="outlined"
+            >
               Cancel
             </Button>
             <Button
@@ -695,10 +679,10 @@ const Investment = () => {
         <MutualFundFormDialog
           open={openDialog}
           onClose={handleDialogClose}
-          onSubmit={handleFormSubmit}
           initialData={editData}
-          mode={isEdit ? 'edit' : 'create'}
-          setOpenDialog={setOpenDialog} // Add this
+          mode={isEdit ? "edit" : "create"}
+          setOpenDialog={setOpenDialog}
+          onSuccess={fetchAllInvestmentData}
         />
         <Snackbar
           open={snackbarOpen}

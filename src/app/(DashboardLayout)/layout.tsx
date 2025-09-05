@@ -3,6 +3,7 @@ import { ReactNode, useState } from "react";
 import Sidebar from "./components/layout/sidebar";
 import Header from "./components/layout/header";
 import { Box } from "@mui/material";
+import '../styles/common.css';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);

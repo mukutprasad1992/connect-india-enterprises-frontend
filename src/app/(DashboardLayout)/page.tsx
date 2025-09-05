@@ -8,6 +8,7 @@ import PieAnimationPage from "./components/dashboard/pieChart";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import OverviewCard from "./components/dashboard/OverviewCard";
+import "../styles/common.css";
 
 type ServiceType = "Investment" | "Policy" | "Insurance" | "Loan";
 
