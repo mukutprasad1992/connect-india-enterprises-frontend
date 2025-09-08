@@ -65,8 +65,8 @@ interface MutualFundData {
     nomineeId: string;
     nomineeMobile: string;
     nomineeRelation: string;
-    isDetailsConfirmed: boolean;
-    stepStatus?: string;
+    submit: boolean;
+    activeSteps?: string;
 }
 
 const defaultFormData: MutualFundData = {
@@ -90,8 +90,8 @@ const defaultFormData: MutualFundData = {
     nomineeId: "",
     nomineeMobile: "",
     nomineeRelation: "",
-    isDetailsConfirmed: false,
-    stepStatus: "basicDetails"
+    submit: false,
+    activeSteps: "basicDetails"
 };
 
 const incomeOptions = [
@@ -271,8 +271,8 @@ const MutualFundFormDialog: React.FC<Props> = ({
             setFilePreviewUrls(urls);
 
             let initialStep = 1;
-            if (initialData.stepStatus) {
-                initialStep = statusStepMap[initialData.stepStatus] || 1;
+            if (initialData.activeSteps) {
+                initialStep = statusStepMap[initialData.activeSteps] || 1;
             }
 
             setStep(initialStep);
@@ -574,7 +574,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
             }
 
             const payload = {
-                stepStatus: stepKey,
+                activeSteps: stepKey,
                 ...stepData,
                 serviceId: 1,
                 ServiceSubType: "Mutual Funds",
@@ -828,7 +828,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
             return;
         }
 
-        if (!formData.isDetailsConfirmed && !declarationIsDetailsConfirmed) {
+        if (!formData.submit && !declarationIsDetailsConfirmed) {
             setErrors(prev => ({
                 ...prev,
                 form: "Please confirm declaration before submitting."
@@ -843,8 +843,8 @@ const MutualFundFormDialog: React.FC<Props> = ({
             await axios.put(
                 `${BASE_URL}/serviceType/updateServiceTypeById/${finalId}`,
                 {
-                    stepStatus: "review",
-                    isDetailsConfirmed: formData.isDetailsConfirmed ? 1 : 0,
+                    activeSteps: "review",
+                    submit: formData.submit ? 1 : 0,
                     serviceId: 1,
                     ServiceSubType: "mutualFund",
                     status: "Pending",
@@ -1215,11 +1215,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 <FormControlLabel
                     control={
                         <Checkbox
-                            checked={!!formData.isDetailsConfirmed}
+                            checked={!!formData.submit}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                 setFormData(prev => ({
                                     ...prev,
-                                    isDetailsConfirmed: e.target.checked
+                                    submit: e.target.checked
                                 }))
                             }
                         />

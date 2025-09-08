@@ -64,13 +64,16 @@ const InquiryPage = () => {
     const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
     const DOCUMENT_KEYS = [
         'panCardFileKey',
-        'aadhaarCardFileKey',
+        'aadharCardFileKey',
         'cancelledChequeFileKey',
         'salarySlipsFileKey',
         'bankStatementFileKey',
         'itrDcumentsFileKey',
         'photoFileKey',
-        'signatureFileKey'
+        'signatureFileKey',
+        'salarySlipsFileKey',
+        "itrDocumentsFileKey",
+        "bankProofFileKey",
     ];
     const token = getToken();
     const getRoleId = () => {
@@ -127,10 +130,8 @@ const InquiryPage = () => {
                     const formattedItem: Record<string, any> = {};
 
                     Object.keys(item).forEach(key => {
-                        if (item[key] !== null && item[key] !== undefined && item[key] !== "") {
-                            const outputKey = key === 'serviceSubType' ? 'type' : key;
-                            formattedItem[outputKey] = item[key];
-                        }
+                        const outputKey = key === 'serviceSubTypeName' ? 'type' : key;
+                        formattedItem[outputKey] = item[key];
                     });
 
                     return formattedItem;
@@ -144,12 +145,13 @@ const InquiryPage = () => {
             }
         } catch (error: any) {
             setSnackbarSeverity("error");
-            setSnackbarMessage(error.response.data.message);
+            setSnackbarMessage(error?.response?.data?.message || "Something went wrong");
             setSnackbarOpen(true);
         } finally {
             setIsLoading(false);
         }
     };
+
     useEffect(() => {
         fetchInquiries();
     }, [token]);
@@ -223,7 +225,7 @@ const InquiryPage = () => {
         { field: "firstName", headerName: "First Name", flex: 0.1 },
         { field: "lastName", headerName: "Last Name", flex: 0.1 },
         { field: "email", headerName: "Email", flex: 0.08 },
-        { field: "mobileNo", headerName: "Mobile No", flex: 0.08 },
+        { field: "mobile", headerName: "Mobile No", flex: 0.08 },
         { field: "type", headerName: "Type", flex: 0.12 },
         {
             field: "isDetailsConfirmed",
@@ -231,6 +233,15 @@ const InquiryPage = () => {
             flex: 0.1,
             renderCell: (params: any) => {
                 return params.row.isDetailsConfirmed ? "True" : "False";
+            },
+        },
+        {
+            field: 'placeOfBirth',
+            headerName: 'Place of Birth',
+            width: 200,
+            valueGetter: (params: any) => {
+                return `${params?.city || ''}`.trim().replace(/^,|,$/, '') || 'N/A';
+                return 'N/A';
             },
         },
         {
@@ -458,7 +469,12 @@ const InquiryPage = () => {
     };
 
     const renderValue = (key: any, value: any) => {
-        // ✅ Document links
+        if (typeof value === "object" && value !== null) {
+            return Object.entries(value)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(", ");
+        }
+
         if (DOCUMENT_KEYS.includes(key)) {
             return value ? (
                 <Link
@@ -469,34 +485,33 @@ const InquiryPage = () => {
                 >
                     View Document
                 </Link>
-            ) : 'N/A';
+            ) : "N/A";
         }
 
-        // ✅ Convert 0/1 into Boolean text
-        if (value === 1) return 'True';
-        if (value === 0) return 'False';
+        if (value === 1) return "True";
+        if (value === 0) return "False";
 
-        // ✅ Status coloring
-        const statusColors = {
-            Pending: '#fbf774',
-            'In Progress': '#fbe06f',
-            Approved: '#8df1b4',
-            Rejected: '#ff8780'
+        const statusColors: Record<string, string> = {
+            Pending: "#fbf774",
+            "In Progress": "#fbe06f",
+            Approved: "#8df1b4",
+            Rejected: "#ff8780",
         };
 
-        return (
-            <span
-                style={{
-                    color:
-                        key === 'status'
-                            ? statusColors[value as keyof typeof statusColors] || '#fbf774'
-                            : 'inherit',
-                    fontWeight: key === 'status' ? 'bold' : 'normal'
-                }}
-            >
-                {value || 'N/A'}
-            </span>
-        );
+        if (key === "status") {
+            return (
+                <span
+                    style={{
+                        color: statusColors[value] || "inherit",
+                        fontWeight: "bold",
+                    }}
+                >
+                    {value || "N/A"}
+                </span>
+            );
+        }
+
+        return value || "N/A";
     };
 
     return (

@@ -115,41 +115,55 @@ const Investment = () => {
   const fetchAllInvestmentData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${1}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("<---response.data---->", response.data)
+      const response = await axios.get(
+        `${BASE_URL}/serviceType/getServiceTypeByServiceId/${1}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
-          email: item.email,
-          aadharNumber: item.aadharNumber,
+          status: item.status,
+          serviceSubTypeName: item.serviceSubTypeName,
+          activeSteps: item.activeSteps,
+          email: item.personalEmail || item.email,
           aadharCardFileKey: item.aadharCardFileKey || null,
           panCardFileKey: item.panCardFileKey || null,
           bankProofFileKey: item.bankProofFileKey || null,
           salarySlipsFileKey: item.salarySlipsFileKey || null,
           itrDocumentsFileKey: item.itrDocumentsFileKey || null,
+          firstName: item.firstName || "",
+          lastName: item.lastName || "",
+          aadharNumber: item.aadharNumber,
           panNumber: item.panNumber,
-
           mobile: item.mobile
-            ?.replace(/^\+91/, "")
+            ?.toString()
+            .replace(/\s+/g, "")
+            .replace(/^\+91/, "")
             .slice(-10),
+
           income: item.income,
           occupation: item.occupation,
-          placeOfBirth: item.placeOfBirth,
+          placeOfBirth: item.placeOfBirth
+            ? `${item.placeOfBirth.city}`
+            : "N/A",
+
           nomineeIdType: item.nomineeIdType,
           nomineeId: item.nomineeId,
           nomineeMobile: item.nomineeMobile
-            ?.replace(/^\+91/, "")
+            ?.toString()
+            .replace(/\s+/g, "")
+            .replace(/^\+91/, "")
             .slice(-10),
-
           nomineeRelation: item.nomineeRelation,
-          status: item.status,
-          stepStatus: item.activeSteps,
-          isDetailsConfirmed: item.submit || false,
+          submit: item.submit === "complete" ? "Complete" : "In complete",
+
         }));
+
         setAllInvestment(formattedData);
       }
     } catch (error) {
@@ -217,11 +231,11 @@ const Investment = () => {
     { field: "income", headerName: "Income", flex: 0.12 },
     { field: "occupation", headerName: "Occupation", flex: 0.12 },
     {
-      field: "placeOfBirth",
-      headerName: "Place Of Birth",
-      flex: 0.12,
+      field: 'placeOfBirth',
+      headerName: 'Place of Birth',
+      width: 200,
       valueGetter: (params: any) => {
-        return params?.city;
+        return `${params || ''}`.trim().replace(/^,|,$/, '') || 'N/A';
       },
     },
     { field: "nomineeId", headerName: "Nominee Pan or Aadhar", flex: 0.12 },
@@ -441,10 +455,6 @@ const Investment = () => {
     setSelectedOption(event.target.value);
   };
 
-  const handleCloseAddInvestmentDialog = () => {
-    setSelectedOption('');
-    setOpenInvestmentFormDialog(false);
-  };
 
   const handleDialogClose = () => {
     setOpenDialog(false);
@@ -566,7 +576,7 @@ const Investment = () => {
         </Dialog>
 
         {/* View Dialog */}
-        <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="xs">
+        <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="md">
           <Grid container spacing={2} sx={{ padding: 2 }}>
             <Grid item xs={12}>
               <Box display="flex" justifyContent="space-between" alignItems="center">
