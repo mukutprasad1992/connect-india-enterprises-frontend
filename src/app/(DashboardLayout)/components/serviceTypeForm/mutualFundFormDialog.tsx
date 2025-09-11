@@ -28,15 +28,17 @@ import {
     Checkbox,
     Autocomplete,
     Tooltip,
-    Chip
+    Chip,
+    Snackbar,
+    Alert
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpOutlinedIcon from '@mui/icons-material/ArrowDropUpOutlined';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import PreviewIcon from "@mui/icons-material/Preview";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
@@ -166,6 +168,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
     const [dialogFileType, setDialogFileType] = useState<"image" | "pdf" | null>(null);
     const [fullScreen, setFullScreen] = useState(false);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+    const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+    const [closeConfirmDialog, setCloseConfirmDialog] = React.useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+    const [snackbarMessage, setSnackbarMessage] = useState('');
     const [fileToRemove, setFileToRemove] = useState<keyof MutualFundData | null>(null);
     const stepStatusMap: { [key: number]: string } = {
         1: "basicDetails",
@@ -269,12 +276,21 @@ const MutualFundFormDialog: React.FC<Props> = ({
             setFormData(updatedFormData);
             setInitialFormData(updatedFormData);
             setFilePreviewUrls(urls);
-
+            if (initialData.submit === true) {
+                setIsReviewSubmitted(true)
+            }
+            else {
+                setIsReviewSubmitted(false)
+            }
             let initialStep = 1;
             if (initialData.activeSteps) {
-                initialStep = statusStepMap[initialData.activeSteps] || 1;
+                if (initialData.activeSteps !== "review") {
+                    initialStep += statusStepMap[initialData.activeSteps] || 1;
+                }
+                else {
+                    initialStep = statusStepMap[initialData.activeSteps] || 1;
+                }
             }
-
             setStep(initialStep);
 
             setMaxAllowedStep(initialStep);
@@ -312,7 +328,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     if (!value) return "Email is required";
                     if (typeof value !== "string") return "Invalid email input";
                     const emailRegex =
-                        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
                     if (!emailRegex.test(value)) return "Invalid email format";
                     return "";
 
@@ -366,9 +382,15 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     return "";
 
                 case "aadharCardFileKey":
+                    if (!value) return "Aadhar card document is required";
+                    if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
+                    return "";
                 case "panCardFileKey":
+                    if (!value) return "PAN card document is required";
+                    if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
+                    return "";
                 case "bankProofFileKey":
-                    if (!value) return "This document is required";
+                    if (!value) return "bank proof documnet is required";
                     if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
                     return "";
 
@@ -421,8 +443,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
         let formattedValue = value;
 
         if (name === "panNumber" || (name === "nomineeId" && formData.nomineeIdType === "pan")) {
-
-            formattedValue = value.toUpperCase().slice(0, 10);
+            formattedValue = value.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 10);
         } else if (
             name === "aadharNumber" ||
             name === "mobile" ||
@@ -430,7 +451,8 @@ const MutualFundFormDialog: React.FC<Props> = ({
             (name === "nomineeId" && formData.nomineeIdType === "aadhar")
         ) {
             const maxLength =
-                name === "aadharNumber" || formData.nomineeIdType === "aadhar" ? 16 : 10;
+                name === "aadharNumber" || formData.nomineeIdType === "aadhar" ? 16 : 12;
+
             formattedValue = value.replace(/\D/g, "").slice(0, maxLength);
         }
 
@@ -440,10 +462,10 @@ const MutualFundFormDialog: React.FC<Props> = ({
             setErrors((prev) => ({ ...prev, [name]: "" }));
         }
     };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, files } = e.target;
         if (!files?.length) {
-            // If user clears the file, reset value and error
             setFormData(prev => ({ ...prev, [name]: "" }));
             setErrors(prev => ({ ...prev, [name]: "This document is required" }));
             setFilePreviewUrls(prev => ({ ...prev, [name]: "" }));
@@ -452,7 +474,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
 
         const file = files[0];
         const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-        const maxSize = 10 * 1024 * 1024; // 10MB
+        const maxSize = 5 * 1024 * 1024;
 
         let error = "";
         if (!allowedTypes.includes(file.type)) {
@@ -466,7 +488,6 @@ const MutualFundFormDialog: React.FC<Props> = ({
             return;
         }
 
-        // Set file and clear error
         setFormData(prev => ({ ...prev, [name]: file }));
         setErrors(prev => ({ ...prev, [name]: "" }));
 
@@ -587,7 +608,9 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     payload,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
-
+                setSnackbarSeverity("success");
+                setSnackbarOpen(true);
+                setSnackbarMessage(response.data.message);
                 if (stepNumber > maxAllowedStep) {
                     setMaxAllowedStep(stepNumber);
                 }
@@ -597,6 +620,9 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     payload,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
+                setSnackbarSeverity("success");
+                setSnackbarOpen(true);
+                setSnackbarMessage(res.data.message || "Step data saved successfully");
                 setServiceId(res.data.data.id);
                 setFormData(prev => ({ ...prev, id: res.data.data.id }));
                 setMaxAllowedStep(1);
@@ -604,14 +630,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 console.warn("Cannot save step without an ID");
             }
         } catch (error) {
+            setSnackbarOpen(false);
             console.error("Step save failed", error);
             throw error;
         }
     };
-
-    // const isFormDataChanged = () => {
-    //     return JSON.stringify(formData) !== JSON.stringify(initialFormData);
-    // };
 
     const validateStep = useCallback(() => {
         const newErrors: Record<string, string> = {};
@@ -809,6 +832,10 @@ const MutualFundFormDialog: React.FC<Props> = ({
     };
 
     const handleClose = () => {
+        setCloseConfirmDialog(true);
+    };
+
+    const handleConfirmClose = () => {
         setStep(1);
         setErrors({});
         setSuccess(false);
@@ -819,8 +846,13 @@ const MutualFundFormDialog: React.FC<Props> = ({
         if (onSuccess) {
             onSuccess();
         }
+
+        setCloseConfirmDialog(false);
     };
 
+    const handleCancelClose = () => {
+        setCloseConfirmDialog(false);
+    };
     const handleFormSubmit = async () => {
         if (!formData.id && !serviceId) {
             console.error("Cannot submit: No service ID found");
@@ -840,7 +872,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
             const token = getToken();
             const finalId = formData.id || serviceId;
 
-            await axios.put(
+            const response = await axios.put(
                 `${BASE_URL}/serviceType/updateServiceTypeById/${finalId}`,
                 {
                     activeSteps: "review",
@@ -853,13 +885,14 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     headers: { Authorization: `Bearer ${token}` }
                 }
             );
-
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+            setSnackbarMessage('Form submitted successfully');
             setSuccess(true);
             onSuccess?.();
-
             setTimeout(() => {
-                setOpenPreviewDialog(false);
-            }, 1500);
+                setOpenDialog(false);
+            }, 3000);
 
         } catch (err) {
             console.error("Failed to submit application", err);
@@ -870,18 +903,13 @@ const MutualFundFormDialog: React.FC<Props> = ({
         }
     };
 
-    const getShortFileName = (fileName: string): string => {
-        if (!fileName) return "";
-        const parts = fileName.split(".");
-        const ext = parts.length > 1 ? "." + parts.pop() : "";
-        const firstChar = fileName.charAt(0);
-        return `${firstChar}...${ext}`;
-    };
-
     const renderFilePreviewDialog = () => (
         <Dialog
             open={openPreviewDialog}
             onClose={() => setOpenPreviewDialog(false)}
+            BackdropProps={{
+                style: { backgroundColor: 'transparent' }
+            }}
             fullScreen={fullScreen}
             maxWidth="lg"
             PaperProps={{
@@ -953,6 +981,9 @@ const MutualFundFormDialog: React.FC<Props> = ({
             </Box>
         </Dialog>
     );
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
     const renderFileUpload = (label: string, name: keyof MutualFundData) => {
         const fileValue = formData[name];
         const error = errors[name];
@@ -1002,36 +1033,45 @@ const MutualFundFormDialog: React.FC<Props> = ({
                         <Paper
                             elevation={0}
                             sx={{
-                                p: 2,
+                                p: 1,
                                 border: "1px solid #e0e0e0",
                                 borderRadius: 2,
                                 "&:hover": { borderColor: "primary.main", boxShadow: 2 },
                             }}
                         >
-                            <Grid container alignItems="center" spacing={2}>
-                                {/* Label */}
+                            <Grid container alignItems="center" spacing={1}>
+                                {/* 1. Label */}
                                 <Grid item xs={12} sm={3}>
-                                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                    <Typography variant="body1" sx={{ fontWeight: 600, ml: 3, fontSize: 11 }}>
                                         <span style={{ color: "red" }}>*</span> {label}
                                     </Typography>
                                 </Grid>
 
-                                {/* File Info + Actions */}
-                                <Grid item xs={12} sm={5} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                {/* 2. File Name */}
+                                <Grid item xs={12} sm={5}>
                                     {fileName ? (
                                         <Tooltip title={fileName || "No file chosen"} arrow>
                                             <Chip
                                                 icon={<InsertDriveFileIcon />}
                                                 label={fileName}
                                                 variant="outlined"
-                                                sx={{ maxWidth: "70%", textOverflow: "ellipsis", overflow: "hidden" }}
+                                                sx={{
+                                                    maxWidth: "100%",
+                                                    textOverflow: "ellipsis",
+                                                    overflow: "hidden",
+                                                    fontSize: 11
+                                                }}
                                             />
                                         </Tooltip>
                                     ) : (
-                                        <Typography variant="body2" color="text.secondary">
+                                        <Typography variant="body2" color="text.secondary" sx={{ pl: 15 }}>
                                             No file chosen
                                         </Typography>
                                     )}
+                                </Grid>
+
+                                {/* 3. Actions (Preview + Remove) */}
+                                <Grid item xs={12} sm={1} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                     {previewUrl && (isImage || isPdf) && (
                                         <Tooltip title="Preview">
                                             <IconButton
@@ -1062,11 +1102,10 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                             </IconButton>
                                         </Tooltip>
                                     )}
-
                                 </Grid>
 
-                                {/* Upload Button */}
-                                <Grid item xs={12} sm={4}>
+                                {/* 4. Upload Button */}
+                                <Grid item xs={12} sm={2.5}>
                                     <Button
                                         component="label"
                                         variant={fileValue ? "contained" : "outlined"}
@@ -1074,6 +1113,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                         disabled={!!fileValue || !!filePreviewUrls[name] || loading}
                                         color="secondary"
                                         className={`customUploadBtn ${fileValue ? "uploaded" : ""}`}
+
                                     >
                                         {fileValue || filePreviewUrls[name] ? "File Uploaded" : "Choose File"}
                                         <input
@@ -1087,6 +1127,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                     </Button>
                                 </Grid>
                             </Grid>
+
                             {error && (
                                 <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
                                     {error}
@@ -1099,6 +1140,9 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 <Dialog
                     open={openConfirmDialog}
                     onClose={() => setOpenConfirmDialog(false)}
+                    BackdropProps={{
+                        style: { backgroundColor: 'transparent' }
+                    }}
                 >
                     <DialogTitle>Confirm Delete</DialogTitle>
                     <DialogContent>
@@ -1141,12 +1185,12 @@ const MutualFundFormDialog: React.FC<Props> = ({
         }
 
         return (
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
                 <Paper
                     elevation={0}
-                    sx={{ p: 2, mb: 2, border: "1px solid #eee", borderRadius: 2 }}
+                    sx={{ p: 1, mb: 1, border: "1px solid #eee", borderRadius: 1, fontSize: 12, fontFamily: 'dubai' }}
                 >
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ fontSize: 12 }}>
                         {label}
                     </Typography>
 
@@ -1155,7 +1199,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                             View Document
                         </Link>
                     ) : (
-                        <Typography variant="body1">{value}</Typography>
+                        <Typography variant="body1" sx={{ fontSize: 12 }}>{value}</Typography>
                     )}
                 </Paper>
             </Grid>
@@ -1163,19 +1207,28 @@ const MutualFundFormDialog: React.FC<Props> = ({
     };
     const renderReviewStep = () => (
         <Box sx={{ p: 2 }}>
-            <Typography variant="h5" gutterBottom sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-                <CheckCircleIcon color="primary" sx={{ mr: 1 }} />
+            <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                    mb: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 15,
+                }}
+            >
+                <CheckCircleIcon color="primary" sx={{ mr: 1, height: 20 }} />
                 Review Your Application
             </Typography>
-
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Basic Information</Typography>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>Basic Information</Typography>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={2}>
                 {renderReviewItem("Aadhar Number", formData.aadharNumber)}
                 {renderReviewItem("PAN Number", formData.panNumber)}
             </Grid>
 
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Personal Information</Typography>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>Personal Information</Typography>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={2}>
                 {renderReviewItem("Email", formData.email)}
@@ -1185,7 +1238,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 {renderReviewItem("Occupation", formData.occupation)}
             </Grid>
 
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Nominee Information</Typography>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>Nominee Information</Typography>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={2}>
                 {renderReviewItem("Nominee ID", formData.nomineeId)}
@@ -1193,7 +1246,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 {renderReviewItem("Nominee Relation", formData.nomineeRelation)}
             </Grid>
 
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Documents</Typography>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>Documents</Typography>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={2}>
                 {formData.aadharCardFileKey && renderReviewItem("Aadhar Card", formData.aadharCardFileKey)}
@@ -1208,7 +1261,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 <Typography
                     variant="subtitle1"
                     gutterBottom
-                    sx={{ fontWeight: 500 }}
+                    sx={{ fontWeight: 500, fontSize: 14 }}
                 >
                     Declaration
                 </Typography>
@@ -1235,7 +1288,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     </Typography>
                 )}
             </Box>
-        </Box>
+        </Box >
     );
     const renderStepContent = () => {
         switch (step) {
@@ -1251,12 +1304,12 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                     </>
                                 }
                                 name="aadharNumber"
-                                value={formData.aadharNumber}
+                                value={formData.aadharNumber || ''}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.aadharNumber}
                                 disabled={loading}
-                                helperText={errors.aadharNumber || "Format: 12 or 16 digit"}
+                                helperText={errors.aadharNumber}
                                 margin="dense"
                                 className="customTextField"
                             />
@@ -1270,11 +1323,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                     </>
                                 }
                                 name="panNumber"
-                                value={formData.panNumber}
+                                value={formData.panNumber || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.panNumber}
-                                helperText={errors.panNumber || "Format: ABCDE1234F"}
+                                helperText={errors.panNumber}
                                 disabled={loading}
                                 margin="dense"
                                 className="customTextField"
@@ -1284,160 +1337,201 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 );
             case 2:
                 return (
-                    <Grid container spacing={2}>
-                        <Grid item {...gridSpacing}>
-                            <TextField
-                                fullWidth
-                                label={
-                                    <>
-                                        Email<span style={{ color: "red" }}>*</span>
-                                    </>
-                                }
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                inputProps={{
-                                    maxLength: 50,
-                                }}
-                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                    const input = e.currentTarget;
-                                    if (input?.value?.length > 50) {
-                                        input.value = input?.value.slice(0, 50);
+                    <Grid>
+                        <Grid container spacing={2}>
+                            <Grid item xs={6}>
+                                <TextField
+                                    fullWidth
+                                    label={
+                                        <>
+                                            Email<span style={{ color: "red" }}>*</span>
+                                        </>
                                     }
-                                }}
-                                error={!!errors.email}
-                                helperText={errors.email}
-                                disabled={loading}
-                                className="customTextField"
-                            />
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <TextField
-                                fullWidth
-                                label={
-                                    <>
-                                        Mobile Number<span style={{ color: "red" }}>*</span>
-                                    </>
-                                }
-                                name="mobile"
-                                value={formData?.mobile ? formData.mobile.replace(/^(\+91 )/, '') : ""}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        mobile: e.target?.value.replace(/\D/, ''),
-                                    })
-                                }
-                                onBlur={handleBlur}
-                                error={!!errors.mobile}
-                                helperText={errors.mobile}
-                                disabled={loading}
-                                className="customTextField"
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment
-                                            position="start"
-                                            sx={{
-                                                marginRight: "0px",
-                                            }}
-                                        >
-                                            +91
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <Autocomplete
-                                className="customAutocomplete"
-                                options={cities}
-                                getOptionLabel={(option: City) => option.city || ""}
-                                value={
-                                    formData.placeOfBirth?.city
-                                        ? cities.find(
-                                            (c) =>
-                                                c.city === formData.placeOfBirth.city &&
-                                                c.state === formData.placeOfBirth.state
-                                        ) || null
-                                        : null
-                                }
-                                onChange={(_, newValue: City | null) => {
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        placeOfBirth: newValue
-                                            ? { city: newValue.city, state: newValue.state }
-                                            : { city: "", state: "" },
-                                    }));
-
-                                    if (errors.placeOfBirth) {
-                                        setErrors((prev) => ({ ...prev, placeOfBirth: "" }));
-                                    }
-                                }}
-                                onBlur={() => {
-                                    const error = validateField("placeOfBirth", formData.placeOfBirth as any);
-                                    setErrors((prev: any) => ({ ...prev, placeOfBirth: error }));
-                                }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label={
-                                            <>
-                                                Place of Birth <span style={{ color: "red" }}>*</span>
-                                            </>
+                                    name="email"
+                                    value={formData.email || ''}
+                                    onChange={handleInputChange}
+                                    onBlur={handleBlur}
+                                    inputProps={{
+                                        maxLength: 50,
+                                    }}
+                                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                        const input = e.currentTarget;
+                                        if (input?.value?.length > 50) {
+                                            input.value = input?.value.slice(0, 50);
                                         }
-                                        error={!!errors.placeOfBirth}
-                                        helperText={errors.placeOfBirth || "Select your city"}
-                                        margin="dense"
-                                        fullWidth
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <FormControl fullWidth error={!!errors.occupation} className="customSelect">
-                                <InputLabel >Occupation <span style={{ color: "red" }}>*</span></InputLabel>
-                                <Select
-                                    name="occupation"
-                                    value={formData.occupation}
-                                    onChange={handleSelectChange}
-                                    label="Occupation"
+                                    }}
+                                    error={!!errors.email}
+                                    helperText={errors.email}
                                     disabled={loading}
-                                    className="customSelect"
-                                >
-                                    <MenuItem value="Job">JOB</MenuItem>
-                                    <MenuItem value="Business">BUSINESS</MenuItem>
-                                </Select>
-                                {errors.occupation && (
-                                    <Typography color="error" variant="caption">
-                                        {errors.occupation}
-                                    </Typography>
-                                )}
-                            </FormControl>
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <FormControl fullWidth error={!!errors.income} disabled={loading} className="customSelect">
-                                <InputLabel>{formData.occupation === "Business" ? "Net Gross Profit" : "Annual Income"}<span style={{ color: "red" }}>*</span></InputLabel>
-                                <Select
-                                    name="income"
-                                    value={formData.income}
-                                    onChange={handleSelectChange}
-                                    label={formData.occupation === "Business" ? "Net Gross Profit" : "Annual Income"}
+                                    className="customTextField"
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField
+                                    fullWidth
+                                    label={
+                                        <>
+                                            Mobile Number<span style={{ color: "red" }}>*</span>
+                                        </>
+                                    }
+                                    name="mobile"
+                                    value={formData?.mobile ? formData.mobile.replace(/^(\+91 )/, '') : ""}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            mobile: e.target?.value.replace(/\D/, ''),
+                                        })
+                                    }
+                                    onBlur={handleBlur}
+                                    error={!!errors.mobile}
+                                    helperText={errors.mobile}
                                     disabled={loading}
-                                    className="customSelect"
-                                >
-                                    {incomeOptions.map(option => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {errors.income && (
-                                    <Typography color="error" variant="caption">
-                                        {errors.income}
-                                    </Typography>
-                                )}
-                            </FormControl>
+                                    className="customTextField"
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment
+                                                position="start"
+                                                sx={{
+                                                    marginRight: "0px",
+                                                    pt: 0.2,
+                                                    "& .MuiTypography-root": {
+                                                        fontSize: "11px",
+                                                    },
+                                                }}
+                                            >
+                                                +91
+                                            </InputAdornment>
+                                        ),
+                                        inputProps: {
+                                            maxLength: 10,
+                                        },
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
 
+                        <Grid container spacing={2} >
+                            <Grid item xs={6} sx={{ mt: 2.4 }} >
+                                <Autocomplete
+                                    className="customAutocomplete"
+                                    options={cities}
+                                    getOptionLabel={(option: City) => option.city || ""}
+                                    value={
+                                        formData.placeOfBirth?.city
+                                            ? cities.find(
+                                                (c) =>
+                                                    c.city === formData.placeOfBirth.city &&
+                                                    c.state === formData.placeOfBirth.state
+                                            ) || null
+                                            : null
+                                    }
+                                    onChange={(_, newValue: City | null) => {
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            placeOfBirth: newValue
+                                                ? { city: newValue.city, state: newValue.state }
+                                                : { city: "", state: "" },
+                                        }));
+
+                                        if (errors.placeOfBirth) {
+                                            setErrors((prev) => ({ ...prev, placeOfBirth: "" }));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        const error = validateField(
+                                            "placeOfBirth",
+                                            formData.placeOfBirth as any
+                                        );
+                                        setErrors((prev: any) => ({ ...prev, placeOfBirth: error }));
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label={
+                                                <>
+                                                    Place of Birth <span style={{ color: "red" }}>*</span>
+                                                </>
+                                            }
+                                            error={!!errors.placeOfBirth}
+                                            helperText={errors.placeOfBirth}
+                                            fullWidth
+                                        />
+                                    )}
+                                />
+                            </Grid>
+                            <Grid item xs={6} sx={{ mt: 2.4 }}>
+                                <Autocomplete
+                                    options={["Job", "Business"]}
+                                    className="customAutocomplete"
+                                    getOptionLabel={(option: any) => option || ""}
+                                    value={formData.occupation || ""}
+                                    onChange={(_, newValue) => {
+                                        handleSelectChange({
+                                            target: { name: "occupation", value: newValue || "" },
+                                        } as any);
+                                    }}
+                                    disabled={loading}
+                                    onBlur={() => {
+                                        const error = validateField("occupation", formData.occupation);
+                                        setErrors((prev: any) => ({ ...prev, occupation: error }));
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label={
+                                                <>
+                                                    Occupation <span style={{ color: "red" }}>*</span>
+                                                </>
+                                            }
+                                            error={!!errors.occupation}
+                                            helperText={errors.occupation}
+                                            fullWidth
+                                        />
+                                    )}
+                                />
+                            </Grid>
+                        </Grid>
+
+                        <Grid container spacing={3} >
+                            <Grid item xs={6} sx={{ mt: 2.3 }}>
+                                <Autocomplete
+                                    options={incomeOptions}
+                                    className="customAutocomplete"
+                                    getOptionLabel={(option) => option || ""}
+                                    value={formData.income || ""}
+                                    onChange={(_, newValue) => {
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            income: newValue || "",
+                                        }));
+
+                                        if (errors.income) {
+                                            setErrors((prev) => ({ ...prev, income: "" }));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        const error = validateField("income", formData.income);
+                                        setErrors((prev: any) => ({ ...prev, income: error }));
+                                    }}
+                                    disabled={loading}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label={
+                                                <>
+                                                    {formData.occupation === "Business"
+                                                        ? "Net Gross Profit"
+                                                        : "Annual Income"}{" "}
+                                                    <span style={{ color: "red" }}>*</span>
+                                                </>
+                                            }
+                                            error={!!errors.income}
+                                            helperText={errors.income}
+                                            fullWidth
+                                        />
+                                    )}
+                                />
+                            </Grid>
                         </Grid>
                     </Grid >
                 );
@@ -1454,7 +1548,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                     </>
                                 }
                                 name="nomineeIdType"
-                                value={formData.nomineeIdType}
+                                value={formData.nomineeIdType || ''}
                                 onChange={handleInputChange}
                                 disabled={loading}
                                 className="customTextField"
@@ -1473,7 +1567,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                     </>
                                 }
                                 name="nomineeId"
-                                value={formData.nomineeId}
+                                value={formData?.nomineeId || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 inputProps={{
@@ -1493,7 +1587,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 error={!!errors.nomineeId}
                                 helperText={
                                     errors.nomineeId ||
-                                    (formData.nomineeIdType === "aadhar" ? "12 or 16 digits" : "10 alphanumeric characters")
+                                    (formData.nomineeIdType === "aadhar")
                                 }
                                 disabled={loading}
                                 className="customTextField"
@@ -1524,7 +1618,13 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                     startAdornment: (
                                         <InputAdornment
                                             position="start"
-                                            sx={{ marginRight: "0px" }}
+                                            sx={{
+                                                marginRight: "0px",
+                                                pt: 0.2,
+                                                "& .MuiTypography-root": {
+                                                    fontSize: "11px",
+                                                },
+                                            }}
                                         >
                                             +91
                                         </InputAdornment>
@@ -1589,7 +1689,6 @@ const MutualFundFormDialog: React.FC<Props> = ({
                             }
                         </Grid>
 
-                        {/* Preview Dialog */}
                         {renderFilePreviewDialog()}
                     </>
                 );
@@ -1601,98 +1700,186 @@ const MutualFundFormDialog: React.FC<Props> = ({
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">
-                        {mode === 'edit' ? 'Edit mutual fund' : 'New mutual fund / SIP'}
-                    </Typography>
-                    <IconButton onClick={handleClose} disabled={loading}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-            </DialogTitle>
-            <DialogContent>
-                <Stepper activeStep={step - 1} alternativeLabel sx={{ mb: 3 }}>
-                    {steps.map((label, index) => {
-                        const stepNumber = index + 1;
-                        const completed = stepNumber < step || (stepNumber < maxAllowedStep && stepNumber !== step);
-                        const isEditable = stepNumber <= maxAllowedStep;
-
-                        return (
-                            <Step key={label} completed={completed}>
-                                <StepButton
-                                    onClick={() => isEditable && handleStepClick(stepNumber)}
-                                    disabled={!isEditable || savingStep}
-                                    sx={{
-                                        '& .MuiStepLabel-label.Mui-active': {
-                                            color: 'green !important',
-                                            fontWeight: 'bold',
-                                        },
-                                        '& .MuiStepIcon-root.Mui-active': {
-                                            color: 'green',
-                                        },
-                                        '& .MuiStepIcon-root.Mui-completed': {
-                                            color: 'green',
-                                        },
-                                    }}
-                                >
-                                    <StepLabel>{label}</StepLabel>
-                                </StepButton>
-                            </Step>
-                        );
-                    })}
-                </Stepper>
-
-                {success ? (
-                    <Box sx={{ textAlign: 'center', p: 4 }}>
-                        <CheckCircleIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
-                        <Typography variant="h5" gutterBottom>
-                            Application Submitted Successfully!
+        <>
+            <Dialog open={open}
+                onClose={(event, reason) => {
+                    if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                        handleClose();
+                    }
+                }}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        height: "400px",
+                        maxHeight: "80vh",
+                        display: "flex",
+                        flexDirection: "column",
+                    },
+                }}>
+                <DialogTitle>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">
+                            {mode === 'edit' ? 'Edit mutual fund' : 'New mutual fund / SIP'}
                         </Typography>
-                        <Typography color="text.secondary">
-                            Your mutual fund application has been received. We'll contact you shortly.
-                        </Typography>
+                        <IconButton onClick={handleClose} disabled={loading}>
+                            <CloseIcon />
+                        </IconButton>
                     </Box>
-                ) : (
-                    renderStepContent()
-                )}
-            </DialogContent>
-            {!success && (
-                <DialogActions>
-                    {step > 1 && (
-                        <Button
-                            onClick={handleBack}
-                            disabled={savingBack || loading || savingStep}
-                            endIcon={savingBack ? <CircularProgress size={20} /> : null}
-                        >
-                            Back
-                        </Button>
-                    )}
+                </DialogTitle>
+                <DialogContent>
+                    <Stepper activeStep={step - 1} alternativeLabel sx={{ mb: 3 }}>
+                        {steps.map((label, index) => {
+                            const stepNumber = index + 1;
+                            const completed =
+                                stepNumber < step ||
+                                (stepNumber < maxAllowedStep && stepNumber !== step) ||
+                                (isReviewSubmitted && stepNumber === 5);
+                            const isEditable = stepNumber <= maxAllowedStep;
+                            const isActive = stepNumber === step;
+                            return (
+                                <Step key={label} completed={completed}>
+                                    <StepButton
+                                        onClick={() => isEditable && handleStepClick(stepNumber)}
+                                        disabled={!isEditable || savingStep}
+                                        sx={{
+                                            "& .MuiStepLabel-label.Mui-active": {
+                                                color: step === maxAllowedStep && !completed ? "orange" : "green",
+                                                fontWeight: "bold",
+                                            },
+                                            "& .MuiStepIcon-root.Mui-active": {
+                                                color: step === maxAllowedStep && !completed ? "orange" : "green",
+                                            },
+                                            "& .MuiStepIcon-root.Mui-completed": {
+                                                color: "green",
+                                            },
+                                            "& .MuiStepLabel-label.Mui-completed": {
+                                                color: "green",
+                                                fontWeight: "bold",
+                                            },
+                                            "& .MuiStepLabel-label": {
+                                                color: stepNumber === maxAllowedStep && !completed ? "orange" : "grey",
+                                                fontWeight: "bold",
+                                            },
+                                            "& .MuiStepIcon-root": {
+                                                color: stepNumber === maxAllowedStep && !completed ? "orange" : "grey",
+                                            },
+                                        }}
+                                    >
+                                        <StepLabel>
+                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
 
-                    {step < steps.length ? (
-                        <Button
-                            onClick={handleNext}
-                            variant="contained"
-                            disabled={savingNext || loading || savingStep}
-                            endIcon={savingNext ? <CircularProgress size={20} /> : null}
-                        >
-                            Next
-                        </Button>
+                                                <span>{label}</span>
+                                                {isActive && (
+                                                    <span
+                                                        style={{
+                                                            color: step === maxAllowedStep && !completed ? "orange" : "green",
+                                                            fontSize: "20px",
+                                                            marginTop: "4px",
+                                                            animation: "bounce 1s infinite",
+                                                        }}
+                                                    >
+                                                        <ArrowDropUpOutlinedIcon />
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </StepLabel>
+                                    </StepButton>
+                                </Step>
+                            );
+                        })}
+                    </Stepper>
+                    <style>
+                        {`
+                  @keyframes bounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(4px); }
+                  }
+                  `}
+                    </style>
+                    {success ? (
+                        <Box sx={{ textAlign: 'center', p: 4 }}>
+                            <CheckCircleIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
+                            <Typography variant="h5" gutterBottom>
+                                Application Submitted Successfully!
+                            </Typography>
+                            <Typography color="text.secondary">
+                                Your mutual fund application has been received. We'll contact you shortly.
+                            </Typography>
+                        </Box>
                     ) : (
-                        <Button
-                            onClick={handleFormSubmit}
-                            variant="contained"
-                            color="primary"
-                            disabled={loading || savingNext || savingBack || savingStep}
-                            endIcon={loading ? <CircularProgress size={20} /> : null}
-                        >
-                            {mode === "edit" ? "Submit" : "Submit"}
-                        </Button>
+                        renderStepContent()
                     )}
+                </DialogContent>
+                {
+                    !success && (
+                        <DialogActions>
+                            {step > 1 && (
+                                <Button
+                                    onClick={handleBack}
+                                    disabled={savingBack || loading || savingStep}
+                                    endIcon={savingBack ? <CircularProgress size={20} /> : null}
+                                >
+                                    Back
+                                </Button>
+                            )}
+
+                            {step < steps.length ? (
+                                <Button
+                                    onClick={handleNext}
+                                    variant="contained"
+                                    disabled={savingNext || loading || savingStep}
+                                    endIcon={savingNext ? <CircularProgress size={20} /> : null}
+                                >
+                                    Next
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleFormSubmit}
+                                    variant="contained"
+                                    color="primary"
+                                    disabled={loading || savingNext || savingBack || savingStep}
+                                    endIcon={loading ? <CircularProgress size={20} /> : null}
+                                >
+                                    {mode === "edit" ? "Submit" : "Submit"}
+                                </Button>
+                            )}
+                        </DialogActions>
+                    )
+                }
+            </Dialog >
+            <Dialog open={closeConfirmDialog} onClose={handleCancelClose}>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Do you really want to close?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelClose} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmClose} color="primary" variant="contained">
+                        Confirm
+                    </Button>
                 </DialogActions>
-            )}
-        </Dialog>
+            </Dialog>
+            <Snackbar
+                // open={true}
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
+        </>
     );
 };
 

@@ -18,7 +18,8 @@ import {
   Alert,
   Snackbar,
   Tooltip,
-  Link
+  Link,
+  Stack
 } from "@mui/material";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -34,18 +35,37 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRouter } from 'next/navigation';
 dayjs.extend(customParseFormat);
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DataGrid, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
 import MutualFundFormDialog from "../../components/serviceTypeForm/mutualFundFormDialog";
 import React from "react";
-import { stat } from "fs";
+import StepProgress from "../../components/StepProgress";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
+import CustomToolbar from "../../components/CustomToolbar";
 
+const defaultColumnVisibility = {
+  id: false,
+  serviceSubTypeName: true,
+  aadharNumber: true,
+  email: false,
+  mobile: false,
+  placeOfBirth: false,
+  income: false,
+  occupation: false,
+  nomineeIdType: false,
+  nomineeId: false,
+  nomineeMobile: false,
+  nomineeRelation: false,
+  submit: false,
+  status: true,
+  activeSteps: true,
+  actions: true,
+}
 const Investment = () => {
   const [allInvestment, setAllInvestment] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState("");
@@ -64,7 +84,7 @@ const Investment = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [openDialog, setOpenDialog] = useState(false);
   const [editData, setEditData] = useState<any>(null);
-
+  const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
   const getToken = () => {
@@ -130,14 +150,6 @@ const Investment = () => {
           status: item.status,
           serviceSubTypeName: item.serviceSubTypeName,
           activeSteps: item.activeSteps,
-          email: item.personalEmail || item.email,
-          aadharCardFileKey: item.aadharCardFileKey || null,
-          panCardFileKey: item.panCardFileKey || null,
-          bankProofFileKey: item.bankProofFileKey || null,
-          salarySlipsFileKey: item.salarySlipsFileKey || null,
-          itrDocumentsFileKey: item.itrDocumentsFileKey || null,
-          firstName: item.firstName || "",
-          lastName: item.lastName || "",
           aadharNumber: item.aadharNumber,
           panNumber: item.panNumber,
           mobile: item.mobile
@@ -145,13 +157,12 @@ const Investment = () => {
             .replace(/\s+/g, "")
             .replace(/^\+91/, "")
             .slice(-10),
-
+          email: item.personalEmail || item.email,
+          firstName: item.firstName || "",
+          lastName: item.lastName || "",
           income: item.income,
           occupation: item.occupation,
-          placeOfBirth: item.placeOfBirth
-            ? `${item.placeOfBirth.city}`
-            : "N/A",
-
+          placeOfBirth: item.placeOfBirth,
           nomineeIdType: item.nomineeIdType,
           nomineeId: item.nomineeId,
           nomineeMobile: item.nomineeMobile
@@ -160,7 +171,12 @@ const Investment = () => {
             .replace(/^\+91/, "")
             .slice(-10),
           nomineeRelation: item.nomineeRelation,
-          submit: item.submit === "complete" ? "Complete" : "In complete",
+          aadharCardFileKey: item.aadharCardFileKey || null,
+          panCardFileKey: item.panCardFileKey || null,
+          bankProofFileKey: item.bankProofFileKey || null,
+          salarySlipsFileKey: item.salarySlipsFileKey || null,
+          itrDocumentsFileKey: item.itrDocumentsFileKey || null,
+          submit: item.submit === 1 ? true : false,
 
         }));
 
@@ -230,12 +246,24 @@ const Investment = () => {
     { field: "mobile", headerName: "Mobile", flex: 0.12 },
     { field: "income", headerName: "Income", flex: 0.12 },
     { field: "occupation", headerName: "Occupation", flex: 0.12 },
+    { field: "serviceSubTypeName", headerName: "Type", flex: 0.12 },
     {
       field: 'placeOfBirth',
       headerName: 'Place of Birth',
-      width: 200,
+      flex: 0.12,
       valueGetter: (params: any) => {
-        return `${params || ''}`.trim().replace(/^,|,$/, '') || 'N/A';
+        const placeOfBirth = params?.city;
+        let city = '';
+        if (placeOfBirth) {
+          try {
+            const parsed = typeof placeOfBirth === 'string' ? placeOfBirth : placeOfBirth;
+            city = parsed || '';
+          } catch (e) {
+            city = '';
+          }
+        }
+
+        return city.trim() || '';
       },
     },
     { field: "nomineeId", headerName: "Nominee Pan or Aadhar", flex: 0.12 },
@@ -253,6 +281,20 @@ const Investment = () => {
             <Typography variant="body1" sx={{ color, textAlign: "center" }}>
               {status}
             </Typography>
+          </Box>
+
+        );
+      },
+    },
+    {
+      field: "activeSteps",
+      headerName: "Active Steps",
+      minWidth: 115,
+      flex: 0,
+      renderCell: (params: any) => {
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", width: "100%", height: "100%" }}>
+            <StepProgress activeStep={params.value} />
           </Box>
         );
       },
@@ -310,11 +352,11 @@ const Investment = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending": return "#fbf774";
-      case "In Progress": return "#fbe06f";
+      case "Pending": return "#8b8a3fff";
+      case "In Progress": return "orange";
       case "Approved": return "#8df1b4";
       case "Rejected": return "#ff8780";
-      default: return "#fbf774";
+      default: return "#8b8a3fff";
     }
   };
 
@@ -475,7 +517,18 @@ const Investment = () => {
     };
     return documentNames[key as keyof typeof documentNames] || 'View Document';
   };
+  const LOCAL_KEY = "userPrefrence";
 
+  useEffect(() => {
+    const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
+    if (saved) {
+      setColumnsVisibilityModel(saved);
+    }
+  }, []);
+
+  const handleSaveLayout = () => {
+    saveLayoutToLocalStorage(LOCAL_KEY, columnsVisibilityModel);
+  };
 
   return (
     <>
@@ -514,7 +567,7 @@ const Investment = () => {
                   <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid
                       rows={allInvestment || []}
-                      columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
+                      columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
                       pageSizeOptions={[5, 10, 20, 50, 100]}
                       paginationModel={pagination}
                       onPaginationModelChange={setPagination}
@@ -522,22 +575,12 @@ const Investment = () => {
                       autoHeight
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: GridToolbar,
+                        toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
                       }}
-                      slotProps={{
-                        toolbar: {
-                          showQuickFilter: true,
-                          quickFilterProps: { debounceMs: 500 },
-                          sx: {
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: "4px",
-                            padding: "8px",
-                            '& .MuiButton-text': {
-                              color: '#44a7a2',
-                            },
-                          },
-                        },
-                      }}
+                      columnVisibilityModel={columnsVisibilityModel}
+                      onColumnVisibilityModelChange={(newModel) =>
+                        setColumnsVisibilityModel(newModel)
+                      }
                     />
                   </Box>
                 </Container>
@@ -627,8 +670,17 @@ const Investment = () => {
                             {getDocumentName(key)}
                           </Link>
                         ) : (
-                          <Typography variant="body2" sx={{ color: isStatus ? statusColor : 'inherit' }}>
-                            {String(value || 'N/A')}
+                          <Typography
+                            variant="body2"
+                            sx={{ color: isStatus ? statusColor : 'inherit' }}
+                          >
+                            {key.toLowerCase() === "submit"
+                              ? value === true
+                                ? "Complete"
+                                : "In Complete"
+                              : key.toLowerCase() === "placeofbirth" && value && typeof value === "object"
+                                ? `${(value as any).city}`
+                                : String(value ?? "N/A")}
                           </Typography>
                         )}
                       </Grid>
@@ -638,6 +690,7 @@ const Investment = () => {
             </Grid>
           </DialogContent>
         </Dialog>
+
         <Dialog
           open={openInvestmentFormDialog}
           onClose={() => {
@@ -696,7 +749,7 @@ const Investment = () => {
         />
         <Snackbar
           open={snackbarOpen}
-          autoHideDuration={6000}
+          autoHideDuration={3000}
           onClose={handleSnackbarClose}
           anchorOrigin={{ vertical: "top", horizontal: "right" }}
         >

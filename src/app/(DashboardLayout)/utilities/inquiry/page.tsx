@@ -250,14 +250,14 @@ const InquiryPage = () => {
             flex: 0.12,
             renderCell: (params: any) => {
                 const status = params.row.status;
-                let color = "#fbf774";
+                let color = "#8b8a3fff";
 
                 switch (status) {
                     case "Pending":
-                        color = "#fbf774";
+                        color = "#8b8a3fff";
                         break;
                     case "In Progress":
-                        color = "#fbe06f";
+                        color = "orange";
                         break;
                     case "Approved":
                         color = "#8df1b4";
@@ -266,7 +266,7 @@ const InquiryPage = () => {
                         color = "#ff8780";
                         break;
                     default:
-                        color = "#fbf774";
+                        color = "#8b8a3fff";
                 }
 
                 return (
@@ -298,6 +298,7 @@ const InquiryPage = () => {
             flex: 0,
             renderCell: (params: any) => {
                 const status = params.row.status;
+                const submit = params.row.submit
                 return (
                     <Box sx={{ display: "flex", gap: 0.01, alignItems: "center" }}>
                         <Tooltip title="View">
@@ -312,7 +313,7 @@ const InquiryPage = () => {
                             </IconButton>
                         </Tooltip>
 
-                        {status !== "Approved" && status !== "Rejected" && (
+                        {submit === 1 && status !== "Approved" && status !== "Rejected" && (
                             <>
                                 <Tooltip title="Approve">
                                     <IconButton color="success" onClick={() => handleApproveClick(params.row)}>
@@ -487,17 +488,28 @@ const InquiryPage = () => {
                 </Link>
             ) : "N/A";
         }
-
-        if (value === 1) return "True";
-        if (value === 0) return "False";
-
         const statusColors: Record<string, string> = {
-            Pending: "#fbf774",
-            "In Progress": "#fbe06f",
+            Complete: "green",
+            'In Complete': "gray",
+            Pending: "#8b8a3fff",
+            "In Progress": "orange",
             Approved: "#8df1b4",
             Rejected: "#ff8780",
         };
 
+        if (key === "submit") {
+            const displayValue = value === 1 ? "Complete" : "In Complete";
+            return (
+                <span
+                    style={{
+                        color: statusColors[displayValue],
+                        // fontWeight: "bold",
+                    }}
+                >
+                    {displayValue}
+                </span>
+            );
+        }
         if (key === "status") {
             return (
                 <span
@@ -510,10 +522,8 @@ const InquiryPage = () => {
                 </span>
             );
         }
-
-        return value || "N/A";
+        return value ?? "N/A";
     };
-
     return (
         <>
             {isLoading && (

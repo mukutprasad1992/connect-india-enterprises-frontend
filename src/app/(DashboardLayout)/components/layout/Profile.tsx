@@ -172,7 +172,7 @@ const Profile = () => {
               Cancel
             </Button>
             <Button onClick={handleLogoutConfirm} variant="contained" color="error">
-              Exit
+              Log Out
             </Button>
           </DialogActions>
         </Dialog>
