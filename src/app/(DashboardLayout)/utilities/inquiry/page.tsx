@@ -37,6 +37,27 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
 import React from "react";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
+import CustomToolbar from "../../components/CustomToolbar";
+
+const defaultColumnVisibility = {
+    id: false,
+    type: true,
+    aadharNumber: true,
+    email: false,
+    mobile: false,
+    placeOfBirth: false,
+    income: false,
+    occupation: false,
+    nomineeIdType: false,
+    nomineeId: false,
+    nomineeMobile: false,
+    nomineeRelation: false,
+    submit: false,
+    status: true,
+    activeSteps: true,
+    actions: true,
+}
 
 dayjs.extend(customParseFormat);
 
@@ -51,6 +72,7 @@ const InquiryPage = () => {
     const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
     const [filterModel, setFilterModel] = React.useState({ items: [] });
     const router = useRouter();
@@ -75,6 +97,19 @@ const InquiryPage = () => {
         "itrDocumentsFileKey",
         "bankProofFileKey",
     ];
+
+    const LOCAL_KEY = "adminPrefrence";
+
+    useEffect(() => {
+        const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
+        if (saved) {
+            setColumnsVisibilityModel(saved);
+        }
+    }, []);
+    const handleSaveLayout = () => {
+        saveLayoutToLocalStorage(LOCAL_KEY, columnsVisibilityModel);
+    };
+
     const token = getToken();
     const getRoleId = () => {
         if (typeof window !== "undefined") {
@@ -136,7 +171,7 @@ const InquiryPage = () => {
 
                     return formattedItem;
                 });
-
+                console.log("Fetched Inquiries:", formattedData);
                 setInquiries(formattedData);
             } else {
                 setSnackbarSeverity("error");
@@ -226,10 +261,18 @@ const InquiryPage = () => {
         { field: "lastName", headerName: "Last Name", flex: 0.1 },
         { field: "email", headerName: "Email", flex: 0.08 },
         { field: "mobile", headerName: "Mobile No", flex: 0.08 },
+        { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
+        { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
         { field: "type", headerName: "Type", flex: 0.12 },
+        { field: "nomineeIdType", headerName: "nominee Id Type", flex: 0.12 },
+        { field: "nomineeId", headerName: "nominee Id", flex: 0.12 },
+        { field: "nomineeMobile", headerName: "Nominee Mobile", flex: 0.12 },
+        { field: "nomineeRelation", headerName: "nominee Relation", flex: 0.12 },
+
+        { field: "activeSteps", headerName: "activeSteps", flex: 0.12 },
         {
-            field: "isDetailsConfirmed",
-            headerName: "Details Confirmed",
+            field: "submit",
+            headerName: "Form Status",
             flex: 0.1,
             renderCell: (params: any) => {
                 return params.row.isDetailsConfirmed ? "True" : "False";
@@ -241,7 +284,6 @@ const InquiryPage = () => {
             width: 200,
             valueGetter: (params: any) => {
                 return `${params?.city || ''}`.trim().replace(/^,|,$/, '') || 'N/A';
-                return 'N/A';
             },
         },
         {
@@ -294,15 +336,15 @@ const InquiryPage = () => {
             sortable: false,
             filterable: false,
             disableColumnMenu: true,
-            minWidth: 170,
-            flex: 0,
+            minWidth: 130,
+            flex: 0.12,
             renderCell: (params: any) => {
                 const status = params.row.status;
                 const submit = params.row.submit
                 return (
-                    <Box sx={{ display: "flex", gap: 0.01, alignItems: "center" }}>
+                    <Box sx={{ display: "flex", gap: 0.01, alignItems: "center", px: 0.5, width: "100%", height: "100%" }}>
                         <Tooltip title="View">
-                            <IconButton
+                            <IconButton sx={{ p: 0.2 }}
                                 color="info"
                                 onClick={() => {
                                     setSelectedInquiry(params.row);
@@ -316,7 +358,7 @@ const InquiryPage = () => {
                         {submit === 1 && status !== "Approved" && status !== "Rejected" && (
                             <>
                                 <Tooltip title="Approve">
-                                    <IconButton color="success" onClick={() => handleApproveClick(params.row)}>
+                                    <IconButton sx={{ p: 0.2 }} color="success" onClick={() => handleApproveClick(params.row)}>
                                         <CheckCircle />
                                     </IconButton>
                                 </Tooltip>
@@ -326,17 +368,17 @@ const InquiryPage = () => {
                                         key={`${params.id}-${status}`}
                                         color="inherit"
                                         onClick={() => handleInProgressClick(params.row)}
-                                        sx={{ color: "unset !important" }}
+                                        sx={{ color: "unset !important", p: 0.2 }}
                                     >
                                         <Pending
-                                            htmlColor={status === "Pending" ? "#fbf774" : "#fbe06f"}
+                                            htmlColor={status === "Pending" ? "#8b8a3fff" : "orange"}
                                             fontSize="medium"
                                         />
                                     </IconButton>
                                 </Tooltip>
 
                                 <Tooltip title="Reject">
-                                    <IconButton color="error" onClick={() => handleRejectClick(params.row)}>
+                                    <IconButton sx={{ p: 0.2 }} color="error" onClick={() => handleRejectClick(params.row)}>
                                         <Cancel />
                                     </IconButton>
                                 </Tooltip>
@@ -493,7 +535,7 @@ const InquiryPage = () => {
             'In Complete': "gray",
             Pending: "#8b8a3fff",
             "In Progress": "orange",
-            Approved: "#8df1b4",
+            Approved: "#6ad392ff",
             Rejected: "#ff8780",
         };
 
@@ -580,22 +622,12 @@ const InquiryPage = () => {
                                             autoHeight
                                             sortModel={[{ field: "id", sort: "desc" }]}
                                             slots={{
-                                                toolbar: GridToolbar,
+                                                toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
                                             }}
-                                            slotProps={{
-                                                toolbar: {
-                                                    showQuickFilter: true,
-                                                    quickFilterProps: { debounceMs: 500 },
-                                                    sx: {
-                                                        backgroundColor: "#f5f5f5",
-                                                        borderRadius: "4px",
-                                                        padding: "8px",
-                                                        '& .MuiButton-text': {
-                                                            color: '#44a7a2',
-                                                        },
-                                                    },
-                                                },
-                                            }}
+                                            columnVisibilityModel={columnsVisibilityModel}
+                                            onColumnVisibilityModelChange={(newModel) =>
+                                                setColumnsVisibilityModel(newModel)
+                                            }
                                         />
                                     </Box>
                                 </Container>
@@ -647,7 +679,11 @@ const InquiryPage = () => {
                         <>
                             <Box display="flex" justifyContent="center" mb={2}>
                                 <Avatar
-                                    src={selectedInquiry.profileImageURL || '/images/profile/user-1.jpg'}
+                                    src={
+                                        selectedInquiry?.profileImageKey
+                                            ? `${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL}/${selectedInquiry.profileImageKey}`
+                                            : '/images/profile/user-1.jpg'
+                                    }
                                     alt="User"
                                     sx={{ width: 150, height: 150 }}
                                     onError={(e) => { (e.target as HTMLImageElement).src = '/images/profile/user-1.jpg'; }}
@@ -658,7 +694,7 @@ const InquiryPage = () => {
 
                             <Grid container spacing={2}>
                                 {Object.entries(selectedInquiry)
-                                    .filter(([key]) => key !== 'profileImageURL')
+                                    .filter(([key]) => key !== 'profileImageKey')
                                     .map(([key, value]) => (
                                         <Grid item xs={12} key={key}>
                                             <Box display="flex" gap={1}>

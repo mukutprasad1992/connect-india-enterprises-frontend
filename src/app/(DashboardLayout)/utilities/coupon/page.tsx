@@ -24,9 +24,6 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import Tooltip from '@mui/material/Tooltip';
 import {
   DataGrid,
-  GridToolbar,
-  GridToolbarColumnsButton,
-  GridToolbarContainer,
 } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
@@ -44,8 +41,31 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
+import CustomToolbar from "../../components/CustomToolbar";
 
+const defaultColumnVisibility = {
+  id: false,
+  vendorName: true,
+  vendorRepresentative: false,
+  vendorCode: false,
+  vendorAddress: false,
+  vendorPhone: false,
+  vendorEmail: false,
+  vendorPincode: false,
+  customerName: false,
+  customerAddress: false,
+  customerPhone: false,
+  customerEmail: false,
+  customerPincode: false,
+  amount: true,
+  voucherCode: true,
+  validityFrom: true,
+  validityTo: true,
+  status: true,
+}
 const VoucherTable: React.FC = () => {
+  const LOCAL_KEY = "couponPrefrence";
   const router = useRouter();
   const [rows, setRows] = useState<any>([]);
   const [open, setOpen] = useState(false);
@@ -61,6 +81,7 @@ const VoucherTable: React.FC = () => {
   const [voucherUpdated, setVoucherUpdated] = useState(false);
   const [viewSelectedVocher, setViewSelectedVocher] = useState<any>(null);
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
+  const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
   const [amount, setAmount] = useState("");
   const [amountError, setAmountError] = useState("");
   const [options, setOptions] = useState([]);
@@ -156,6 +177,17 @@ const VoucherTable: React.FC = () => {
       router.push("/authentication/login");
     }
   }, [router, token]);
+
+  useEffect(() => {
+    const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
+    if (saved) {
+      setColumnsVisibilityModel(saved);
+    }
+  }, []);
+
+  const handleSaveLayout = () => {
+    saveLayoutToLocalStorage(LOCAL_KEY, columnsVisibilityModel);
+  };
 
   const handleGenerateButton = () => {
     setSelectedRow(undefined);
@@ -687,6 +719,7 @@ const VoucherTable: React.FC = () => {
           </IconButton> */}
           <Tooltip title="View">
             <IconButton
+              sx={{ p: 0.2 }}
               color="primary"
               onClick={() => {
                 const pdfURL = params.row?.pdfURL;
@@ -705,6 +738,7 @@ const VoucherTable: React.FC = () => {
               <Tooltip title={params.row.status === 'Disable' ? 'User has already redeemed' : 'Redeem'}>
                 <span>
                   <IconButton
+                    sx={{ p: 0.2 }}
                     color={params.row.status === 'Disable' ? 'error' : 'primary'}
                     size="small"
                     onClick={() => handleUpdateStatusButton(params.row.id)}
@@ -715,12 +749,20 @@ const VoucherTable: React.FC = () => {
                 </span>
               </Tooltip>
               <Tooltip title="Edit">
-                <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
+                <IconButton
+                  sx={{ p: 0.2 }}
+                  color="primary"
+                  size="small"
+                  onClick={() => handleEditButton(params.row)}>
                   <EditIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
-                <IconButton color="primary" size="small" onClick={() => handleDeleteButton(params.row.id)}>
+                <IconButton
+                  sx={{ p: 0.2 }}
+                  color="primary"
+                  size="small"
+                  onClick={() => handleDeleteButton(params.row.id)}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -776,13 +818,6 @@ const VoucherTable: React.FC = () => {
     setVoucherErrorMessage(false);
   };
 
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
-  }
   const handleClosePdfPopUp = () => {
     setopenPdfPopUp(false);
     setLoading(false)
@@ -1090,22 +1125,12 @@ const VoucherTable: React.FC = () => {
                       autoHeight
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: GridToolbar,
+                        toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
                       }}
-                      slotProps={{
-                        toolbar: {
-                          showQuickFilter: true,
-                          quickFilterProps: { debounceMs: 500 },
-                          sx: {
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: "4px",
-                            padding: "8px",
-                            '& .MuiButton-text': {
-                              color: '#44a7a2',
-                            },
-                          },
-                        },
-                      }}
+                      columnVisibilityModel={columnsVisibilityModel}
+                      onColumnVisibilityModelChange={(newModel) =>
+                        setColumnsVisibilityModel(newModel)
+                      }
                     />
                   </Box>
                 </Container>

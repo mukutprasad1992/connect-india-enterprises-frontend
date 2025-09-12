@@ -6,7 +6,7 @@ import {
     GridToolbarExport,
     GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Tooltip } from "@mui/material";
 
 function CustomToolbar({ onSave }: { onSave: () => void }) {
     return (
@@ -24,22 +24,21 @@ function CustomToolbar({ onSave }: { onSave: () => void }) {
                 gap: 1
             }}
         >
-            {/* Left side buttons */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <GridToolbarColumnsButton
                 />
                 <GridToolbarFilterButton />
                 <GridToolbarDensitySelector />
                 <GridToolbarExport />
-                <Button
-                    size="small"
-                    onClick={onSave}
-                >
-                    Save Layout
-                </Button>
+                <Tooltip title="Save layout">
+                    <Button
+                        size="small"
+                        onClick={onSave}
+                    >
+                        Save Layout
+                    </Button>
+                </Tooltip>
             </Box>
-
-            {/* Right side search */}
             <Box sx={{ marginLeft: "auto" }}>
                 <GridToolbarQuickFilter debounceMs={500} placeholder="Search..." />
             </Box>

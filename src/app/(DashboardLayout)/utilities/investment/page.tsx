@@ -67,6 +67,7 @@ const defaultColumnVisibility = {
   actions: true,
 }
 const Investment = () => {
+  const LOCAL_KEY = "userPrefrence";
   const [allInvestment, setAllInvestment] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedId, setSelectedId] = useState("");
@@ -148,6 +149,7 @@ const Investment = () => {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
           status: item.status,
+          submit: item.submit === 1 ? true : false,
           serviceSubTypeName: item.serviceSubTypeName,
           activeSteps: item.activeSteps,
           aadharNumber: item.aadharNumber,
@@ -176,7 +178,6 @@ const Investment = () => {
           bankProofFileKey: item.bankProofFileKey || null,
           salarySlipsFileKey: item.salarySlipsFileKey || null,
           itrDocumentsFileKey: item.itrDocumentsFileKey || null,
-          submit: item.submit === 1 ? true : false,
 
         }));
 
@@ -289,15 +290,19 @@ const Investment = () => {
     {
       field: "activeSteps",
       headerName: "Active Steps",
-      minWidth: 115,
-      flex: 0,
-      renderCell: (params: any) => {
-        return (
-          <Box sx={{ display: "flex", alignItems: "center", width: "100%", height: "100%" }}>
-            <StepProgress activeStep={params.value} />
-          </Box>
-        );
-      },
+      flex: 0.12,
+      renderCell: (params: any) => (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+            gap: "4px",
+          }}
+        >
+          <StepProgress activeStep={params.value} />
+        </Box>
+      ),
     },
     {
       field: "actions",
@@ -305,7 +310,7 @@ const Investment = () => {
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
-      minWidth: 100,
+      minWidth: 80,
       flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
@@ -315,6 +320,7 @@ const Investment = () => {
           <Box display="flex" width="100%" height="100%">
             <Tooltip title="View">
               <IconButton
+                sx={{ p: 0.2 }}
                 color="info"
                 size="small"
                 onClick={() => handleViewButton(params.row)}
@@ -326,6 +332,7 @@ const Investment = () => {
               <>
                 <Tooltip title="Edit">
                   <IconButton
+                    sx={{ p: 0.2 }}
                     color="primary"
                     size="small"
                     onClick={() => handleEditButton(params.row)}
@@ -335,6 +342,7 @@ const Investment = () => {
                 </Tooltip>
                 <Tooltip title="Delete">
                   <IconButton
+                    sx={{ p: 0.2 }}
                     color="error"
                     size="small"
                     onClick={() => handleDeleteButton(params.row.id)}
@@ -354,7 +362,7 @@ const Investment = () => {
     switch (status) {
       case "Pending": return "#8b8a3fff";
       case "In Progress": return "orange";
-      case "Approved": return "#8df1b4";
+      case "Approved": return "#6ad392ff";
       case "Rejected": return "#ff8780";
       default: return "#8b8a3fff";
     }
@@ -517,7 +525,6 @@ const Investment = () => {
     };
     return documentNames[key as keyof typeof documentNames] || 'View Document';
   };
-  const LOCAL_KEY = "userPrefrence";
 
   useEffect(() => {
     const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
@@ -562,7 +569,11 @@ const Investment = () => {
               <DashboardCard>
                 <Container>
                   <Grid container justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                    <Typography variant="h4">Investment</Typography>
+                    <Typography variant="h4"
+                      sx={{
+                        fontSize: { xs: "1.4rem", sm: "1.4rem", md: "1.4rem" }
+                      }}
+                    >Investment</Typography>
                   </Grid>
                   <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                     <DataGrid

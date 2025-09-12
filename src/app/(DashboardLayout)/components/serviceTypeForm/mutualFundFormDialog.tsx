@@ -235,7 +235,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
         const fetchCities = async () => {
             setLoading(true);
             try {
-                const res = await axios.get("http://localhost:4000/city/getCities", {
+                const res = await axios.get(`${BASE_URL}/city/getCities`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -598,7 +598,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 activeSteps: stepKey,
                 ...stepData,
                 serviceId: 1,
-                ServiceSubType: "Mutual Funds",
+                serviceSubType: "Mutual Funds",
                 status: "Pending",
             };
 
@@ -878,7 +878,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     activeSteps: "review",
                     submit: formData.submit ? 1 : 0,
                     serviceId: 1,
-                    ServiceSubType: "mutualFund",
+                    serviceSubType: "mutualFund",
                     status: "Pending",
                 },
                 {

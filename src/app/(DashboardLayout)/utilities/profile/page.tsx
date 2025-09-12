@@ -75,7 +75,6 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
         setMounted(true);
     }, []);
-    console.log("<---control--->", control);
     const fetchProfile = async () => {
         if (!token) {
             localStorage.clear();
