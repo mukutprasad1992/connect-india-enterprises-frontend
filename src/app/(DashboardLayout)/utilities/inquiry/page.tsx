@@ -171,7 +171,6 @@ const InquiryPage = () => {
 
                     return formattedItem;
                 });
-                console.log("Fetched Inquiries:", formattedData);
                 setInquiries(formattedData);
             } else {
                 setSnackbarSeverity("error");

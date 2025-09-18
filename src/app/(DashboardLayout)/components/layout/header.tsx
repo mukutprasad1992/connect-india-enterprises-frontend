@@ -1,11 +1,11 @@
 "use client";
 import {
-    AppBar,
     Toolbar,
     IconButton,
     Tooltip,
     Box,
     Stack,
+    Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import MessageComponent from "../message/MessageComponent";
@@ -14,25 +14,27 @@ import Notification from "../../utilities/notification/page";
 
 export default function Header({ toggleSidebar }: { toggleSidebar: () => void }) {
     return (
-        <AppBar position="static" sx={{ backgroundColor: "#44a7a2" }}>
+        <Box
+            sx={{
+                position: "sticky",
+                top: 0,
+                zIndex: 1100,
+                bgcolor: "background.paper",
+            }}
+        >
             <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Box>
-                    <Tooltip title="Toggle Sidebar" arrow>
-                        <IconButton color="inherit" edge="start" onClick={toggleSidebar}>
-                            <MenuIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Tooltip title="Toggle Sidebar" arrow>
+                    <IconButton color="primary" edge="start" onClick={toggleSidebar}>
+                        <MenuIcon />
+                    </IconButton>
+                </Tooltip>
+                <Stack direction="row" alignItems="center" spacing={2}>
                     {/* <MessageComponent /> */}
-                    <Box flexGrow={40} />
                     <Notification />
-                    <Box />
-                    <Stack direction="row" alignItems="center">
-                        <Profile />
-                    </Stack>
-                </Box>
+                    <Profile />
+                </Stack>
             </Toolbar>
-        </AppBar>
+            <Divider />
+        </Box>
     );
 }

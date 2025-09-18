@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Box sx={{ display: "flex", height: "auto", m: 1, }}>
+    <Box sx={{ display: "flex", height: "auto", m: 0, }}>
       <Sidebar isOpen={isSidebarOpen} isMobileOpen={isMobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
       <Box sx={{ flexGrow: 1 }}>
         <Header toggleSidebar={toggleSidebar} />

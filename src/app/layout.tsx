@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import ClientWrapper from "../app/(DashboardLayout)/components/ClientWrapper";
 import "./styles/common.css";
+import "./global.css";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

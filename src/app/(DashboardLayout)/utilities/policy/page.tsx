@@ -391,7 +391,6 @@ const Policy = () => {
         }
       );
       if (response.data.status) {
-        console.log("Policy updated successfully:", response.data);
         handleCloseAddPolicyDialog();
         fetchAllPolicyData();
         setPolicyUpdated(prev => !prev);

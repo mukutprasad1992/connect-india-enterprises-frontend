@@ -33,20 +33,19 @@ export const formatDate = (value: any): string => {
   return date.toISOString().split("T")[0];
 };
 
-export const formatDateToIST = (dateString: string | number | Date) => {
-  const dateFormat = new Intl.DateTimeFormat('en-IN', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true,
-    timeZone: 'Asia/Kolkata',
-  });
+export const formatDateInd = (value: any): string => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "Invalid date";
 
-  const date = new Date(dateString);
-  return dateFormat.format(date).replace(',', ' T');
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
 };
+
+
 export const formatDateTime = (input?: Date | string | null): string => {
   if (!input) return "";
 

@@ -8,6 +8,7 @@ import {
     useMediaQuery,
     Tooltip,
     Divider,
+    Grid,
 } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
 import { menuItems } from "./menuItems";
@@ -54,15 +55,32 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
                     />
                 )}
                 {(isOpen || isMobile) && (
-                    <Box
-                        component="img"
-                        src="/images/logos/logo.png"
-                        alt="App Logo"
-                        sx={{ height: 50, width: "auto", transition: "all 0.3s" }}
-                    />
+                    <Grid container alignItems="center" spacing={1}>
+                        {/* Logo */}
+                        <Grid item>
+                            <Box
+                                component="img"
+                                src="/logo-transparent-small-png.png"
+                                alt="App Logo"
+                                sx={{ height: 50, width: "auto", transition: "all 0.3s" }}
+                            />
+                        </Grid>
+
+                        {/* Text section */}
+                        <Grid item>
+                            <Grid container direction="column">
+                                <Grid item sx={{ color: "black", fontFamily: "Corbel", fontSize: 20, fontWeight: 600 }}>
+                                    Connect India
+                                </Grid>
+                                <Grid item sx={{ fontFamily: "Corbel", fontSize: 16, color: "brown", fontWeight: 600 }}>
+                                    Enterprise
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
                 )}
             </Box>
-            <Divider />
             {currentMenuItems.map((item: any) => {
                 const isActive = pathname === item.route;
 
@@ -81,14 +99,14 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
                             sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                p: 1,
+                                p: .5,
                                 borderRadius: 2,
                                 cursor: "pointer",
-                                backgroundColor: isActive ? "#44a7a2" : "transparent",
-                                color: isActive ? "white" : "inherit",
+                                backgroundColor: isActive ? "#ebf4f5ff" : "transparent",
+                                color: isActive ? "#465fff" : "inherit",
                                 "&:hover": {
-                                    backgroundColor: "#44a7a2",
-                                    color: "white",
+                                    backgroundColor: "#ebf4f5ff",
+                                    color: "#465fff",
                                 },
                                 justifyContent: isOpen || isMobile ? "flex-start" : "center",
                             }}
@@ -96,10 +114,10 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
                             <IconButton
                                 size="small"
                                 sx={{
-                                    color: isActive ? "white" : "inherit",
+                                    color: isActive ? "#465fff" : "inherit",
                                     "&:hover": {
-                                        backgroundColor: "#44a7a2",
-                                        color: "white",
+                                        backgroundColor: "#ebf4f5ff",
+                                        color: "#465fff",
                                     },
                                 }}
                             >

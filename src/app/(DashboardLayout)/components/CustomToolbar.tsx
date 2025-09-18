@@ -19,7 +19,7 @@ function CustomToolbar({ onSave }: { onSave: () => void }) {
                 display: "flex",
                 alignItems: "center",
                 '& .MuiButton-text': {
-                    color: '#44a7a2',
+                    color: '#465fff',
                 },
                 gap: 1
             }}

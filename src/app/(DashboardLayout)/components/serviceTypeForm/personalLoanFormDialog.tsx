@@ -22,20 +22,26 @@ import {
     Box,
     Paper,
     Divider,
-    Avatar
+    Avatar,
+    StepButton,
+    Snackbar,
+    Alert,
+    FormControlLabel,
+    Checkbox
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
-
+import ArrowDropUpOutlinedIcon from '@mui/icons-material/ArrowDropUpOutlined';
 interface LoanFormData {
+    id: number;
     motherName: string;
     landmark: string;
     email: string;
     currentAddress: string;
-    cityYears: string;
+    yearsOfCity: number;
     alternateNo: string;
     maritalStatus: string;
     designation: string;
@@ -53,17 +59,21 @@ interface LoanFormData {
     aadharNumber: string;
     photoFileKey: File | string | null;
     panCardFileKey: File | string | null;
-    aadhaarCardFileKey: File | string | null;
+    aadharCardFileKey: File | string | null;
     salarySlipsFileKey: File | string | null;
     bankStatementFileKey: File | string | null;
+    submit: boolean,
+    activeSteps: string,
+
 }
 
 const defaultFormData: LoanFormData = {
+    id: null as any,
     motherName: "",
     landmark: "",
     email: "",
     currentAddress: "",
-    cityYears: "",
+    yearsOfCity: null as any,
     alternateNo: "",
     maritalStatus: "",
     designation: "",
@@ -81,25 +91,29 @@ const defaultFormData: LoanFormData = {
     aadharNumber: "",
     photoFileKey: null,
     panCardFileKey: null,
-    aadhaarCardFileKey: null,
+    aadharCardFileKey: null,
     salarySlipsFileKey: null,
-    bankStatementFileKey: null
+    bankStatementFileKey: null,
+    submit: false,
+    activeSteps: ''
 };
 
 interface Props {
     open: boolean;
     onClose: () => void;
-    onSubmit: (formData: any, isEdit: boolean) => void;
+    setOpenDialog: (open: boolean) => void;
     initialData?: LoanFormData | null;
     mode?: 'create' | 'edit';
+    onSuccess?: () => void;
 }
 
 const PersonalLoanFormDialog: React.FC<Props> = ({
     open,
     onClose,
-    onSubmit,
+    setOpenDialog,
     initialData,
-    mode = 'create'
+    mode = 'create',
+    onSuccess,
 }) => {
     const router = useRouter();
     const [step, setStep] = useState(1);
@@ -107,12 +121,47 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [maxAllowedStep, setMaxAllowedStep] = useState(1);
     const [filePreviewUrls, setFilePreviewUrls] = useState<Record<string, string>>({});
+    const [openPreviewDialog, setOpenPreviewDialog] = useState(false);
+    const [dialogFileUrl, setDialogFileUrl] = useState<string | null>(null);
+    const [dialogFileType, setDialogFileType] = useState<"image" | "pdf" | null>(null);
+    const [fullScreen, setFullScreen] = useState(false);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+    const [serviceId, setServiceId] = useState<number | null>(null);
+    const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+    const [closeConfirmDialog, setCloseConfirmDialog] = React.useState(false);
+    const [savingNext, setSavingNext] = useState(false);
+    const [savingBack, setSavingBack] = useState(false);
+    const [initialFormData, setInitialFormData] = useState(formData);
+    const [declarationIsDetailsConfirmed, setDeclarationIsDetailsConfirmed] = useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [savingStep, setSavingStep] = useState(false);
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [fileToRemove, setFileToRemove] = useState<keyof LoanFormData | null>(null);
+    const stepStatusMap: { [key: number]: string } = {
+        1: "personalDetails",
+        2: "contactDetails",
+        3: "employmentDetails",
+        4: "referenceDetails",
+        5: "documents",
+        6: "Review"
+    };
+
+    const statusStepMap: { [key: string]: number } = {
+        "personalDetails": 1,
+        "contactDetails": 2,
+        "employmentDetails": 3,
+        "referenceDetails": 4,
+        "documents": 5,
+        "Review": 6
+    };
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-    const steps = ["Personal Info", "Contact Info", "Employment", "References", "Documents", "Review"];
+    const steps = ["personalDetails", "contactDetails", "employmentDetails", "referenceDetails", "documents", "Review"];
     const maritalStatusOptions = ["Single", "Married", "Divorced", "Widowed"];
     const gridSpacing = { xs: 12, sm: 6 };
-    const DOCUMENT_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
+    const DOCUMENT_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
     const getToken = () => {
         if (typeof window !== "undefined") {
             const token = localStorage.getItem('accessToken');
@@ -150,29 +199,52 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         }
     }, []);
     useEffect(() => {
-        if (mode === 'edit' && initialData) {
-            setFormData(initialData);
+        if (mode === "edit" && initialData) {
+            const updatedFormData: any = { ...initialData };
             const urls: Record<string, string> = {};
 
             const documentKeys: (keyof LoanFormData)[] = [
-                'aadhaarCardFileKey',
-                'panCardFileKey',
-                'salarySlipsFileKey',
-                'bankStatementFileKey',
+                "aadharCardFileKey",
+                "panCardFileKey",
+                "photoFileKey",
+                "salarySlipsFileKey",
+                "bankStatementFileKey"
             ];
 
-            documentKeys.forEach(key => {
-                if (typeof initialData[key] === 'string') {
+            documentKeys.forEach((key) => {
+                if (typeof initialData[key] === "string" && initialData[key] !== "") {
                     urls[key] = `${DOCUMENT_URL}/${initialData[key]}`;
+                    updatedFormData[key] = initialData[key];
                 }
             });
-
+            setFormData(updatedFormData);
+            setInitialFormData(updatedFormData);
             setFilePreviewUrls(urls);
+            if (initialData.submit === true) {
+                setIsReviewSubmitted(true)
+            }
+            else {
+                setIsReviewSubmitted(false)
+            }
+            let initialStep = 1;
+            if (initialData.activeSteps) {
+                if (initialData.activeSteps !== "review") {
+                    initialStep += statusStepMap[initialData.activeSteps] || 1;
+                }
+                else {
+                    initialStep = statusStepMap[initialData.activeSteps] || 1;
+                }
+            }
+            setStep(initialStep);
+
+            setMaxAllowedStep(initialStep);
         } else {
             setFormData(defaultFormData);
+            setInitialFormData(defaultFormData);
             setFilePreviewUrls({});
+            setStep(1);
+            setMaxAllowedStep(1);
         }
-        setStep(1);
         setSuccess(false);
     }, [open, initialData, mode, DOCUMENT_URL]);
 
@@ -272,7 +344,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 return "";
 
             // Numeric Fields with Range
-            case 'cityYears':
+            case 'yearsOfCity':
             case 'companyExp':
             case 'totalWorkExp':
                 if (typeof value !== 'string') return "Invalid number input";
@@ -293,7 +365,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
 
             // File Uploads
             case 'panCardFileKey':
-            case 'aadhaarCardFileKey':
+            case 'aadharCardFileKey':
             case 'photoFileKey':
             case 'salarySlipsFileKey':
             case 'bankStatementFileKey':
@@ -311,7 +383,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
 
         const validateFields = (fields: Array<keyof LoanFormData>) => {
             fields.forEach(field => {
-                const error = validateField(field, formData[field]);
+                const error = validateField(field, formData[field] as string | File | null);
                 if (error) {
                     newErrors[field] = error;
                     isValid = false;
@@ -321,10 +393,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
 
         switch (step) {
             case 1:
-                validateFields(['motherName', 'panNumber', 'aadharNumber', 'email', 'currentAddress']);
+                validateFields(['motherName', 'panNumber', 'aadharNumber', 'maritalStatus', 'currentAddress']);
                 break;
             case 2:
-                validateFields(['cityYears', 'alternateNo', 'landmark', 'maritalStatus']);
+                validateFields(['yearsOfCity', 'alternateNo', 'landmark']);
                 break;
             case 3:
                 validateFields(['designation', 'companyExp', 'totalWorkExp', 'officeAddress', 'officeMobile']);
@@ -335,7 +407,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
             case 5:
                 validateFields([
                     'panCardFileKey',
-                    'aadhaarCardFileKey', 'photoFileKey', 'salarySlipsFileKey',
+                    'aadharCardFileKey', 'photoFileKey', 'salarySlipsFileKey',
                     'bankStatementFileKey'
                 ]);
                 break;
@@ -345,10 +417,168 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         return isValid;
     }, [step, formData, validateField]);
 
-    const handleNext = () => {
-        if (validateStep()) setStep(prev => prev + 1);
+    const handleNext = async () => {
+        console.log("-------handle next button");
+        const isValid = validateStep();
+        console.log("-------isValid-------", isValid);
+        if (!isValid) {
+            if (step === 5) {
+                setErrors((prev) => ({
+                    ...prev,
+                    form: "Please upload all required files before proceeding",
+                }));
+            }
+            return;
+        }
+        setErrors((prev) => ({ ...prev, form: "" }));
+
+        setSavingNext(true);
+        try {
+            if (step === 5) {
+                const fileKeys = [
+                    { field: "aadharCardFileKey", folder: "aadhar" },
+                    { field: "panCardFileKey", folder: "pan" },
+                    { field: "photoFileKey", folder: "photo" },
+                    { field: "salarySlipsFileKey", folder: "salary-slips" },
+                    { field: "bankStatementFileKey", folder: "bank-statement" }
+                ];
+
+                for (const { field, folder } of fileKeys) {
+                    const file = formData[field as keyof LoanFormData
+                    ];
+                    if (file instanceof File) {
+                        const key = await uploadFileToServer(file, folder);
+                        (formData as any)[field] = key;
+                    }
+                }
+                await saveStepData(step);
+                setInitialFormData(formData);
+                setStep((prev) => prev + 1);
+                setMaxAllowedStep(5);
+                return;
+            }
+
+            await saveStepData(step);
+            setInitialFormData(formData);
+            setStep((prev) => prev + 1);
+            setMaxAllowedStep(Math.max(maxAllowedStep, step + 1));
+        } catch (err) {
+            console.error("Step save failed:", err);
+            setErrors((prev) => ({
+                ...prev,
+                form: "Step save failed, please try again.",
+            }));
+        } finally {
+            setSavingNext(false);
+        }
     };
 
+    const saveStepData = async (stepNumber: number) => {
+        try {
+            const token = getToken();
+            if (!token) return;
+
+            const stepKey = stepStatusMap[stepNumber];
+            if (!stepKey) return;
+
+            let stepData: Partial<LoanFormData> = {};
+            console.log("-----------stepKey---------", stepKey)
+            switch (stepKey) {
+                case "personalDetails":
+                    stepData = {
+                        aadharNumber: formData.aadharNumber,
+                        panNumber: formData.panNumber,
+                        motherName: formData.motherName,
+                        maritalStatus: formData.maritalStatus,
+                        currentAddress: formData.currentAddress
+                    };
+                    break;
+
+                case "contactDetails":
+                    stepData = {
+                        yearsOfCity: formData.yearsOfCity,
+                        alternateNo: formData.alternateNo,
+                        landmark: formData.landmark
+                    };
+                    break;
+
+                case "employmentDetails":
+                    stepData = {
+                        designation: formData.designation,
+                        companyExp: formData.companyExp,
+                        totalWorkExp: formData.totalWorkExp,
+                        officeMobile: formData.officeMobile,
+                        officeAddress: formData.officeAddress
+                    };
+                    break;
+                case "referenceDetails":
+                    stepData = {
+                        ref1Name: formData.ref1Name,
+                        ref1Mobile: formData.ref1Mobile,
+                        ref1Address: formData.ref1Address,
+                        ref2Name: formData.ref2Name,
+                        ref2Mobile: formData.ref2Mobile,
+                        ref2Address: formData.ref2Address
+                    };
+                    break;
+                case "documents":
+                    stepData = {
+                        aadharCardFileKey: formData.aadharCardFileKey,
+                        panCardFileKey: formData.panCardFileKey,
+                        photoFileKey: formData.photoFileKey,
+                        salarySlipsFileKey: formData.salarySlipsFileKey,
+                        bankStatementFileKey: formData.bankStatementFileKey,
+                    };
+                    break;
+
+                case "review":
+                    stepData = {
+                        ...formData,
+                    };
+                    break;
+            }
+
+            const payload = {
+                activeSteps: stepKey,
+                ...stepData,
+                serviceId: 4,
+                serviceSubType: "Personal loans",
+                status: "Pending",
+            };
+            console.log("payload", payload)
+            if (formData.id) {
+                const response = await axios.put(
+                    `${BASE_URL}/loan/updateLoanById/${formData.id || serviceId}`,
+                    payload,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setSnackbarSeverity("success");
+                setSnackbarOpen(true);
+                setSnackbarMessage(response.data.message);
+                if (stepNumber > maxAllowedStep) {
+                    setMaxAllowedStep(stepNumber);
+                }
+            } else if (stepNumber === 1) {
+                const res = await axios.post(
+                    `${BASE_URL}/loan/createLoan`,
+                    payload,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setSnackbarSeverity("success");
+                setSnackbarOpen(true);
+                setSnackbarMessage(res.data.message || "Step data saved successfully");
+                setServiceId(res.data.data.id);
+                setFormData(prev => ({ ...prev, id: res.data.data.id }));
+                setMaxAllowedStep(1);
+            } else {
+                console.warn("Cannot save step without an ID");
+            }
+        } catch (error) {
+            setSnackbarOpen(false);
+            console.error("Step save failed", error);
+            throw error;
+        }
+    };
     const handleBack = () => setStep(prev => prev - 1);
 
     const handleBlur = (e: any) => {
@@ -386,60 +616,101 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         return response.data.result.key;
     };
 
+    const handleStepClick = async (targetStep: number) => {
+        if (targetStep === step) return;
+        if (targetStep > maxAllowedStep) return;
+        if (targetStep > step && !validateStep()) return;
+
+        // setSavingStep(true);
+        try {
+            if (
+                step !== targetStep &&
+                JSON.stringify(formData) !== JSON.stringify(initialFormData)
+            ) {
+                // await saveStepData(step);
+                setInitialFormData(formData);
+            }
+            setStep(targetStep);
+        } catch (err) {
+            console.error("Failed to save step data", err);
+        } finally {
+            setSavingStep(false);
+        }
+    };
+
     const handleClose = () => {
-        setFormData(defaultFormData);
-        setErrors({});
+        setCloseConfirmDialog(true);
+    };
+
+    const handleConfirmClose = () => {
         setStep(1);
+        setErrors({});
         setSuccess(false);
+        setFormData(defaultFormData);
+        setMaxAllowedStep(1);
         onClose();
+
+        if (onSuccess) {
+            onSuccess();
+        }
+
+        setCloseConfirmDialog(false);
+    };
+
+    const handleCancelClose = () => {
+        setCloseConfirmDialog(false);
     };
 
     const handleFormSubmit = async () => {
-        if (!validateStep()) return;
+        if (!formData.id && !serviceId) {
+            console.error("Cannot submit: No service ID found");
+            setErrors(prev => ({ ...prev, form: "Service ID missing. Please start over." }));
+            return;
+        }
 
-        setLoading(true);
+        if (!formData.submit && !declarationIsDetailsConfirmed) {
+            setErrors(prev => ({
+                ...prev,
+                form: "Please confirm declaration before submitting."
+            }));
+            return;
+        }
 
         try {
-            const uploadPromises: Promise<{ field: string, key: string }>[] = [];
-            const isEdit = mode === 'edit';
-            const fileMappings = [
-                { field: 'panCardFileKey', folder: 'pan' },
-                { field: 'aadhaarCardFileKey', folder: 'aadhar' },
-                { field: 'photoFileKey', folder: 'photo' },
-                { field: 'salarySlipsFileKey', folder: 'salary-slips' },
-                { field: 'bankStatementFileKey', folder: 'bank-statements' }
-            ];
+            const token = getToken();
+            const finalId = formData.id || serviceId;
 
-            for (const { field, folder } of fileMappings) {
-                const file = formData[field as keyof LoanFormData];
-                if (file instanceof File) {
-                    uploadPromises.push(
-                        uploadFileToServer(file, folder)
-                            .then(key => ({ field, key }))
-                            .catch(error => {
-                                throw error;
-                            })
-                    );
+            const response = await axios.put(
+                `${BASE_URL}/loan/updateLoanById/${finalId}`,
+                {
+                    activeSteps: "review",
+                    submit: formData.submit ? 1 : 0,
+                    serviceId: 4,
+                    serviceSubType: "Personal loans",
+                    status: "Pending",
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
                 }
-            }
-
-            const uploadResults = await Promise.all(uploadPromises);
-            const submissionData = { ...formData };
-            uploadResults.forEach(({ field, key }) => {
-                submissionData[field as keyof LoanFormData] = key;
-            });
-
-            onSubmit(submissionData, isEdit);
+            );
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+            setSnackbarMessage('Form submitted successfully');
             setSuccess(true);
+            onSuccess?.();
             setTimeout(() => {
-                handleClose();
-            }, 2000);
-        } catch (error) {
-            console.error('Form submission failed:', error);
-        } finally {
-            setLoading(false);
+                setOpenDialog(false);
+            }, 3000);
+
+        } catch (err) {
+            console.error("Failed to submit application", err);
+            setErrors(prev => ({
+                ...prev,
+                form: "Failed to submit application. Please try again."
+            }));
         }
     };
+
     const renderFileUpload = (label: string, name: keyof LoanFormData) => {
         const fileValue = formData[name];
         const error = errors[name];
@@ -486,84 +757,142 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         );
     };
     const renderReviewItem = (label: string, value: any) => {
-        if (value === null || value === undefined || value === "") {
-            return null;
+        if (value === null || value === undefined || value === "") return null;
+
+        let fileUrl: string | null = null;
+        const validExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
+
+        if (value instanceof File) {
+            fileUrl = URL.createObjectURL(value);
+        } else if (filePreviewUrls[label]) {
+            fileUrl = filePreviewUrls[label];
+        } else if (typeof value === "string") {
+            const lowerValue = value.toLowerCase();
+            if (validExtensions.some(ext => lowerValue.endsWith(ext))) {
+                fileUrl = `${DOCUMENT_URL}/${value}`;
+            }
         }
 
         return (
-            <Grid item xs={12} sm={6}>
-                <Paper elevation={0} sx={{ p: 2, mb: 2, border: '1px solid #eee', borderRadius: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            <Grid item xs={12} sm={4}>
+                <Paper
+                    elevation={0}
+                    sx={{ p: 1, mb: 1, border: "1px solid #eee", borderRadius: 1, fontSize: 12, fontFamily: 'dubai' }}
+                >
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ fontSize: 12 }}>
                         {label}
                     </Typography>
-                    {value instanceof File ? (
-                        <Link href={URL.createObjectURL(value)} target="_blank" rel="noopener">
-                            View {value.name}
+
+                    {fileUrl ? (
+                        <Link href={fileUrl} target="_blank" rel="noopener">
+                            View Document
                         </Link>
                     ) : (
-                        <Typography variant="body1">{value}</Typography>
+                        <Typography variant="body1" sx={{ fontSize: 12 }}>{value}</Typography>
                     )}
                 </Paper>
             </Grid>
         );
     };
 
-    const renderReviewStep = () => {
-        return (
-            <Box sx={{ p: 2 }}>
-                <Typography variant="h5" gutterBottom sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-                    <CheckCircleIcon color="primary" sx={{ mr: 1 }} />
-                    Review Your Application
+    const renderReviewStep = () => (
+        <Box sx={{ p: 2 }}>
+            <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                    mb: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 15,
+                }}
+            >
+                <CheckCircleIcon color="primary" sx={{ mr: 1, height: 20 }} />
+                Review Your Application
+            </Typography>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>Personal Information</Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={2}>
+                {renderReviewItem("Aadhar Number", formData.aadharNumber)}
+                {renderReviewItem("PAN Number", formData.panNumber)}
+                {renderReviewItem("mother Name", formData.motherName)}
+                {renderReviewItem("Marital Status", formData.maritalStatus)}
+                {renderReviewItem("Current Address", formData.currentAddress)}
+            </Grid>
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>contact Information</Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={2}>
+                {renderReviewItem("Years Of City", formData.yearsOfCity)}
+                {renderReviewItem("Alternate No", formData.alternateNo)}
+                {renderReviewItem("Landmark", formData.landmark)}
+            </Grid>
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>employment Information</Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={2}>
+                {renderReviewItem("Designation", formData.designation)}
+                {renderReviewItem("Company Experience", formData.companyExp)}
+                {renderReviewItem("Total Work Experience", formData.totalWorkExp)}
+                {renderReviewItem("office Mobile", formData.officeMobile)}
+                {renderReviewItem("Office Address", formData.officeAddress)}
+            </Grid>
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>reference Information</Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={2}>
+                {renderReviewItem("reference 1 Name", formData.ref1Name)}
+                {renderReviewItem("reference 1 Mobile", formData.ref1Mobile)}
+                {renderReviewItem("reference 1 Work Address", formData.ref1Address)}
+                {renderReviewItem("reference 2 Name", formData.ref2Name)}
+                {renderReviewItem("reference 2 Mobile", formData.ref2Mobile)}
+                {renderReviewItem("reference 2 Address", formData.ref2Address)}
+            </Grid>
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 1, fontSize: 14 }}>Documents</Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={2}>
+                {formData.aadharCardFileKey && renderReviewItem("Aadhar Card", formData.aadharCardFileKey)}
+                {formData.panCardFileKey && renderReviewItem("PAN Card", formData.panCardFileKey)}
+                {formData.bankStatementFileKey && renderReviewItem("Bank Proof", formData.bankStatementFileKey)}
+                {formData.salarySlipsFileKey && renderReviewItem("Salary Proof", formData.salarySlipsFileKey)}
+                {formData.photoFileKey && renderReviewItem("photo", formData.photoFileKey)}
+            </Grid>
+            <Box sx={{ mt: 4 }}>
+                <Typography
+                    variant="subtitle1"
+                    gutterBottom
+                    sx={{ fontWeight: 500, fontSize: 14 }}
+                >
+                    Declaration
                 </Typography>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={!!formData.submit}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setFormData(prev => ({
+                                    ...prev,
+                                    submit: e.target.checked
+                                }))
+                            }
+                        />
+                    }
+                    label="I hereby declare that the information provided above is true, complete
+                         and correct to the best of my knowledge. I understand that any false information 
+                         may result in rejection of my application."
+                />
 
-                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Personal Information</Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Grid container spacing={2}>
-                    {renderReviewItem("Mother's Name", formData.motherName)}
-                    {renderReviewItem("Landmark", formData.landmark)}
-                    {renderReviewItem("Email", formData.email)}
-                    {renderReviewItem("PAN Number", formData.panNumber)}
-                    {renderReviewItem("Aadhar Number", formData.aadharNumber)}
-                    {renderReviewItem("Current Address", formData.currentAddress)}
-                    {renderReviewItem("Years in Current City", formData.cityYears)}
-                    {renderReviewItem("Alternate Number", formData.alternateNo)}
-                    {renderReviewItem("Marital Status", formData.maritalStatus)}
-                </Grid>
-
-                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Employment Information</Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Grid container spacing={2}>
-                    {renderReviewItem("Designation", formData.designation)}
-                    {renderReviewItem("Company Experience (Years)", formData.companyExp)}
-                    {renderReviewItem("Total Work Experience (Years)", formData.totalWorkExp)}
-                    {renderReviewItem("Office Address", formData.officeAddress)}
-                    {renderReviewItem("Office Mobile", formData.officeMobile)}
-                </Grid>
-
-                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>References</Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Grid container spacing={2}>
-                    {renderReviewItem("Reference 1 Name", formData.ref1Name)}
-                    {renderReviewItem("Reference 1 Mobile", formData.ref1Mobile)}
-                    {renderReviewItem("Reference 1 Address", formData.ref1Address)}
-                    {renderReviewItem("Reference 2 Name", formData.ref2Name)}
-                    {renderReviewItem("Reference 2 Mobile", formData.ref2Mobile)}
-                    {renderReviewItem("Reference 2 Address", formData.ref2Address)}
-                </Grid>
-
-                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>Documents</Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Grid container spacing={2}>
-
-                    {formData.panCardFileKey && renderReviewItem("PAN Card", formData.panCardFileKey)}
-                    {formData.aadhaarCardFileKey && renderReviewItem("Aadhar Card", formData.aadhaarCardFileKey)}
-                    {formData.photoFileKey && renderReviewItem("Photo", formData.photoFileKey)}
-                    {formData.salarySlipsFileKey && renderReviewItem("Salary Slips", formData.salarySlipsFileKey)}
-                    {formData.bankStatementFileKey && renderReviewItem("Bank Statement", formData.bankStatementFileKey)}
-                </Grid>
+                {errors.form && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                        {errors.form}
+                    </Typography>
+                )}
             </Box>
-        );
-    };
+        </Box >
+    );
+
     const renderStepContent = () => {
         switch (step) {
             case 1:
@@ -574,10 +903,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 fullWidth
                                 label={<span>PAN Number <span style={{ color: 'red' }}>*</span></span>}
                                 name="panNumber"
-                                value={formData.panNumber}
+                                value={formData.panNumber || ""}
                                 onChange={handleInputChange}
                                 error={!!errors.panNumber}
-                                helperText={errors.panNumber || "Format: ABCDE1234F"}
+                                helperText={errors.panNumber}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 10
@@ -589,10 +918,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 fullWidth
                                 label={<span>Aadhar Number <span style={{ color: 'red' }}>*</span></span>}
                                 name="aadharNumber"
-                                value={formData.aadharNumber}
+                                value={formData.aadharNumber || ""}
                                 onChange={handleInputChange}
                                 error={!!errors.aadharNumber}
-                                helperText={errors.aadharNumber || "12 digits"}
+                                helperText={errors.aadharNumber}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 12,
@@ -611,7 +940,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 fullWidth
                                 label={<span>Mothers Name <span style={{ color: 'red' }}>*</span></span>}
                                 name="motherName"
-                                value={formData.motherName}
+                                value={formData.motherName || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.motherName}
@@ -619,107 +948,6 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 50
-                                }}
-                            />
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <TextField
-                                fullWidth
-                                label={<span>Email <span style={{ color: 'red' }}>*</span></span>}
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                error={!!errors.email}
-                                helperText={errors.email}
-                                disabled={loading}
-                                inputProps={{
-                                    maxLength: 100
-                                }}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                label={<span>Current Address <span style={{ color: 'red' }}>*</span></span>}
-                                name="currentAddress"
-                                value={formData.currentAddress}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                error={!!errors.currentAddress}
-                                helperText={errors.currentAddress}
-                                disabled={loading}
-                                multiline
-                                rows={3}
-                                inputProps={{
-                                    maxLength: 200
-                                }}
-                            />
-                        </Grid>
-                    </Grid>
-                );
-            case 2:
-                return (
-                    <Grid container spacing={2}>
-                        <Grid item {...gridSpacing}>
-                            <TextField
-                                fullWidth
-                                label={<span>Years in Current City <span style={{ color: 'red' }}>*</span></span>}
-                                name="cityYears"
-                                value={formData.cityYears}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                error={!!errors.cityYears}
-                                helperText={errors.cityYears || "Number of years (max 50)"}
-                                disabled={loading}
-                                inputProps={{
-                                    maxLength: 2,
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                }}
-                                onKeyPress={(e: React.KeyboardEvent) => {
-                                    if (!/[0-9]/.test(e.key)) {
-                                        e.preventDefault();
-                                    }
-                                }}
-                            />
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <TextField
-                                fullWidth
-                                label={<span>Alternate Number <span style={{ color: 'red' }}>*</span></span>}
-                                name="alternateNo"
-                                value={formData.alternateNo}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                inputProps={{
-                                    maxLength: 10,
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                }}
-                                onKeyPress={(e: React.KeyboardEvent) => {
-                                    if (!/[0-9]/.test(e.key)) {
-                                        e.preventDefault();
-                                    }
-                                }}
-                                error={!!errors.alternateNo}
-                                helperText={errors.alternateNo || "10 digit mobile number"}
-                                disabled={loading}
-                            />
-                        </Grid>
-                        <Grid item {...gridSpacing}>
-                            <TextField
-                                fullWidth
-                                label={<span>Landmark <span style={{ color: 'red' }}>*</span></span>}
-                                name="landmark"
-                                value={formData.landmark}
-                                onChange={handleInputChange}
-                                onBlur={handleBlur}
-                                error={!!errors.landmark}
-                                helperText={errors.landmark}
-                                disabled={loading}
-                                inputProps={{
-                                    maxLength: 100
                                 }}
                             />
                         </Grid>
@@ -743,6 +971,91 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                     </Typography>
                                 )}
                             </FormControl>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label={<span>Current Address <span style={{ color: 'red' }}>*</span></span>}
+                                name="currentAddress"
+                                value={formData.currentAddress || ""}
+                                onChange={handleInputChange}
+                                onBlur={handleBlur}
+                                error={!!errors.currentAddress}
+                                helperText={errors.currentAddress}
+                                disabled={loading}
+                                multiline
+                                rows={3}
+                                inputProps={{
+                                    maxLength: 200
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                );
+            case 2:
+                return (
+                    <Grid container spacing={2}>
+                        <Grid item {...gridSpacing}>
+                            <TextField
+                                fullWidth
+                                label={<span>Years in Current City <span style={{ color: 'red' }}>*</span></span>}
+                                name="yearsOfCity"
+                                value={formData.yearsOfCity || ""}
+                                onChange={handleInputChange}
+                                onBlur={handleBlur}
+                                error={!!errors.yearsOfCity}
+                                helperText={errors.yearsOfCity || "Number of years (max 50)"}
+                                disabled={loading}
+                                inputProps={{
+                                    maxLength: 2,
+                                    inputMode: 'numeric',
+                                    pattern: '[0-9]*',
+                                }}
+                                onKeyPress={(e: React.KeyboardEvent) => {
+                                    if (!/[0-9]/.test(e.key)) {
+                                        e.preventDefault();
+                                    }
+                                }}
+                            />
+                        </Grid>
+                        <Grid item {...gridSpacing}>
+                            <TextField
+                                fullWidth
+                                label={<span>Alternate Number <span style={{ color: 'red' }}>*</span></span>}
+                                name="alternateNo"
+                                value={formData.alternateNo || ""}
+                                onChange={handleInputChange}
+                                onBlur={handleBlur}
+                                inputProps={{
+                                    maxLength: 10,
+                                    inputMode: 'numeric',
+                                    pattern: '[0-9]*',
+                                }}
+                                onKeyPress={(e: React.KeyboardEvent) => {
+                                    if (!/[0-9]/.test(e.key)) {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                error={!!errors.alternateNo}
+                                helperText={errors.alternateNo || "10 digit mobile number"}
+                                disabled={loading}
+                            />
+                        </Grid>
+                        <Grid item {...gridSpacing}>
+                            <TextField
+                                fullWidth
+                                label={<span>Landmark <span style={{ color: 'red' }}>*</span></span>}
+                                name="landmark"
+                                value={formData.landmark || ""}
+                                onChange={handleInputChange}
+                                onBlur={handleBlur}
+                                error={!!errors.landmark}
+                                helperText={errors.landmark}
+                                disabled={loading}
+                                inputProps={{
+                                    maxLength: 100
+                                }}
+                            />
                         </Grid>
                     </Grid>
                 );
@@ -975,7 +1288,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 return (
                     <Grid container spacing={2}>
                         {renderFileUpload("Upload PAN Card", "panCardFileKey")}
-                        {renderFileUpload("Upload Aadhar Card", "aadhaarCardFileKey")}
+                        {renderFileUpload("Upload Aadhar Card", "aadharCardFileKey")}
                         {renderFileUpload("Upload Photo", "photoFileKey")}
                         {renderFileUpload("Upload 3 Month Salary Slips", "salarySlipsFileKey")}
                         {renderFileUpload("Upload 3 Month Bank Statement", "bankStatementFileKey")}
@@ -988,63 +1301,165 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         }
     };
 
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
+
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">
-                        {mode === 'edit' ? 'Edit Loan Application' : 'New Loan Application'}
-                    </Typography>
-                    <IconButton onClick={handleClose} disabled={loading}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-            </DialogTitle>
-            <DialogContent>
-                <Stepper activeStep={step - 1} alternativeLabel sx={{ mb: 3 }}>
-                    {steps.map(label => (
-                        <Step key={label}><StepLabel>{label}</StepLabel></Step>
-                    ))}
-                </Stepper>
-                {success ? (
-                    <Box sx={{ textAlign: 'center', p: 4 }}>
-                        <CheckCircleIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
-                        <Typography variant="h5" gutterBottom>
-                            Application Submitted Successfully!
+        <>
+            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">
+                            {mode === 'edit' ? 'Edit Loan Application' : 'New Loan Application'}
                         </Typography>
-                        <Typography color="text.secondary">
-                            Your Loan application has been received. Well contact you shortly.
-                        </Typography>
+                        <IconButton onClick={handleClose} disabled={loading}>
+                            <CloseIcon />
+                        </IconButton>
                     </Box>
-                ) : (
-                    renderStepContent()
-                )}
-            </DialogContent>
-            {!success && (
-                <DialogActions>
-                    {step > 1 && (
-                        <Button onClick={handleBack} disabled={loading}>
-                            Back
-                        </Button>
-                    )}
-                    {step < steps.length ? (
-                        <Button onClick={handleNext} variant="contained" disabled={loading}>
-                            Next
-                        </Button>
+                </DialogTitle>
+                <DialogContent>
+                    <Stepper activeStep={step - 1} alternativeLabel sx={{ mb: 2 }}>
+                        {steps.map((label, index) => {
+                            const stepNumber = index + 1;
+                            const completed =
+                                stepNumber < step ||
+                                (stepNumber < maxAllowedStep && stepNumber !== step) ||
+                                (isReviewSubmitted && stepNumber === 5);
+                            const isEditable = stepNumber <= maxAllowedStep;
+                            const isActive = stepNumber === step;
+                            return (
+                                <Step key={label} completed={completed}>
+                                    <StepButton
+                                        onClick={() => isEditable && handleStepClick(stepNumber)}
+                                        disabled={!isEditable || savingStep}
+                                        sx={{
+                                            "& .MuiStepLabel-label.Mui-active": {
+                                                color: step === maxAllowedStep && !completed ? "orange" : "green",
+                                                fontWeight: "bold",
+                                            },
+                                            "& .MuiStepIcon-root.Mui-active": {
+                                                color: step === maxAllowedStep && !completed ? "orange" : "green",
+                                            },
+                                            "& .MuiStepIcon-root.Mui-completed": {
+                                                color: "green",
+                                            },
+                                            "& .MuiStepLabel-label.Mui-completed": {
+                                                color: "green",
+                                                fontWeight: "bold",
+                                            },
+                                            "& .MuiStepLabel-label": {
+                                                color: stepNumber === maxAllowedStep && !completed ? "orange" : "grey",
+                                                fontWeight: "bold",
+                                            },
+                                            "& .MuiStepIcon-root": {
+                                                color: stepNumber === maxAllowedStep && !completed ? "orange" : "grey",
+                                                width: "18px",
+                                                height: "18px",
+                                            },
+
+                                        }}
+                                    >
+                                        <StepLabel>
+                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+
+                                                <span>{label}</span>
+                                                {isActive && (
+                                                    <span
+                                                        style={{
+                                                            color: step === maxAllowedStep && !completed ? "orange" : "green",
+                                                            fontSize: "20px",
+                                                            marginTop: "4px",
+                                                            animation: "bounce 1s infinite",
+                                                        }}
+                                                    >
+                                                        <ArrowDropUpOutlinedIcon />
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </StepLabel>
+                                    </StepButton>
+                                </Step>
+                            );
+                        })}
+                    </Stepper>
+                    {success ? (
+                        <Box sx={{ textAlign: 'center', p: 4 }}>
+                            <CheckCircleIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
+                            <Typography variant="h5" gutterBottom>
+                                Application Submitted Successfully!
+                            </Typography>
+                            <Typography color="text.secondary">
+                                Your Loan application has been received. Well contact you shortly.
+                            </Typography>
+                        </Box>
                     ) : (
-                        <Button
-                            onClick={handleFormSubmit}
-                            variant="contained"
-                            color="primary"
-                            disabled={loading}
-                            endIcon={loading ? <CircularProgress size={20} /> : null}
-                        >
-                            {mode === 'edit' ? 'Update Application' : 'Submit Application'}
-                        </Button>
+                        renderStepContent()
                     )}
+                </DialogContent>
+                {!success && (
+                    <DialogActions>
+                        {step > 1 && (
+                            <Button onClick={handleBack}
+                                disabled={savingBack || loading || savingStep}
+                                endIcon={savingBack ? <CircularProgress size={20} /> : null}
+                            >
+                                Back
+                            </Button>
+                        )}
+                        {step < steps.length ? (
+                            <Button onClick={handleNext} variant="contained"
+                                disabled={savingNext || loading || savingStep}
+                                endIcon={savingNext ? <CircularProgress size={20} /> : null}
+                            >
+                                Next
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={handleFormSubmit}
+                                variant="contained"
+                                color="primary"
+                                disabled={loading || savingNext || savingBack || savingStep}
+                                endIcon={loading ? <CircularProgress size={20} /> : null}
+                            >
+                                {mode === 'edit' ? 'Submit' : 'Submitn'}
+                            </Button>
+                        )}
+                    </DialogActions>
+                )}
+            </Dialog>
+            <Dialog open={closeConfirmDialog} onClose={handleCancelClose}>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Do you really want to close?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelClose} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmClose} color="primary" variant="contained">
+                        Confirm
+                    </Button>
                 </DialogActions>
-            )}
-        </Dialog>
+            </Dialog>
+            <Snackbar
+                // open={true}
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+                <Alert
+                    onClose={handleSnackbarClose}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
+        </>
     );
 };
 

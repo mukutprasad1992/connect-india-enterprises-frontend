@@ -231,11 +231,8 @@ const Collaborator = () => {
 
       let status = "";
       if (currentStatus === "Enable") {
-        console.log("currentStatus --- Enable", currentStatus)
         status = "Disable";
-        console.log("status -- enable", status);
       } else if (currentStatus === "Disable") {
-        console.log("currentStatus --- Disable", currentStatus)
         status = "Enable";
       } else {
         return;

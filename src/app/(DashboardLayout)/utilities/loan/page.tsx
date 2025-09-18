@@ -53,6 +53,47 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
 import PersonalLoanFormDialog from "../../components/serviceTypeForm/personalLoanFormDialog";
+import CustomToolbar from "../../components/CustomToolbar";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
+import StepProgress from "../../components/StepProgress";
+
+const defaultColumnVisibility = {
+  id: false,
+  submit: false,
+  motherName: false,
+  landmark: false,
+  email: false,
+  mobileNo: false,
+  currentAddress: false,
+  yearsOfCity: false,
+  alternateNo: false,
+  maritalStatus: false,
+  designation: false,
+  companyExp: false,
+  totalWorkExp: false,
+  officeAddress: false,
+  officeMobile: false,
+  ref1Name: false,
+  ref1Mobile: false,
+  ref1Address: false,
+  ref2Name: false,
+  ref2Mobile: false,
+  ref2Address: false,
+  panNumber: true,
+  aadharNumber: true,
+  photoFileKey: false,
+  panCardFileKey: false,
+  aadhaarCardFileKey: false,
+  salarySlipsFileKey: false,
+  bankStatementFileKey: false,
+  serviceId: false,
+  serviceSubTypeName: true,
+  status: true,
+  activeSteps: true,
+  actions: true
+
+}
+const pageName = "loanPage";
 const Loan = () => {
   const [loans, setLoans] = useState<any>(null);
 
@@ -78,6 +119,7 @@ const Loan = () => {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [selectedOption, setSelectedOption] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
+  const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
   const [editData, setEditData] = useState<any>(null);
   const [openLoanFormDialog, setOpenLoanFormDialog] = useState(false);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
@@ -153,7 +195,7 @@ const Loan = () => {
     }
     setLoading(true)
     try {
-      const response = await axios.get(`${BASE_URL}/serviceType/getServiceTypeByServiceId/${4}`, {
+      const response = await axios.get(`${BASE_URL}/loan/getloanByServiceId/${4}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -162,11 +204,13 @@ const Loan = () => {
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
+          submit: item.submit === 1 ? true : false,
           motherName: item.motherName,
           landmark: item.landmark,
           email: item.email,
+          mobileNo: item.mobileNo,
           currentAddress: item.currentAddress,
-          cityYears: item.cityYears,
+          yearsOfCity: item.yearsOfCity,
           alternateNo: item.alternateNo,
           maritalStatus: item.maritalStatus,
           designation: item.designation,
@@ -188,11 +232,11 @@ const Loan = () => {
           salarySlipsFileKey: item.salarySlipsFileKey,
           bankStatementFileKey: item.bankStatementFileKey,
           serviceId: item.serviceId,
-          serviceSubType: item.serviceSubType,
+          activeSteps: item.activeSteps,
+          serviceSubTypeName: item.serviceSubTypeName,
           status: item.status,
         }));
         setLoans(formattedData);
-        console.log("Fetched loans data:", response.data);
         setLoading(false)
       }
 
@@ -256,16 +300,17 @@ const Loan = () => {
     setSelectedRow(null);
   };
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.12 },
-    { field: "serviceSubType", headerName: "Type", flex: 0.12 },
-    { field: "email", headerName: "Email", flex: 0.12 },
-    { field: "landmark", headerName: "Landmark", flex: 0.12 },
-    { field: "motherName", headerName: "Mother Name", flex: 0.12 },
-    { field: "cityYears", headerName: "City Years", flex: 0.12 },
-    { field: "alternateNo", headerName: "Alternate No", flex: 0.12 },
-    { field: "maritalStatus", headerName: "Marital Status", flex: 0.12 },
-    { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
-    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
+    { field: "id", headerName: "ID", flex: 0 },
+    { field: "panNumber", headerName: "PAN Number", flex: 0 },
+    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0 },
+    { field: "serviceSubTypeName", headerName: "Type", flex: 0 },
+    { field: "email", headerName: "Email", flex: 0 },
+    { field: "mobileNo", headerName: "mobile No", flex: 0 },
+    { field: "landmark", headerName: "Landmark", flex: 0 },
+    { field: "motherName", headerName: "Mother Name", flex: 0 },
+    { field: "cityYears", headerName: "City Years", flex: 0 },
+    { field: "alternateNo", headerName: "Alternate No", flex: 0 },
+    { field: "maritalStatus", headerName: "Marital Status", flex: 0 },
     {
       field: "status",
       headerName: "Status",
@@ -309,6 +354,23 @@ const Loan = () => {
           </Box>
         );
       },
+    },
+    {
+      field: "activeSteps",
+      headerName: "Active Steps",
+      flex: 0,
+      renderCell: (params: any) => (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+            gap: "4px",
+          }}
+        >
+          <StepProgress activeStep={params.value} />
+        </Box>
+      ),
     },
     {
       field: "actions",
@@ -558,7 +620,6 @@ const Loan = () => {
         ServiceSubType: selectedOption,
         status: "Pending",
       });
-      console.log("Payload:", payload);
       const response = await axios[method](url, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -594,6 +655,25 @@ const Loan = () => {
       bankStatementFileKey: 'View bank Statement',
     };
     return documentNames[key as keyof typeof documentNames] || 'View Document';
+  };
+
+
+  useEffect(() => {
+    const saved = loadLayoutFromLocalStorage(pageName);
+    if (saved) {
+      setColumnsVisibilityModel(saved);
+    }
+  }, []);
+
+  const handleSaveLayout = () => {
+    saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setSelectedOption('');
+    setEditData(null);
+    setIsEdit(false);
   };
 
   return (
@@ -660,22 +740,20 @@ const Loan = () => {
                       autoHeight
                       sortModel={[{ field: "id", sort: "desc" }]}
                       slots={{
-                        toolbar: GridToolbar,
+                        toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
                       }}
                       slotProps={{
-                        toolbar: {
-                          showQuickFilter: true,
-                          quickFilterProps: { debounceMs: 500 },
+                        columnsPanel: {
                           sx: {
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: "4px",
-                            padding: "8px",
-                            '& .MuiButton-text': {
-                              color: '#44a7a2',
-                            },
-                          },
-                        },
+                            maxHeight: 400,
+                            overflowY: "auto"
+                          }
+                        }
                       }}
+                      columnVisibilityModel={columnsVisibilityModel}
+                      onColumnVisibilityModelChange={(newModel) =>
+                        setColumnsVisibilityModel(newModel)
+                      }
                     />
                   </Box>
                 </Container>
@@ -820,14 +898,11 @@ const Loan = () => {
       </Dialog>
       <PersonalLoanFormDialog
         open={openDialog}
-        onClose={() => {
-          setOpenDialog(false);
-          setEditData(null);
-          setIsEdit(false);
-        }}
-        onSubmit={handleFormSubmit}
+        onClose={handleDialogClose}
         initialData={editData}
-        mode={isEdit ? 'edit' : 'create'}
+        mode={isEdit ? "edit" : "create"}
+        setOpenDialog={setOpenDialog}
+        onSuccess={loans}
       />
       <Snackbar
         open={snackbarOpen}

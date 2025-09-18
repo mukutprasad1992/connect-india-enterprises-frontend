@@ -19,7 +19,8 @@ import {
   Snackbar,
   Tooltip,
   Link,
-  Stack
+  Stack,
+  Paper
 } from "@mui/material";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -66,8 +67,8 @@ const defaultColumnVisibility = {
   activeSteps: true,
   actions: true,
 }
+const pageName = "investmentPage";
 const Investment = () => {
-  const LOCAL_KEY = "userPrefrence";
   const [allInvestment, setAllInvestment] = useState<any>(null);
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedId, setSelectedId] = useState("");
@@ -240,18 +241,18 @@ const Investment = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.12 },
-    { field: "email", headerName: "Email", flex: 0.12 },
-    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
-    { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
-    { field: "mobile", headerName: "Mobile", flex: 0.12 },
-    { field: "income", headerName: "Income", flex: 0.12 },
-    { field: "occupation", headerName: "Occupation", flex: 0.12 },
-    { field: "serviceSubTypeName", headerName: "Type", flex: 0.12 },
+    { field: "id", headerName: "ID", flex: 0 },
+    { field: "aadharNumber", headerName: "Aadhar Number", flex: 0 },
+    { field: "panNumber", headerName: "PAN Number", flex: 0 },
+    { field: "email", headerName: "Email", flex: 0 },
+    { field: "mobile", headerName: "Mobile", flex: 0 },
+    { field: "income", headerName: "Income", flex: 0 },
+    { field: "occupation", headerName: "Occupation", flex: 0 },
+    { field: "serviceSubTypeName", headerName: "Type", flex: 0 },
     {
       field: 'placeOfBirth',
       headerName: 'Place of Birth',
-      flex: 0.12,
+      flex: 0,
       valueGetter: (params: any) => {
         const placeOfBirth = params?.city;
         let city = '';
@@ -267,13 +268,13 @@ const Investment = () => {
         return city.trim() || '';
       },
     },
-    { field: "nomineeId", headerName: "Nominee Pan or Aadhar", flex: 0.12 },
-    { field: "nomineeMobile", headerName: "Nominee Mobile", flex: 0.12 },
-    { field: "nomineeRelation", headerName: "Nominee Relation", flex: 0.12 },
+    { field: "nomineeId", headerName: "Nominee Pan or Aadhar", flex: 0 },
+    { field: "nomineeMobile", headerName: "Nominee Mobile", flex: 0 },
+    { field: "nomineeRelation", headerName: "Nominee Relation", flex: 0 },
     {
       field: "status",
       headerName: "Status",
-      flex: 0.12,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
         const color = getStatusColor(status);
@@ -290,7 +291,7 @@ const Investment = () => {
     {
       field: "activeSteps",
       headerName: "Active Steps",
-      flex: 0.12,
+      flex: 0,
       renderCell: (params: any) => (
         <Box
           sx={{
@@ -527,252 +528,263 @@ const Investment = () => {
   };
 
   useEffect(() => {
-    const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
+    const saved = loadLayoutFromLocalStorage(pageName);
     if (saved) {
       setColumnsVisibilityModel(saved);
     }
   }, []);
 
   const handleSaveLayout = () => {
-    saveLayoutToLocalStorage(LOCAL_KEY, columnsVisibilityModel);
+    saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
   };
 
   return (
     <>
-      <PageContainer title="Investment" description="This is investment page">
-        <Box>
-          <Grid container spacing={1}>
-            <Grid item xs={12} sx={{ mb: 2 }}>
-              <Box display="flex" justifyContent="flex-end" alignItems="center">
-                <Tooltip title="Add">
-                  <IconButton
-                    sx={{ textTransform: "none", color: "#44a7a2" }}
-                    onClick={() => setOpenInvestmentFormDialog(true)}
-                  >
-                    <AddCircleOutlineIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Export Excel'>
-                  <IconButton onClick={exportToExcel} sx={{ color: "#44a7a2" }}>
-                    <GridOnIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Export PDF'>
-                  <IconButton onClick={exportToPDF} sx={{ color: "#44a7a2" }}>
-                    <PictureAsPdfIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <DashboardCard>
-                <Container>
-                  <Grid container justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+      <Box sx={{ pr: 1.8 }}>
+        <Grid container spacing={0}>
+          <Grid item xs={12}>
+            <Paper >
+              <Box>
+                <Grid container justifyContent="space-between" alignItems="center">
+                  <Grid sx={{ ml: 3 }} >
                     <Typography variant="h4"
                       sx={{
-                        fontSize: { xs: "1.4rem", sm: "1.4rem", md: "1.4rem" }
+                        fontSize: { xs: "1.4rem", sm: "1.4rem", md: "1.4rem", }
                       }}
                     >Investment</Typography>
                   </Grid>
-                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
-                    <DataGrid
-                      rows={allInvestment || []}
-                      columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
-                      pageSizeOptions={[5, 10, 20, 50, 100]}
-                      paginationModel={pagination}
-                      onPaginationModelChange={setPagination}
-                      disableRowSelectionOnClick
-                      autoHeight
-                      sortModel={[{ field: "id", sort: "desc" }]}
-                      slots={{
-                        toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
-                      }}
-                      columnVisibilityModel={columnsVisibilityModel}
-                      onColumnVisibilityModelChange={(newModel) =>
-                        setColumnsVisibilityModel(newModel)
-                      }
-                    />
+
+                  <Box display="flex" justifyContent="flex-end" alignItems="center" sx={{ p: 2 }}>
+                    <Tooltip title="Add">
+                      <IconButton
+                        size="small"
+                        sx={{ textTransform: "none", color: "#465fff", p: 0.2 }}
+                        onClick={() => setOpenInvestmentFormDialog(true)}
+                      >
+                        <AddCircleOutlineIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Export Excel'>
+                      <IconButton
+                        size="small"
+                        onClick={exportToExcel} sx={{ color: "#465fff", p: 0.2 }}>
+                        <GridOnIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Export PDF'>
+                      <IconButton
+                        size="small"
+                        onClick={exportToPDF} sx={{ color: "#465fff", p: 0.2 }}>
+                        <PictureAsPdfIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
-                </Container>
-              </DashboardCard>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={openDeleteInvestmentDialog}
-          onClose={() => setOpenDeleteInvestmentDialog(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle>Delete investment</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to delete?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenDeleteInvestmentDialog(false)}
-              variant="outlined"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={deleteInvestment}
-              variant="contained"
-              color="primary"
-              disabled={dialogLoading}
-            >
-              {dialogLoading ? <CircularProgress size={24} /> : "Delete"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* View Dialog */}
-        <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="md">
-          <Grid container spacing={2} sx={{ padding: 2 }}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">Investment Details</Typography>
-                <IconButton onClick={handleCloseViewDialog} size="small">
-                  <CloseIcon />
-                </IconButton>
+                </Grid>
+                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "block", }}>
+                  <DataGrid
+                    rows={allInvestment || []}
+                    columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
+                    pageSizeOptions={[5, 10, 20, 50, 100]}
+                    paginationModel={pagination}
+                    onPaginationModelChange={setPagination}
+                    disableRowSelectionOnClick
+                    autoHeight
+                    density="compact"
+                    sortModel={[{ field: "id", sort: "desc" }]}
+                    slots={{
+                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                    }}
+                    slotProps={{
+                      columnsPanel: {
+                        sx: {
+                          maxHeight: 400,
+                          overflowY: "auto"
+                        }
+                      }
+                    }}
+                    columnVisibilityModel={columnsVisibilityModel}
+                    onColumnVisibilityModelChange={(newModel) =>
+                      setColumnsVisibilityModel(newModel)
+                    }
+                  />
+                </Box>
               </Box>
-            </Grid>
+            </Paper>
           </Grid>
-          <DialogContent dividers>
-            <Grid container spacing={2}>
-              {selectedRow &&
-                Object.entries(selectedRow).map(([key, value]) => {
-                  const isStatus = key.toLowerCase() === "status";
-                  const isDocumentKey = [
-                    'aadharCardFileKey',
-                    'panCardFileKey',
-                    'bankProofFileKey',
-                    'salarySlipsFileKey',
-                    'itrDocumentsFileKey'
-                  ].includes(key);
+        </Grid>
+      </Box>
 
-                  const statusColor = isStatus ? getStatusColor(String(value)) : undefined;
-
-                  return (
-                    <React.Fragment key={key}>
-                      <Grid item xs={6}>
-                        <Typography variant="body2">
-                          <Box component="span" sx={{ fontWeight: 'bold' }}>
-                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
-                          </Box>
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        {isDocumentKey && value ? (
-                          <Link
-                            href={`${AWS_S3_BUCKET_URL}/${value}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                              color: 'primary.main',
-                              textDecoration: 'underline',
-                              cursor: 'pointer',
-                              wordBreak: 'break-all'
-                            }}
-                          >
-                            {getDocumentName(key)}
-                          </Link>
-                        ) : (
-                          <Typography
-                            variant="body2"
-                            sx={{ color: isStatus ? statusColor : 'inherit' }}
-                          >
-                            {key.toLowerCase() === "submit"
-                              ? value === true
-                                ? "Complete"
-                                : "In Complete"
-                              : key.toLowerCase() === "placeofbirth" && value && typeof value === "object"
-                                ? `${(value as any).city}`
-                                : String(value ?? "N/A")}
-                          </Typography>
-                        )}
-                      </Grid>
-                    </React.Fragment>
-                  );
-                })}
-            </Grid>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog
-          open={openInvestmentFormDialog}
-          onClose={() => {
-            setSelectedOption("");
-            setOpenInvestmentFormDialog(false)
-          }}
-          maxWidth="xs"
-          fullWidth
-          disableEscapeKeyDown
-        >
-          <DialogTitle>Select Investment Type</DialogTitle>
-          <DialogContent>
-            <FormControl fullWidth sx={{ mt: 2 }} className="customSelect">
-              <InputLabel>Choose Option</InputLabel>
-              <Select
-                value={selectedOption}
-                onChange={handleSelectChange}
-                label="Choose Option"
-                className="customSelect"
-              >
-                <MenuItem value="mutualFund">Mutual Fund / SIP</MenuItem>
-              </Select>
-            </FormControl>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => {
-                setSelectedOption("");
-                setOpenInvestmentFormDialog(false);
-              }}
-              variant="outlined"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                if (!selectedOption) return;
-                setOpenInvestmentFormDialog(false);
-                setOpenDialog(true);
-              }}
-              disabled={!selectedOption}
-            >
-              Next
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <MutualFundFormDialog
-          open={openDialog}
-          onClose={handleDialogClose}
-          initialData={editData}
-          mode={isEdit ? "edit" : "create"}
-          setOpenDialog={setOpenDialog}
-          onSuccess={fetchAllInvestmentData}
-        />
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={handleSnackbarClose}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          <Alert
-            onClose={handleSnackbarClose}
-            severity={snackbarSeverity}
-            sx={{ width: '100%' }}
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteInvestmentDialog}
+        onClose={() => setOpenDeleteInvestmentDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete investment</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOpenDeleteInvestmentDialog(false)}
+            variant="outlined"
           >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-      </PageContainer>
+            Cancel
+          </Button>
+          <Button
+            onClick={deleteInvestment}
+            variant="contained"
+            color="primary"
+            disabled={dialogLoading}
+          >
+            {dialogLoading ? <CircularProgress size={24} /> : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="md">
+        <Grid container spacing={2} sx={{ padding: 2 }}>
+          <Grid item xs={12}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h6">Investment Details</Typography>
+              <IconButton onClick={handleCloseViewDialog} size="small">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </Grid>
+        </Grid>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            {selectedRow &&
+              Object.entries(selectedRow).map(([key, value]) => {
+                const isStatus = key.toLowerCase() === "status";
+                const isDocumentKey = [
+                  'aadharCardFileKey',
+                  'panCardFileKey',
+                  'bankProofFileKey',
+                  'salarySlipsFileKey',
+                  'itrDocumentsFileKey'
+                ].includes(key);
+
+                const statusColor = isStatus ? getStatusColor(String(value)) : undefined;
+
+                return (
+                  <React.Fragment key={key}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2">
+                        <Box component="span" sx={{ fontWeight: 'bold' }}>
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                        </Box>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      {isDocumentKey && value ? (
+                        <Link
+                          href={`${AWS_S3_BUCKET_URL}/${value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            wordBreak: 'break-all'
+                          }}
+                        >
+                          {getDocumentName(key)}
+                        </Link>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          sx={{ color: isStatus ? statusColor : 'inherit' }}
+                        >
+                          {key.toLowerCase() === "submit"
+                            ? value === true
+                              ? "Complete"
+                              : "In Complete"
+                            : key.toLowerCase() === "placeofbirth" && value && typeof value === "object"
+                              ? `${(value as any).city}`
+                              : String(value ?? "N/A")}
+                        </Typography>
+                      )}
+                    </Grid>
+                  </React.Fragment>
+                );
+              })}
+          </Grid>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={openInvestmentFormDialog}
+        onClose={() => {
+          setSelectedOption("");
+          setOpenInvestmentFormDialog(false)
+        }}
+        maxWidth="xs"
+        fullWidth
+        disableEscapeKeyDown
+      >
+        <DialogTitle>Select Investment Type</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2 }} className="customSelect">
+            <InputLabel>Choose Option</InputLabel>
+            <Select
+              value={selectedOption}
+              onChange={handleSelectChange}
+              label="Choose Option"
+              className="customSelect"
+            >
+              <MenuItem value="mutualFund">Mutual Fund / SIP</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setSelectedOption("");
+              setOpenInvestmentFormDialog(false);
+            }}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (!selectedOption) return;
+              setOpenInvestmentFormDialog(false);
+              setOpenDialog(true);
+            }}
+            disabled={!selectedOption}
+          >
+            Next
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <MutualFundFormDialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        initialData={editData}
+        mode={isEdit ? "edit" : "create"}
+        setOpenDialog={setOpenDialog}
+        onSuccess={fetchAllInvestmentData}
+      />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

@@ -160,7 +160,7 @@ const Notification = () => {
     return (
         <>
             <Tooltip title="Notification">
-                <IconButton color="inherit" onClick={handleClick}>
+                <IconButton color="primary" onClick={handleClick}>
                     <Badge badgeContent={unreadCount} color="error">
                         <NotificationsIcon />
                     </Badge>

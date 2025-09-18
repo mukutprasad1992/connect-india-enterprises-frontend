@@ -74,8 +74,8 @@ interface MutualFundData {
 const defaultFormData: MutualFundData = {
     id: null,
     aadharNumber: "",
-    aadharCardFileKey: null,
     panNumber: "",
+    aadharCardFileKey: null,
     panCardFileKey: null,
     bankProofFileKey: null,
     salarySlipsFileKey: null,
@@ -1728,7 +1728,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     </Box>
                 </DialogTitle>
                 <DialogContent>
-                    <Stepper activeStep={step - 1} alternativeLabel sx={{ mb: 3 }}>
+                    <Stepper activeStep={step - 1} alternativeLabel sx={{ mb: 2 }}>
                         {steps.map((label, index) => {
                             const stepNumber = index + 1;
                             const completed =
@@ -1763,7 +1763,10 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                             },
                                             "& .MuiStepIcon-root": {
                                                 color: stepNumber === maxAllowedStep && !completed ? "orange" : "grey",
+                                                width: "18px",
+                                                height: "18px",
                                             },
+
                                         }}
                                     >
                                         <StepLabel>
