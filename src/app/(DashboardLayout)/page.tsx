@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Grid, Box, CircularProgress, Typography, Tabs, Tab } from "@mui/material";
+import { Grid, Box, CircularProgress, Typography, Tabs, Tab, Paper } from "@mui/material";
 import PageContainer from "./components/container/PageContainer";
 import PieAnimationPage from "./components/dashboard/pieChart";
 import axios from "axios";
@@ -140,7 +140,6 @@ const Dashboard = () => {
 
       if (response.data.status) {
         const data = response.data.data;
-
         setStats({
           Investment: {
             totalAmount: parseFloat(data.Investment?.totalAmount) || 0,
@@ -254,45 +253,46 @@ const Dashboard = () => {
           <CircularProgress />
         </div>
       )}
-
-      <PageContainer title="Dashboard" description="This is Dashboard">
-        <Box>
-          <Typography variant="h6" sx={{ mb: 3 }}>
-            Dashboard
-          </Typography>
-          <Tabs
-            value={filter}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ mb: 2 }}
-          >
-            <Tab value="today" label="Today" />
-            <Tab value="week" label="This Week" />
-            <Tab value="month" label="This Month" />
-          </Tabs>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Grid container spacing={2}>
-                {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map((title) => (
-                  <Grid item xs={12} sm={6} md={3} key={title}>
-                    <OverviewCard
-                      title={title}
-                      value={Math.floor(stats[title].totalAmount)}
-                      icon={ICONS[title]}
-                      backgroundColor={BG_COLORS[title]}
-                      navigateTo={roleId === 3 ? LINKS[title] : undefined}
-                      progress={Math.abs(stats[title].percent)}
-                      tooltip={`Total Services: ${stats[title].totalServices}\nGrowth: ${stats[title].extra >= 0 ? "+" : "-"}₹${Math.abs(stats[title].extra)}`}
-                    />
-                  </Grid>
-                ))}
+      <Box >
+        <Paper sx={{ p: 1.5 }}>
+          <Box>
+            <Typography variant="h4" sx={{ ml: 1, mt: .5, mb: .5 }} >
+              Dashboard
+            </Typography>
+            <Tabs
+              value={filter}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ mb: 2 }}
+            >
+              <Tab value="today" label="Today" />
+              <Tab value="week" label="This Week" />
+              <Tab value="month" label="This Month" />
+            </Tabs>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map((title) => (
+                    <Grid item xs={12} sm={6} md={3} key={title}>
+                      <OverviewCard
+                        title={title}
+                        value={Math.floor(stats[title].totalServices)}
+                        icon={ICONS[title]}
+                        backgroundColor={BG_COLORS[title]}
+                        navigateTo={roleId === 3 ? LINKS[title] : undefined}
+                        progress={Math.abs(stats[title].percent)}
+                        tooltip={`Total Services: ${stats[title].totalServices}\nGrowth: ${stats[title].extra >= 0 ? "+" : "-"}₹${Math.abs(stats[title].extra)}`}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
-        </Box>
-        <PieAnimationPage />
-      </PageContainer>
+          </Box>
+          <PieAnimationPage />
+        </Paper>
+      </Box>
     </>
   );
 };

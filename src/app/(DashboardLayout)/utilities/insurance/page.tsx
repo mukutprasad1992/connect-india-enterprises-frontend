@@ -61,7 +61,7 @@ const defaultColumnVisibility = {
   aadharNumber: true,
   panNumber: true,
   alcohol: false,
-  annualIncome: false,
+  income: false,
   mobile: false,
   heightCM: false,
   motherName: false,
@@ -73,7 +73,7 @@ const defaultColumnVisibility = {
   smoker: false,
   weightKG: false,
   status: false,
-  serviceSubType: false,
+  serviceSubTypeName: false,
   panCardFileKey: false,
   aadhaarCardFileKey: false,
   bankProofFileKey: false,
@@ -182,7 +182,7 @@ const Insurance = () => {
           aadharNumber: item.aadharNumber,
           panNumber: item.panNumber,
           alcohol: item.alcohol,
-          annualIncome: item.annualIncome,
+          income: item.income,
           mobile: item.mobileNo,
           heightCM: item.heightCM,
           motherName: item.motherName,
@@ -191,11 +191,10 @@ const Insurance = () => {
           nomineeRelation: item.nomineeRelation,
           occupation: item.occupation,
           placeOfBirth: item.placeOfBirth,
-          income: item.income,
           smoker: item.smoker,
           weightKG: item.weightKG,
           status: item.status,
-          serviceSubType: item.serviceSubType,
+          serviceSubTypeName: item.serviceSubTypeName,
           panCardFileKey: item.panCardFileKey,
           aadharCardFileKey: item.aadharCardFileKey,
           bankProofFileKey: item.bankProofFileKey,
@@ -271,12 +270,14 @@ const Insurance = () => {
         }
       }
 
-      await axios.delete(`${BASE_URL}/insurance/deleteInsuranceById/${selectedId}`, {
+      const response = await axios.delete(`${BASE_URL}/insurance/deleteInsuranceById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      setSnackbarMessage(response.data.message);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
       setInsuranceUpdated(prev => !prev);
       setInsurances((prevAllInsurance: any[]) => {
         const updatedAllInsurance = prevAllInsurance
@@ -319,7 +320,7 @@ const Insurance = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.12 },
+    { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
     { field: "email", headerName: "email", flex: 0.12 },
     { field: "mobile", headerName: "Mobile", flex: 0.12 },
     { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
@@ -361,28 +362,10 @@ const Insurance = () => {
     {
       field: "status",
       headerName: "Status",
-      flex: 0.12,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
-        let color = "#fbf774";
-
-        switch (status) {
-          case "Pending":
-            color = "#fbf774";
-            break;
-          case "In Progress":
-            color = "#fbe06f";
-            break;
-          case "Approved":
-            color = "#8df1b4";
-            break;
-          case "Rejected":
-            color = "#ff8780";
-            break;
-          default:
-            color = "#fbf774";
-        }
-
+        const color = getStatusColor(status);
         return (
           <Box
             sx={{
@@ -390,11 +373,13 @@ const Insurance = () => {
               alignItems: "center",
               width: "100%",
               height: "100%",
+              fontFamily: "Verdana",
+              fontSize: "10px",
             }}
           >
             <Typography
               variant="body1"
-              sx={{ color, textAlign: "center" }}
+              sx={{ color, textAlign: "center", fontSize: "10px" }}
             >
               {status}
             </Typography>
@@ -435,31 +420,34 @@ const Insurance = () => {
           <Box display="flex" width="100%" height="100%">
             <Tooltip title="View">
               <IconButton
+                sx={{ p: 0.1 }}
                 color="info"
                 size="small"
                 onClick={() => handleViewButton(params.row)}
               >
-                <VisibilityIcon fontSize="small" />
+                <VisibilityIcon fontSize="small" sx={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
             {!isEditDeleteHidden && (
               <>
                 <Tooltip title="Edit">
                   <IconButton
+                    sx={{ p: 0.1 }}
                     color="primary"
                     size="small"
                     onClick={() => handleEditButton(params.row)}
                   >
-                    <EditIcon fontSize="small" />
+                    <EditIcon fontSize="small" sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Delete">
                   <IconButton
+                    sx={{ p: 0.1 }}
                     color="error"
                     size="small"
                     onClick={() => handleDeleteButton(params.row.id)}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon fontSize="small" sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
               </>
@@ -501,21 +489,21 @@ const Insurance = () => {
   let getStatusColor = (status: any) => {
     switch (status) {
       case "Pending":
-        return "#fbf774";
+        return "#8b8a3fff";
       case "In Progress":
-        return "#fbe06f";
+        return "orange";
       case "Approved":
-        return "#8df1b4";
+        return "#6ad392ff";
       case "Rejected":
         return "#ff8780";
       default:
-        return "#fbf774";
+        return "#8b8a3fff";
     }
   };
 
   const exportToPDF = async () => {
     const doc = new jsPDF({
-      orientation: 'landscape',  // Changed to landscape for better fit
+      orientation: 'landscape',
       unit: 'mm'
     });
 
@@ -563,7 +551,7 @@ const Insurance = () => {
       row.aadharNumber || 'N/A',
       row.panNumber || 'N/A',
       row.alcohol === 1 ? 'Yes' : 'No',
-      row.annualIncome || 'N/A',
+      row.income || 'N/A',
       row.mobile || 'N/A',
       row.heightCM || 'N/A',
       row.motherName || 'N/A',
@@ -667,6 +655,7 @@ const Insurance = () => {
   };
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setSelectedOption('')
     setEditData(null);
     setIsEdit(false);
   };
@@ -674,11 +663,11 @@ const Insurance = () => {
 
   const getDocumentName = (key: any) => {
     const documentNames = {
-      aadhaarCardFileKey: 'View Aadhaar Card',
+      aadharCardFileKey: 'View Aadhaar Card',
       panCardFileKey: 'View PAN Card',
       bankProofFileKey: 'View Bank Proof',
       salarySlipsFileKey: 'View Salary Slips',
-      itrDcumentsFileKey: 'View ITR Documents'
+      itrDocumentsFileKey: 'View ITR Documents'
     };
     return documentNames[key as keyof typeof documentNames] || 'View Document';
   };
@@ -727,7 +716,20 @@ const Insurance = () => {
                 <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                   <DataGrid
                     rows={insurances || []}
-                    columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
+                    columns={columns.map((col: any) => {
+                      if (col.field === "actions" || col.field === "activeSteps" || col.field === "status") {
+                        return { ...col, flex: 1, editable: false };
+                      }
+                      return {
+                        ...col,
+                        flex: 1,
+                        editable: false,
+                        renderCell: (params: any) =>
+                          params.value === null || params.value === undefined || params.value === ""
+                            ? "-"
+                            : params.value,
+                      };
+                    })}
                     pageSizeOptions={[5, 10, 20, 50, 100]}
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
@@ -737,6 +739,7 @@ const Insurance = () => {
                     slots={{
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
                     }}
+                    density="compact"
                     slotProps={{
                       toolbar: {
                         showQuickFilter: true,
@@ -755,6 +758,19 @@ const Insurance = () => {
                     onColumnVisibilityModelChange={(newModel) =>
                       setColumnsVisibilityModel(newModel)
                     }
+                    sx={{
+                      fontSize: "0.575rem",
+                      "& .MuiDataGrid-columnHeaders": {
+                        fontSize: "0.575rem",
+                        fontWeight: 600
+                      },
+                      "& .MuiDataGrid-cell": {
+                        fontSize: "0.575rem"
+                      },
+                      "& .MuiDataGrid-toolbarContainer": {
+                        fontSize: "0.575rem"
+                      }
+                    }}
                   />
                 </Box>
               </Box>
@@ -798,7 +814,7 @@ const Insurance = () => {
         </DialogActions>
       </Dialog>
       {/* View Dialog */}
-      < Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm" >
+      < Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="md" >
         <Grid container spacing={2} sx={{ padding: 2 }}>
           <Grid item xs={12}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -815,11 +831,11 @@ const Insurance = () => {
               Object.entries(selectedRow).map(([key, value]) => {
                 const isStatus = key.toLowerCase() === "status";
                 const isDocumentKey = [
-                  "aadhaarCardFileKey",
+                  "aadharCardFileKey",
                   "panCardFileKey",
                   "bankProofFileKey",
                   "salarySlipsFileKey",
-                  "itrDcumentsFileKey",
+                  "itrDocumentsFileKey",
                 ].includes(key);
 
                 const statusColor = isStatus ? getStatusColor(String(value)) : undefined;
@@ -839,7 +855,7 @@ const Insurance = () => {
                   <React.Fragment key={key}>
                     <Grid item xs={6}>
                       <Typography variant="body2">
-                        <Box component="span" sx={{ fontWeight: "bold" }}>
+                        <Box component="span" sx={{ fontWeight: "bold", fontSize: 11 }}>
                           {key
                             .replace(/([A-Z])/g, " $1")
                             .replace(/^./, (str) => str.toUpperCase())}
@@ -863,11 +879,17 @@ const Insurance = () => {
                           {getDocumentName(key)}
                         </Link>
                       ) : (
-                        <Typography
+                        < Typography
                           variant="body2"
-                          sx={{ color: isStatus ? statusColor : "inherit" }}
+                          sx={{ color: isStatus ? statusColor : 'inherit', fontSize: 11 }}
                         >
-                          {displayValue}
+                          {key.toLowerCase() === "submit"
+                            ? value === true
+                              ? "Complete"
+                              : "In Complete"
+                            : key.toLowerCase() === "placeofbirth" && value && typeof value === "object"
+                              ? `${(value as any).city}`
+                              : String(value ?? "N/A")}
                         </Typography>
                       )}
                     </Grid>
@@ -880,8 +902,9 @@ const Insurance = () => {
       </Dialog >
       <Dialog
         open={openInsuranceFormDialog}
-        onClose={(event, reason) => {
-          if (reason !== 'backdropClick') handleCloseAddInsuranceDialog();
+        onClose={() => {
+          setSelectedOption("");
+          setOpenInsuranceFormDialog(false)
         }}
         maxWidth="xs"
         fullWidth
@@ -903,20 +926,29 @@ const Insurance = () => {
 
         <DialogTitle>Select Insurance Type</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
+          <FormControl
+            fullWidth sx={{ mt: 2 }}
+            className="customSelect"
+          >
             <InputLabel>Choose Option</InputLabel>
             <Select
               value={selectedOption}
               onChange={handleSelectChange}
               label="Choose Option"
-              className="customSelect"
+
             >
               <MenuItem value="lifeInsurance">Life Insurance</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseAddInsuranceDialog} variant="outlined">
+          <Button
+            onClick={() => {
+              setSelectedOption("");
+              setOpenInsuranceFormDialog(false);
+            }}
+            variant="outlined"
+          >
             Cancel
           </Button>
           <Button
@@ -936,7 +968,7 @@ const Insurance = () => {
             Next
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog >
       <LifeInsuranceFormDialog
         open={openDialog}
         onClose={handleDialogClose}

@@ -73,7 +73,7 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
                                     Connect India
                                 </Grid>
                                 <Grid item sx={{ fontFamily: "Corbel", fontSize: 16, color: "brown", fontWeight: 600 }}>
-                                    Enterprise
+                                    Enterprises
                                 </Grid>
                             </Grid>
                         </Grid>

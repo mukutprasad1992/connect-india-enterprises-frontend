@@ -15,7 +15,8 @@ import {
   CircularProgress,
   Snackbar,
   Container,
-  Tooltip
+  Tooltip,
+  Paper
 } from "@mui/material";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -35,6 +36,8 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
+import CustomToolbar from "../../components/CustomToolbar";
 
 interface CustomerData {
   id: number;
@@ -44,6 +47,17 @@ interface CustomerData {
   email: string;
   pincode: string;
 }
+
+const defaultColumnVisibility = {
+  id: true,
+  name: true,
+  email: false,
+  address: false,
+  phone: false,
+  pincode: false,
+  actions: true
+}
+const pageName = 'customerPage'
 const User = () => {
   const router = useRouter();
   const [rows, setRows] = useState<CustomerData[]>([]);
@@ -55,6 +69,7 @@ const User = () => {
   const [customerErrorMessage, setCustomerErrorMessage] = useState(false);
   const [customerUpdated, setCustomerUpdated] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
@@ -413,7 +428,7 @@ const User = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: .5 },
+    { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
     { field: "name", headerName: "Name", flex: .8 },
     { field: "email", headerName: "Email", flex: .8 },
     { field: "phone", headerName: "Phone", flex: .8 },
@@ -427,13 +442,13 @@ const User = () => {
         <>
           <Tooltip title="View">
             <IconButton color="secondary" size="small" onClick={() => handleViewButton(params.row)}>
-              <VisibilityIcon fontSize="small" />
+              <VisibilityIcon fontSize="small" sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
           {roleId === 2 && (
             <Tooltip title="Edit">
               <IconButton color="primary" size="small" onClick={() => handleEditButton(params.row)}>
-                <EditIcon fontSize="small" />
+                <EditIcon fontSize="small" sx={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
           )}
@@ -446,14 +461,6 @@ const User = () => {
 
   const handleCloseCustomerSuccessSnackbar = () => {
     setOpenCustomerSuccessSnackbar(false);
-  }
-
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
   }
 
   const exportToPDF = async () => {
@@ -541,6 +548,18 @@ const User = () => {
     const fileURL = URL.createObjectURL(blob);
     saveAs(blob, "customers.xlsx");
   }
+
+  useEffect(() => {
+    const saved = loadLayoutFromLocalStorage(pageName);
+    if (saved) {
+      setColumnsVisibilityModel(saved);
+    }
+  }, []);
+
+  const handleSaveLayout = () => {
+    saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
+  };
+
   return (
     <>
       {loading && (
@@ -556,317 +575,336 @@ const User = () => {
           <CircularProgress />
         </div>
       )}
-      <PageContainer title="Customer" description="This is the customer page">
-        <Box >
-          <Grid container spacing={1}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" >
-                {roleId === 2 && (
-                  <IconButton
-                    sx={{ color: "#44a7a2" }}
-                    onClick={handleAddUser}
-                  >
-                    <AddCircleOutlineIcon />
-                  </IconButton>
-                )}
-                <IconButton onClick={exportToExcel}>
-                  <GridOnIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-                <IconButton onClick={exportToPDF}>
-                  <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <DashboardCard >
-                <Container>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{ mb: 2 }}
-                  >
-                    <Typography variant="h4">Customer</Typography>
-                  </Grid>
-                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
-                    <DataGrid
-                      rows={rows || []}
-                      columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
-                      pageSizeOptions={[5, 10, 20, 50, 100]}
-                      paginationModel={pagination}
-                      onPaginationModelChange={setPagination}
-                      disableRowSelectionOnClick
-                      autoHeight
-                      sortModel={[{ field: "id", sort: "desc" }]}
-                      slots={{
-                        toolbar: GridToolbar,
-                      }}
-                      slotProps={{
-                        toolbar: {
-                          showQuickFilter: true,
-                          quickFilterProps: { debounceMs: 500 },
-                          sx: {
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: "4px",
-                            padding: "8px",
-                            '& .MuiButton-text': {
-                              color: '#44a7a2',
-                            },
-                          },
-                        },
-                      }}
-                    />
+      <Box >
+        <Grid container spacing={1}>
+          <Grid item xs={12}>
+            <Paper sx={{ mr: 1.5 }} >
+              <Grid
+                container
+                justifyContent="space-between"
+                alignItems="center"
+
+              ><Grid sx={{ m: 2 }} >
+                  <Typography variant="h4">Customer</Typography>
+                </Grid>
+                <Grid item xs={6} sx={{ mr: 1 }}>
+                  <Box display="flex" justifyContent="flex-end" >
+                    {roleId === 2 && (
+                      <IconButton
+                        sx={{ color: "#465fff" }}
+                        onClick={handleAddUser}
+                      >
+                        <AddCircleOutlineIcon />
+                      </IconButton>
+                    )}
+                    <IconButton onClick={exportToExcel}>
+                      <GridOnIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
+                    <IconButton onClick={exportToPDF}>
+                      <PictureAsPdfIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
                   </Box>
-                </Container>
-              </DashboardCard>
-            </Grid>
-          </Grid>
-        </Box>
-        <Dialog open={openAddDialog} onClose={handleCloseAddCustomerDialog}>
-          <DialogTitle> Customer</DialogTitle>
-          <Divider></Divider>
-          {loading && (
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-              }}
-            >
-              <CircularProgress />
-            </div>
-          )}
-          {customerErrorMessage && (
-            <Grid item>
-              <Box sx={{
-                border: 1,
-                borderColor: '#ff9999',
-                p: 0,
-                mb: 2,
-                backgroundColor: '#f8bbd0'
-              }}>
-                <Alert severity="error">{customerErrorMessage}</Alert>
-              </Box>
-            </Grid>
-          )}
-          <DialogContent sx={{ overflow: 'visible', minHeight: '120px' }}>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Name <span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  name="name"
-                  fullWidth
-                  value={addFormData.name}
-                  onChange={handleAddChange}
-                  onBlur={() => {
-                    if (!addFormData.name.trim()) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        name: "Name is required",
-                      }));
-                    } else {
-                      setAddError((prev: any) => ({ ...prev, name: "" }));
+                </Grid>
+                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                  <DataGrid
+                    rows={rows || []}
+                    columns={columns.map((col: any) => {
+                      if (col.field === "actions") {
+                        return { ...col, flex: 1, editable: false };
+                      }
+                      return {
+                        ...col,
+                        flex: 1,
+                        editable: false,
+                        renderCell: (params: any) =>
+                          params.value === null || params.value === undefined || params.value === ""
+                            ? "-"
+                            : params.value,
+                      };
+                    })}
+                    pageSizeOptions={[5, 10, 20, 50, 100]}
+                    paginationModel={pagination}
+                    onPaginationModelChange={setPagination}
+                    disableRowSelectionOnClick
+                    density="compact"
+                    autoHeight
+                    sortModel={[{ field: "id", sort: "desc" }]}
+                    slots={{
+                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                    }}
+                    columnVisibilityModel={columnsVisibilityModel}
+                    onColumnVisibilityModelChange={(newModel) =>
+                      setColumnsVisibilityModel(newModel)
                     }
-                  }}
-                  error={!!addError.name}
-                  helperText={addError.name}
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Phone<span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  name="phone"
-                  fullWidth
-                  value={addFormData.phone}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^[+-]?\d{0,13}$/.test(value)) {
-                      setAddFormData((prev: any) => ({
-                        ...prev,
-                        phone: value,
-                      }));
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        phone: "",
-                      }));
-                    }
-                  }}
-                  onBlur={() => {
-                    const phone = addFormData.phone.trim();
-
-                    if (!phone) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        phone: "Phone is required",
-                      }));
-                    } else if (!/^\+?\d{10,13}$/.test(phone)) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        phone: "Phone number must be between 10 to 13 digits, optionally starting with '+'",
-                      }));
-                    } else {
-                      setAddError((prev: any) => ({ ...prev, phone: "" }));
-                    }
-                  }}
-
-                  error={!!addError.phone}
-                  helperText={addError.phone}
-                  inputProps={{ maxLength: 13 }}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Email<span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  name="email"
-                  fullWidth
-                  value={addFormData.email}
-                  onChange={handleAddChange}
-                  InputProps={{
-                    readOnly: isEdit,
-                  }}
-                  onBlur={() => {
-                    const email = addFormData.email.trim();
-                    const emailRegex =
-                      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-                    if (!email) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        email: "Email is required",
-                      }));
-                    } else if (!emailRegex.test(email)) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        email: "Enter a valid email address",
-                      }));
-                    } else {
-                      setAddError((prev: any) => ({ ...prev, email: "" }));
-                    }
-                  }}
-                  error={!!addError.email}
-                  helperText={addError.email}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Pin code<span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  name="pincode"
-                  fullWidth
-                  value={addFormData.pincode}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow only numbers and '+'
-                    if (/^[+]?[0-9]*$/.test(value)) {
-                      setAddFormData((prev: any) => ({
-                        ...prev,
-                        pincode: value,
-                      }));
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        pincode: "",
-                      }));
-                    }
-                  }}
-                  onBlur={() => {
-                    const pincode = addFormData.pincode.trim();
-
-                    if (!pincode) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        pincode: "Pin code is required",
-                      }));
-                    } else if (pincode.length < 6) {
-                      setAddError((prev: any) => ({
-                        ...prev,
-                        pincode: "Pincode  must be  6 digits",
-                      }));
-                    } else {
-                      setAddError((prev: any) => ({ ...prev, pincode: "" }));
-                    }
-                  }}
-                  error={!!addError.pincode}
-                  helperText={addError.pincode}
-                  inputProps={{ maxLength: 6 }}
-                />
-              </Grid>
-              <Grid container spacing={2}>
-                <Grid item xs={12} marginTop={2} marginLeft={2}>
-                  <TextField
-                    label={
-                      <span>
-                        Address<span style={{ color: "red" }}>*</span>
-                      </span>
-                    }
-                    name="address"
-                    fullWidth
-                    multiline
-                    rows={2}
-                    maxRows={2}
-                    inputProps={{
-                      maxLength: 100,
-                      style: {
-                        lineHeight: 1.0,
-                        wordBreak: "break-word",
+                    sx={{
+                      fontSize: "0.575rem",
+                      "& .MuiDataGrid-columnHeaders": {
+                        fontSize: "0.575rem",
+                        fontWeight: 600
                       },
-                    }}
-                    value={addFormData.address}
-                    onChange={(e) => {
-                      let inputValue = e.target.value;
-                      inputValue = inputValue.replace(/\s{2,}/g, " ");
-                      setAddFormData((prev: any) => ({ ...prev, address: inputValue }));
-                    }}
-                    onBlur={() => {
-                      let trimmedValue = addFormData.address.trim();
-                      setAddFormData((prev: any) => ({ ...prev, address: trimmedValue }));
-                      if (!trimmedValue) {
-                        setAddError((prev: any) => ({
-                          ...prev,
-                          address: "Address is required",
-                        }));
-                      } else {
-                        setAddError((prev: any) => ({ ...prev, address: "" }));
+                      "& .MuiDataGrid-cell": {
+                        fontSize: "0.575rem"
+                      },
+                      "& .MuiDataGrid-toolbarContainer": {
+                        fontSize: "0.575rem"
                       }
                     }}
-                    error={!!addError.address}
-                    helperText={addError.address}
                   />
-                </Grid>
+                </Box>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+      <Dialog open={openAddDialog} onClose={handleCloseAddCustomerDialog}>
+        <DialogTitle> Customer</DialogTitle>
+        <Divider></Divider>
+        {loading && (
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1000,
+            }}
+          >
+            <CircularProgress />
+          </div>
+        )}
+        {customerErrorMessage && (
+          <Grid item>
+            <Box sx={{
+              border: 1,
+              borderColor: '#ff9999',
+              p: 0,
+              mb: 2,
+              backgroundColor: '#f8bbd0'
+            }}>
+              <Alert severity="error">{customerErrorMessage}</Alert>
+            </Box>
+          </Grid>
+        )}
+        <DialogContent sx={{ overflow: 'visible', minHeight: '120px' }}>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Name <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                name="name"
+                className="customTextField"
+                fullWidth
+                value={addFormData.name}
+                onChange={handleAddChange}
+                onBlur={() => {
+                  if (!addFormData.name.trim()) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      name: "Name is required",
+                    }));
+                  } else {
+                    setAddError((prev: any) => ({ ...prev, name: "" }));
+                  }
+                }}
+                error={!!addError.name}
+                helperText={addError.name}
+              />
+            </Grid>
+
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Phone<span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                name="phone"
+                className="customTextField"
+                fullWidth
+                value={addFormData.phone}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^[+-]?\d{0,13}$/.test(value)) {
+                    setAddFormData((prev: any) => ({
+                      ...prev,
+                      phone: value,
+                    }));
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      phone: "",
+                    }));
+                  }
+                }}
+                onBlur={() => {
+                  const phone = addFormData.phone.trim();
+
+                  if (!phone) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      phone: "Phone is required",
+                    }));
+                  } else if (!/^\+?\d{10,13}$/.test(phone)) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      phone: "Phone number must be between 10 to 13 digits, optionally starting with '+'",
+                    }));
+                  } else {
+                    setAddError((prev: any) => ({ ...prev, phone: "" }));
+                  }
+                }}
+
+                error={!!addError.phone}
+                helperText={addError.phone}
+                inputProps={{ maxLength: 13 }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Email<span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                className="customTextField"
+                name="email"
+                fullWidth
+                value={addFormData.email}
+                onChange={handleAddChange}
+                InputProps={{
+                  readOnly: isEdit,
+                }}
+                onBlur={() => {
+                  const email = addFormData.email.trim();
+                  const emailRegex =
+                    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+                  if (!email) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      email: "Email is required",
+                    }));
+                  } else if (!emailRegex.test(email)) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      email: "Enter a valid email address",
+                    }));
+                  } else {
+                    setAddError((prev: any) => ({ ...prev, email: "" }));
+                  }
+                }}
+                error={!!addError.email}
+                helperText={addError.email}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Pin code<span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                name="pincode"
+                className="customTextField"
+                fullWidth
+                value={addFormData.pincode}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow only numbers and '+'
+                  if (/^[+]?[0-9]*$/.test(value)) {
+                    setAddFormData((prev: any) => ({
+                      ...prev,
+                      pincode: value,
+                    }));
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      pincode: "",
+                    }));
+                  }
+                }}
+                onBlur={() => {
+                  const pincode = addFormData.pincode.trim();
+
+                  if (!pincode) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      pincode: "Pin code is required",
+                    }));
+                  } else if (pincode.length < 6) {
+                    setAddError((prev: any) => ({
+                      ...prev,
+                      pincode: "Pincode  must be  6 digits",
+                    }));
+                  } else {
+                    setAddError((prev: any) => ({ ...prev, pincode: "" }));
+                  }
+                }}
+                error={!!addError.pincode}
+                helperText={addError.pincode}
+                inputProps={{ maxLength: 6 }}
+              />
+            </Grid>
+            <Grid container spacing={2}>
+              <Grid item xs={12} marginTop={2} marginLeft={2}>
+                <TextField
+                  label={
+                    <span>
+                      Address<span style={{ color: "red" }}>*</span>
+                    </span>
+                  }
+                  name="address"
+                  fullWidth
+                  className="customTextField"
+                  multiline
+                  rows={2}
+                  maxRows={2}
+                  inputProps={{
+                    maxLength: 100,
+                    style: {
+                      lineHeight: 1.0,
+                      wordBreak: "break-word",
+                    },
+                  }}
+                  value={addFormData.address}
+                  onChange={(e) => {
+                    let inputValue = e.target.value;
+                    inputValue = inputValue.replace(/\s{2,}/g, " ");
+                    setAddFormData((prev: any) => ({ ...prev, address: inputValue }));
+                  }}
+                  onBlur={() => {
+                    let trimmedValue = addFormData.address.trim();
+                    setAddFormData((prev: any) => ({ ...prev, address: trimmedValue }));
+                    if (!trimmedValue) {
+                      setAddError((prev: any) => ({
+                        ...prev,
+                        address: "Address is required",
+                      }));
+                    } else {
+                      setAddError((prev: any) => ({ ...prev, address: "" }));
+                    }
+                  }}
+                  error={!!addError.address}
+                  helperText={addError.address}
+                />
               </Grid>
             </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseAddCustomerDialog} color="error">
-              Cancel
-            </Button>
-            <Button
-              onClick={isEdit ? handleUpdate : handleAdd}
-              variant="contained"
-              color="primary"
-            >
-              {isEdit ? "Update" : "Submit"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </PageContainer>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddCustomerDialog} color="error">
+            Cancel
+          </Button>
+          <Button
+            onClick={isEdit ? handleUpdate : handleAdd}
+            variant="contained"
+            color="primary"
+          >
+            {isEdit ? "Update" : "Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={openViewDialog} onClose={() => setOpenViewDialog(false)} maxWidth="xs" fullWidth>
         <DialogTitle>User Details</DialogTitle>
         <DialogContent>

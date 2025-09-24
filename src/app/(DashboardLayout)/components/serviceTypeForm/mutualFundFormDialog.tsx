@@ -45,6 +45,8 @@ import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
+import CloseConfirmDialog from "../CloseConfirmDialog";
+import { Try } from "@mui/icons-material";
 
 interface MutualFundData {
     id: number | null;
@@ -698,9 +700,10 @@ const MutualFundFormDialog: React.FC<Props> = ({
             }
             return;
         }
-        setErrors((prev) => ({ ...prev, form: "" }));
 
+        setErrors((prev) => ({ ...prev, form: "" }));
         setSavingNext(true);
+
         try {
             if (step === 4) {
                 const fileKeys = [
@@ -719,21 +722,24 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     const file = formData[field as keyof MutualFundData];
                     if (file instanceof File) {
                         const key = await uploadFileToServer(file, folder);
+
+                        if (!key) {
+                            setErrors((prev) => ({
+                                ...prev,
+                                form: `Failed to upload ${field}. Please try again.`,
+                            }));
+                            return;
+                        }
+
                         (formData as any)[field] = key;
                     }
                 }
-                await saveStepData(step);
-                setInitialFormData(formData);
-                setStep((prev) => prev + 1);
-                setMaxAllowedStep(5);
-                return;
             }
-
             await saveStepData(step);
             setInitialFormData(formData);
             setStep((prev) => prev + 1);
             setMaxAllowedStep(Math.max(maxAllowedStep, step + 1));
-        } catch (err) {
+        } catch (err: any) {
             console.error("Step save failed:", err);
             setErrors((prev) => ({
                 ...prev,
@@ -743,6 +749,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
             setSavingNext(false);
         }
     };
+
 
     const handleBack = async () => {
         try {
@@ -803,7 +810,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
         }
     };
 
-    const uploadFileToServer = async (file: File, folderName: string): Promise<string> => {
+    const uploadFileToServer = async (file: File, folderName: string): Promise<any> => {
         const token = getToken();
         if (!token) throw new Error('No authentication token found');
 
@@ -812,23 +819,47 @@ const MutualFundFormDialog: React.FC<Props> = ({
         formData.append('mediaType', 'document');
         formData.append('description', 'Mutual fund document');
         formData.append('folderName', folderName);
-
-        const response = await axios.post(
-            `${BASE_URL}/uploadDocumentSerciceTypeFile/dynamic`,
-            formData,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
+        try {
+            const response = await axios.post(
+                `${BASE_URL}/uploadDocumentSerciceTypeFile/dynamic`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
                 }
+            );
+
+            if (response.data?.status) {
+                setSnackbarSeverity("success");
+                setSnackbarMessage("File uploaded successfully.");
+                setSnackbarOpen(true);
+                return response.data.result?.key;
             }
-        );
 
-        if (!response.data.status) {
-            throw new Error(response.data.message || 'File upload failed');
+            // API returned status=false
+            setSnackbarSeverity("error");
+            setSnackbarMessage("Upload failed. Please try again.");
+            setSnackbarOpen(true);
+            return null;
+
+        } catch (error: any) {
+            let message = "An unexpected error occurred.";
+
+            if (error.response) {
+                message = "No response from server. Please check your network connection.";
+            } else if (error.request) {
+                message = "No response from server. Please check your network connection.";
+            } else {
+                message = "No response from server. Please check your network connection.";
+            }
+            setSavingStep(false);
+            setSnackbarSeverity("error");
+            setSnackbarMessage(message);
+            setSnackbarOpen(true);
+            return null;
         }
-
-        return response.data.result.key;
     };
 
     const handleClose = () => {
@@ -846,7 +877,6 @@ const MutualFundFormDialog: React.FC<Props> = ({
         if (onSuccess) {
             onSuccess();
         }
-
         setCloseConfirmDialog(false);
     };
 
@@ -1043,7 +1073,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 {/* 1. Label */}
                                 <Grid item xs={12} sm={3}>
                                     <Typography variant="body1" sx={{ fontWeight: 600, ml: 3, fontSize: 11 }}>
-                                        <span style={{ color: "red" }}>*</span> {label}
+                                        {label} <span style={{ color: "red" }}>*</span>
                                     </Typography>
                                 </Grid>
 
@@ -1128,12 +1158,13 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 </Grid>
                             </Grid>
 
-                            {error && (
-                                <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
-                                    {error}
-                                </Typography>
-                            )}
+
                         </Paper>
+                        {error && (
+                            <Typography variant="caption" color="error" sx={{ mt: .1, ml: .7, display: "block" }}>
+                                {error}
+                            </Typography>
+                        )}
                     </FormControl>
 
                 </Grid >
@@ -1720,7 +1751,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Typography variant="h6">
-                            {mode === 'edit' ? 'Edit mutual fund' : 'New mutual fund / SIP'}
+                            {mode === 'edit' ? 'Edit mutual fund / SIP' : 'New mutual fund / SIP'}
                         </Typography>
                         <IconButton onClick={handleClose} disabled={loading}>
                             <CloseIcon />
@@ -1851,22 +1882,11 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     )
                 }
             </Dialog >
-            <Dialog open={closeConfirmDialog} onClose={handleCancelClose}>
-                <DialogTitle>Are you sure?</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Do you really want to close?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelClose} color="secondary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmClose} color="primary" variant="contained">
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <CloseConfirmDialog
+                open={closeConfirmDialog}
+                handleCancelClose={handleCancelClose}
+                handleConfirmClose={handleConfirmClose}
+            />
             <Snackbar
                 // open={true}
                 open={snackbarOpen}

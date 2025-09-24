@@ -16,7 +16,8 @@ import {
     Avatar,
     Divider,
     Tooltip,
-    Link
+    Link,
+    Paper
 } from "@mui/material";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -60,7 +61,7 @@ const defaultColumnVisibility = {
 }
 
 dayjs.extend(customParseFormat);
-
+const pageName = "inquiryPage";
 const InquiryPage = () => {
     const [inquiries, setInquiries] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +69,7 @@ const InquiryPage = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [actionType, setActionType] = useState<'approve' | 'reject' | 'in progress' | 'pending' | null>(null);
     const [selectedInquiryId, setSelectedInquiryId] = useState<number | null>(null);
+    const [selectedInquiryServiceId, setSelectedInquiryServiceId] = useState<number | null>(null);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -98,16 +100,15 @@ const InquiryPage = () => {
         "bankProofFileKey",
     ];
 
-    const LOCAL_KEY = "adminPrefrence";
-
     useEffect(() => {
-        const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
+        const saved = loadLayoutFromLocalStorage(pageName);
         if (saved) {
             setColumnsVisibilityModel(saved);
         }
     }, []);
+
     const handleSaveLayout = () => {
-        saveLayoutToLocalStorage(LOCAL_KEY, columnsVisibilityModel);
+        saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
     };
 
     const token = getToken();
@@ -192,6 +193,7 @@ const InquiryPage = () => {
     const handleApproveClick = (row: any) => {
         setActionType('approve');
         setSelectedInquiryId(row.id);
+        setSelectedInquiryServiceId(row.serviceId)
         setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
@@ -199,6 +201,7 @@ const InquiryPage = () => {
     const handleInProgressClick = (row: any) => {
         setActionType('in progress');
         setSelectedInquiryId(row.id);
+        setSelectedInquiryServiceId(row.serviceId)
         setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
@@ -206,6 +209,7 @@ const InquiryPage = () => {
     const handleRejectClick = (row: any) => {
         setActionType('reject');
         setSelectedInquiryId(row.id);
+        setSelectedInquiryServiceId(row.serviceId)
         setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
@@ -213,6 +217,7 @@ const InquiryPage = () => {
     const updateInquiryStatus = async (
         action: 'approve' | 'reject' | 'in progress' | 'pending',
         id: number,
+        serviceId: number,
         currentStatus: string
     ) => {
         setIsLoading(true);
@@ -231,13 +236,13 @@ const InquiryPage = () => {
             // );
 
             const response = await axios.put(
-                `${BASE_URL}/serviceType/updateStatus/${id}`,
+                `${BASE_URL}/serviceType/updateStatus/${id}/${serviceId}`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (response.data.status) {
-                await fetchInquiries(); // sync with backend again
+                await fetchInquiries();
                 setSnackbarSeverity("success");
                 setSnackbarMessage(response.data.message || "Status updated successfully");
             } else {
@@ -253,13 +258,26 @@ const InquiryPage = () => {
             setIsLoading(false);
         }
     };
-
+    let getStatusColor = (status: any) => {
+        switch (status) {
+            case "Pending":
+                return "#8b8a3fff";
+            case "In Progress":
+                return "orange";
+            case "Approved":
+                return "#6ad392ff";
+            case "Rejected":
+                return "#ff8780";
+            default:
+                return "#8b8a3fff";
+        }
+    };
     const columns = [
-        { field: "id", headerName: "ID", flex: 0.1 },
+        { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
         { field: "firstName", headerName: "First Name", flex: 0.1 },
         { field: "lastName", headerName: "Last Name", flex: 0.1 },
         { field: "email", headerName: "Email", flex: 0.08 },
-        { field: "mobile", headerName: "Mobile No", flex: 0.08 },
+        { field: "mobileNo", headerName: "Mobile No", flex: 0.08 },
         { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
         { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
         { field: "type", headerName: "Type", flex: 0.12 },
@@ -285,31 +303,14 @@ const InquiryPage = () => {
                 return `${params?.city || ''}`.trim().replace(/^,|,$/, '') || 'N/A';
             },
         },
+
         {
             field: "status",
             headerName: "Status",
-            flex: 0.12,
+            flex: 0,
             renderCell: (params: any) => {
                 const status = params.row.status;
-                let color = "#8b8a3fff";
-
-                switch (status) {
-                    case "Pending":
-                        color = "#8b8a3fff";
-                        break;
-                    case "In Progress":
-                        color = "orange";
-                        break;
-                    case "Approved":
-                        color = "#8df1b4";
-                        break;
-                    case "Rejected":
-                        color = "#ff8780";
-                        break;
-                    default:
-                        color = "#8b8a3fff";
-                }
-
+                const color = getStatusColor(status);
                 return (
                     <Box
                         sx={{
@@ -317,18 +318,20 @@ const InquiryPage = () => {
                             alignItems: "center",
                             width: "100%",
                             height: "100%",
+                            fontFamily: "Verdana",
+                            fontSize: "10px",
                         }}
                     >
                         <Typography
-                            sx={{ color, textAlign: "start" }}
+                            variant="body1"
+                            sx={{ color, textAlign: "center", fontSize: "10px" }}
                         >
                             {status}
                         </Typography>
                     </Box>
                 );
             },
-        }
-        ,
+        },
         {
             field: "actions",
             headerName: "Actions",
@@ -338,27 +341,27 @@ const InquiryPage = () => {
             minWidth: 130,
             flex: 0.12,
             renderCell: (params: any) => {
+                console.log("-------params-----", params.row.serviceId)
                 const status = params.row.status;
-                const submit = params.row.submit
                 return (
                     <Box sx={{ display: "flex", gap: 0.01, alignItems: "center", px: 0.5, width: "100%", height: "100%" }}>
                         <Tooltip title="View">
-                            <IconButton sx={{ p: 0.2 }}
+                            <IconButton sx={{ p: 0.1 }}
                                 color="info"
                                 onClick={() => {
                                     setSelectedInquiry(params.row);
                                     setIsViewDialogOpen(true);
                                 }}
                             >
-                                <Visibility />
+                                <Visibility fontSize='small' sx={{ fontSize: 14 }} />
                             </IconButton>
                         </Tooltip>
 
-                        {submit === 1 && status !== "Approved" && status !== "Rejected" && (
+                        {status !== "Approved" && status !== "Rejected" && (
                             <>
                                 <Tooltip title="Approve">
-                                    <IconButton sx={{ p: 0.2 }} color="success" onClick={() => handleApproveClick(params.row)}>
-                                        <CheckCircle />
+                                    <IconButton sx={{ p: 0.1 }} color="success" onClick={() => handleApproveClick(params.row)}>
+                                        <CheckCircle fontSize='small' sx={{ fontSize: 14 }} />
                                     </IconButton>
                                 </Tooltip>
 
@@ -367,18 +370,18 @@ const InquiryPage = () => {
                                         key={`${params.id}-${status}`}
                                         color="inherit"
                                         onClick={() => handleInProgressClick(params.row)}
-                                        sx={{ color: "unset !important", p: 0.2 }}
+                                        sx={{ color: "unset !important", p: 0.1 }}
                                     >
                                         <Pending
                                             htmlColor={status === "Pending" ? "#8b8a3fff" : "orange"}
-                                            fontSize="medium"
+                                            fontSize='small' sx={{ fontSize: 14 }}
                                         />
                                     </IconButton>
                                 </Tooltip>
 
                                 <Tooltip title="Reject">
-                                    <IconButton sx={{ p: 0.2 }} color="error" onClick={() => handleRejectClick(params.row)}>
-                                        <Cancel />
+                                    <IconButton sx={{ p: 0.1 }} color="error" onClick={() => handleRejectClick(params.row)}>
+                                        <Cancel fontSize='small' sx={{ fontSize: 14 }} />
                                     </IconButton>
                                 </Tooltip>
                             </>
@@ -581,41 +584,56 @@ const InquiryPage = () => {
                 </div>
             )}
             <PageContainer title="Inquiry" description="This is the inquiry page">
-                <Box>
+                <Box sx={{ pr: 1.5 }}>
                     <Grid container spacing={1}>
-                        <Grid item xs={12} sx={{ mb: 2 }}>
-                            <Box display="flex" justifyContent="flex-end" alignItems="center">
-                                <Tooltip title="Export to Excel">
-                                    <IconButton onClick={exportToExcel}>
-                                        <GridOnIcon sx={{ color: "#44a7a2" }} />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Export to PDF">
-                                    <IconButton
-                                        onClick={() => exportToPDF(inquiries, userName)}
-                                    >
-                                        <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
-                                    </IconButton>
-                                </Tooltip>
-                            </Box>
-                        </Grid>
                         <Grid item xs={12}>
-                            <DashboardCard >
-                                <Container>
-                                    <Grid
+                            <Paper >
+                                <Grid container >
+                                    <Grid item xs={12}
                                         container
                                         justifyContent="space-between"
                                         alignItems="center"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        <Typography variant="h4">Inquiry</Typography>
+
+                                    ><Grid sx={{ m: 2 }} >
+                                            <Typography variant="h4">Inquiry</Typography>
+                                        </Grid>
+                                        <Grid item xs={6} sx={{ mt: 1, mb: 1, mr: 1 }}>
+                                            <Box display="flex" justifyContent="flex-end" alignItems="center">
+                                                <Tooltip title="Export to Excel">
+                                                    <IconButton onClick={exportToExcel}>
+                                                        <GridOnIcon sx={{ color: "#465fff" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Export to PDF">
+                                                    <IconButton
+                                                        onClick={() => exportToPDF(inquiries, userName)}
+                                                    >
+                                                        <PictureAsPdfIcon sx={{ color: "#465fff" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        </Grid>
                                     </Grid>
                                     <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
                                         <DataGrid
                                             rows={inquiries || []}
-                                            columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
+                                            columns={columns.map((col: any) => {
+                                                if (col.field === "actions" || col.field === "activeSteps" || col.field === "status") {
+                                                    return { ...col, flex: 1, editable: false };
+                                                }
+                                                return {
+                                                    ...col,
+                                                    flex: 1,
+                                                    editable: false,
+                                                    renderCell: (params: any) =>
+                                                        params.value === null || params.value === undefined || params.value === ""
+                                                            ? "-"
+                                                            : params.value,
+                                                };
+                                            })}
                                             pageSizeOptions={[5, 10, 20, 50, 100]}
                                             paginationModel={pagination}
+                                            density="compact"
                                             onPaginationModelChange={setPagination}
                                             disableRowSelectionOnClick
                                             autoHeight
@@ -627,13 +645,27 @@ const InquiryPage = () => {
                                             onColumnVisibilityModelChange={(newModel) =>
                                                 setColumnsVisibilityModel(newModel)
                                             }
+                                            sx={{
+                                                fontSize: "0.575rem",
+                                                "& .MuiDataGrid-columnHeaders": {
+                                                    fontSize: "0.575rem",
+                                                    fontWeight: 600
+                                                },
+                                                "& .MuiDataGrid-cell": {
+                                                    fontSize: "0.575rem"
+                                                },
+                                                "& .MuiDataGrid-toolbarContainer": {
+                                                    fontSize: "0.575rem"
+                                                }
+                                            }}
                                         />
                                     </Box>
-                                </Container>
-                            </DashboardCard>
+                                </Grid>
+                            </Paper>
                         </Grid>
+
                     </Grid>
-                </Box>
+                </Box >
             </PageContainer >
             <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
                 <DialogTitle>
@@ -650,9 +682,9 @@ const InquiryPage = () => {
                     </Button>
                     <Button
                         onClick={() => {
-                            if (actionType && selectedInquiryId !== null) {
+                            if (actionType && selectedInquiryId !== null && selectedInquiryServiceId !== null) {
                                 const selectedInquiryItem = inquiries.find(inq => inq.id === selectedInquiryId);
-                                updateInquiryStatus(actionType, selectedInquiryId, selectedInquiryItem?.status || "");
+                                updateInquiryStatus(actionType, selectedInquiryId, selectedInquiryServiceId, selectedInquiryItem?.status || "");
                                 setIsDialogOpen(false);
                             }
                         }}
@@ -662,7 +694,7 @@ const InquiryPage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="md" fullWidth>
                 <Grid container justifyContent="space-between" alignItems="center" sx={{ p: 2 }}>
                     <Grid item>
                         <Typography variant="h6">Inquiry Details</Typography>
@@ -695,15 +727,17 @@ const InquiryPage = () => {
                                 {Object.entries(selectedInquiry)
                                     .filter(([key]) => key !== 'profileImageKey')
                                     .map(([key, value]) => (
-                                        <Grid item xs={12} key={key}>
-                                            <Box display="flex" gap={1}>
-                                                <Typography variant="subtitle1" fontWeight="bold" minWidth="250px">
+                                        <Grid container key={key}>
+                                            <Grid item xs={6} sx={{ pl: 3 }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 11 }}>
                                                     {formatKey(key)}:
                                                 </Typography>
-                                                <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                                <Typography variant="body1" sx={{ wordBreak: 'break-word', fontSize: 11 }}>
                                                     {renderValue(key, value)}
                                                 </Typography>
-                                            </Box>
+                                            </Grid>
                                         </Grid>
                                     ))}
                             </Grid>
@@ -722,11 +756,14 @@ const InquiryPage = () => {
                     severity={snackbarSeverity}
                     sx={{
                         width: "100%",
+                        border: "1px solid",
+                        borderColor: "error.main",
                     }}
                 >
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
+
         </>
     );
 };

@@ -17,6 +17,7 @@ import {
   Autocomplete,
   Alert,
   Snackbar,
+  Paper,
 } from "@mui/material";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -46,11 +47,11 @@ import CustomToolbar from "../../components/CustomToolbar";
 
 const defaultColumnVisibility = {
   id: false,
-  vendorName: true,
-  vendorRepresentative: false,
+  vendorBusinessName: true,
   vendorCode: false,
+  vendorBusinessRepresentative: false,
   vendorAddress: false,
-  vendorPhone: false,
+  vendorMobileNo: false,
   vendorEmail: false,
   vendorPincode: false,
   customerName: false,
@@ -63,7 +64,11 @@ const defaultColumnVisibility = {
   validityFrom: true,
   validityTo: true,
   status: true,
-}
+  actions: true,
+};
+
+const pageName = "voucherPage";
+
 const VoucherTable: React.FC = () => {
   const LOCAL_KEY = "couponPrefrence";
   const router = useRouter();
@@ -179,14 +184,14 @@ const VoucherTable: React.FC = () => {
   }, [router, token]);
 
   useEffect(() => {
-    const saved = loadLayoutFromLocalStorage(LOCAL_KEY);
+    const saved = loadLayoutFromLocalStorage(pageName);
     if (saved) {
       setColumnsVisibilityModel(saved);
     }
   }, []);
 
   const handleSaveLayout = () => {
-    saveLayoutToLocalStorage(LOCAL_KEY, columnsVisibilityModel);
+    saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
   };
 
   const handleGenerateButton = () => {
@@ -606,7 +611,7 @@ const VoucherTable: React.FC = () => {
   };
 
   const columns: any = [
-    { field: "id", headerName: "ID", flex: 0.08 },
+    { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
     { field: "vendorBusinessName", headerName: "Vendor Name", flex: 1, editable: true },
     { field: "vendorCode", headerName: "Vendor Code", flex: 1, editable: true },
     {
@@ -730,7 +735,7 @@ const VoucherTable: React.FC = () => {
                 }
               }}
             >
-              <VisibilityIcon style={{ fontSize: 20 }} />
+              <VisibilityIcon style={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
           {roleId === 1 && (
@@ -744,7 +749,7 @@ const VoucherTable: React.FC = () => {
                     onClick={() => handleUpdateStatusButton(params.row.id)}
                     disabled={params.row.status === 'Disable'}
                   >
-                    <RedeemIcon fontSize="small" />
+                    <RedeemIcon fontSize="small" style={{ fontSize: 14 }} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -754,7 +759,7 @@ const VoucherTable: React.FC = () => {
                   color="primary"
                   size="small"
                   onClick={() => handleEditButton(params.row)}>
-                  <EditIcon fontSize="small" />
+                  <EditIcon fontSize="small" style={{ fontSize: 14 }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
@@ -763,7 +768,7 @@ const VoucherTable: React.FC = () => {
                   color="primary"
                   size="small"
                   onClick={() => handleDeleteButton(params.row.id)}>
-                  <DeleteIcon fontSize="small" />
+                  <DeleteIcon fontSize="small" style={{ fontSize: 14 }} />
                 </IconButton>
               </Tooltip>
             </>
@@ -1082,417 +1087,439 @@ const VoucherTable: React.FC = () => {
           <CircularProgress />
         </div>
       )}
-      <PageContainer title="Voucher" description="This is the voucher page">
-        <Box>
-          <Grid container spacing={1}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end" >
-                {roleId === 1 && (
-                  <IconButton
-                    sx={{ color: "#44a7a2" }}
-                    onClick={handleGenerateButton}
-                  >
-                    <LocalOfferIcon />
-                  </IconButton>
-                )}
-                <IconButton onClick={() => exportToExcel(rows)}>
-                  <GridOnIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-                <IconButton onClick={() => exportToPDF(rows, userName)}>
-                  <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <DashboardCard>
-                <Container>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{ mb: 2 }}
-                  >
-                    <Typography variant="h4">Voucher</Typography>
-                  </Grid>
-                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
-                    <DataGrid
-                      rows={rows || []}
-                      columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
-                      pageSizeOptions={[5, 10, 20, 50, 100]}
-                      paginationModel={pagination}
-                      onPaginationModelChange={setPagination}
-                      disableRowSelectionOnClick
-                      autoHeight
-                      sortModel={[{ field: "id", sort: "desc" }]}
-                      slots={{
-                        toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
-                      }}
-                      columnVisibilityModel={columnsVisibilityModel}
-                      onColumnVisibilityModelChange={(newModel) =>
-                        setColumnsVisibilityModel(newModel)
-                      }
-                    />
+      <Box>
+        <Grid container spacing={1}>
+          <Grid item xs={12}>
+            <Paper sx={{ mr: 1.5 }}>
+              <Grid
+                container
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 2 }}
+              ><Grid sx={{ m: 2 }}>
+                  <Typography variant="h4">Voucher</Typography>
+                </Grid>
+                <Grid item xs={6} sx={{ mr: 1, mt: 1, mb: 1 }}>
+                  <Box display="flex" justifyContent="flex-end" >
+                    {roleId === 1 && (
+                      <IconButton
+                        sx={{ color: "#465fff" }}
+                        onClick={handleGenerateButton}
+                      >
+                        <LocalOfferIcon />
+                      </IconButton>
+                    )}
+                    <IconButton onClick={() => exportToExcel(rows)}>
+                      <GridOnIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
+                    <IconButton onClick={() => exportToPDF(rows, userName)}>
+                      <PictureAsPdfIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
                   </Box>
-                </Container>
-              </DashboardCard>
+                </Grid>
+                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                  <DataGrid
+                    rows={rows || []}
+                    columns={columns.map((col: any) => {
+                      if (col.field === "actions") {
+                        return { ...col, flex: 1, editable: false };
+                      }
+                      return {
+                        ...col,
+                        flex: 1,
+                        editable: false,
+                        renderCell: (params: any) =>
+                          params.value === null || params.value === undefined || params.value === ""
+                            ? "-"
+                            : params.value,
+                      };
+                    })}
+                    pageSizeOptions={[5, 10, 20, 50, 100]}
+                    paginationModel={pagination}
+                    onPaginationModelChange={setPagination}
+                    disableRowSelectionOnClick
+                    autoHeight
+                    density="compact"
+                    sortModel={[{ field: "id", sort: "desc" }]}
+                    slots={{
+                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                    }}
+                    columnVisibilityModel={columnsVisibilityModel}
+                    onColumnVisibilityModelChange={(newModel) =>
+                      setColumnsVisibilityModel(newModel)
+                    }
+                    sx={{
+                      fontSize: "0.575rem",
+                      "& .MuiDataGrid-columnHeaders": {
+                        fontSize: "0.575rem",
+                        fontWeight: 600
+                      },
+                      "& .MuiDataGrid-cell": {
+                        fontSize: "0.575rem"
+                      },
+                      "& .MuiDataGrid-toolbarContainer": {
+                        fontSize: "0.575rem"
+                      }
+                    }}
+                  />
+                </Box>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+      >
+        <DialogTitle>Delete Voucher</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={confirmDelete} variant="contained" color="primary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openStatusDialog}
+        onClose={() => setOpenStatusDialog(false)}
+      >
+        <DialogTitle>Redeem Voucher</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to Redeem this voucher?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenStatusDialog(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={updateVoucherStatus} variant="contained" color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={open} onClose={onCloseDialog} maxWidth="sm" fullWidth>
+
+        <DialogTitle> Voucher</DialogTitle>
+        {voucherErrorMessage && (
+          <Grid item>
+            <Box sx={{
+              border: 1,
+              borderColor: '#ff9999',
+              p: 0,
+              m: 2,
+              backgroundColor: '#f8bbd0'
+            }}>
+              <Alert severity="error">{voucherErrorMessage}</Alert>
+            </Box>
+          </Grid>
+        )}
+        <Divider></Divider>
+        <DialogContent>
+          <Grid container spacing={2} justifyContent="center" alignItems="center">
+            {loading && (
+              <div
+                style={{
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 1000,
+                }}
+              >
+                <CircularProgress />
+              </div>
+            )}
+            <Grid item xs={12} sm={6}>
+              <Autocomplete
+                options={vendorOptions}
+                getOptionLabel={(option: any) => option?.businessName || ""}
+                value={
+                  vendorOptions.find(
+                    (option: any) => option.id === formData.vendorName?.value
+                  ) || null
+                }
+                onChange={(event, newValue) => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    vendorName: newValue
+                      ? { label: newValue.businessName, value: newValue.id }
+                      : null,
+                    customerName: null,
+                  }));
+                  setCustomerOptions([]);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={
+                      <span>
+                        Vendor <span style={{ color: "red" }}> *</span>
+                      </span>
+                    }
+                    variant="outlined"
+                    fullWidth
+                    error={!!error.vendorName}
+                    helperText={error.vendorName}
+                  />
+                )}
+                onBlur={() => {
+                  if (!formData?.vendorName?.label) {
+                    setError((prev: any) => ({
+                      ...prev,
+                      vendorName: "Vendor is required",
+                    }));
+                  } else {
+                    setError((prev: any) => ({ ...prev, vendorName: "" }));
+                  }
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Autocomplete
+                options={customerOptions}
+                getOptionLabel={(option: any) => option?.name || ""}
+                value={
+                  customerOptions.find(
+                    (option: any) => option.id === formData.customerName?.value
+                  ) || null
+                }
+                onChange={(event, newValue) => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    customerName: newValue
+                      ? { label: newValue.name, value: newValue.id }
+                      : null,
+                  }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={
+                      <span>
+                        Customer name <span style={{ color: "red" }}> *</span>
+                      </span>
+                    }
+                    variant="outlined"
+                    fullWidth
+                    error={!!error.customerName}
+                    helperText={error.customerName}
+                  />
+                )}
+                onBlur={() => {
+                  if (!formData?.customerName?.label) {
+                    setError((prev: any) => ({
+                      ...prev,
+                      customerName: "Customer name is required",
+                    }));
+                  } else {
+                    setError((prev: any) => ({ ...prev, customerName: "" }));
+                  }
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
             </Grid>
           </Grid>
-        </Box>
-        <Dialog
-          open={openDeleteDialog}
-          onClose={() => setOpenDeleteDialog(false)}
-        >
-          <DialogTitle>Delete Voucher</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to delete?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDeleteDialog(false)} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={confirmDelete} variant="contained" color="primary">
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog
-          open={openStatusDialog}
-          onClose={() => setOpenStatusDialog(false)}
-        >
-          <DialogTitle>Redeem Voucher</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to Redeem this voucher?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenStatusDialog(false)} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={updateVoucherStatus} variant="contained" color="primary">
-              Confirm
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog open={open} onClose={onCloseDialog} maxWidth="sm" fullWidth>
+          <Grid container spacing={2} justifyContent="center" alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="amount"
+                label={
+                  <span>
+                    Amount <span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={formData.amount}
+                error={!!error.amount}
+                helperText={error.amount}
+                onChange={(e: any) => {
+                  const value = e.target.value;
+                  const isValid = value === "" || /^\d*\.?\d{0,2}$/.test(value);
+                  const [integerPart] = value.split(".");
 
-          <DialogTitle> Voucher</DialogTitle>
-          {voucherErrorMessage && (
-            <Grid item>
-              <Box sx={{
-                border: 1,
-                borderColor: '#ff9999',
-                p: 0,
-                m: 2,
-                backgroundColor: '#f8bbd0'
-              }}>
-                <Alert severity="error">{voucherErrorMessage}</Alert>
-              </Box>
-            </Grid>
-          )}
-          <Divider></Divider>
-          <DialogContent>
-            <Grid container spacing={2} justifyContent="center" alignItems="center">
-              {loading && (
-                <div
-                  style={{
-                    position: "fixed",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 1000,
-                  }}
-                >
-                  <CircularProgress />
-                </div>
-              )}
-              <Grid item xs={12} sm={6}>
-                <Autocomplete
-                  options={vendorOptions}
-                  getOptionLabel={(option: any) => option?.businessName || ""}
-                  value={
-                    vendorOptions.find(
-                      (option: any) => option.id === formData.vendorName?.value
-                    ) || null
-                  }
-                  onChange={(event, newValue) => {
+                  if (isValid && integerPart.length <= 8) {
                     setFormData((prev: any) => ({
                       ...prev,
-                      vendorName: newValue
-                        ? { label: newValue.businessName, value: newValue.id }
-                        : null,
-                      customerName: null,
+                      amount: value,
                     }));
-                    setCustomerOptions([]);
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={
-                        <span>
-                          Vendor <span style={{ color: "red" }}> *</span>
-                        </span>
-                      }
-                      variant="outlined"
-                      fullWidth
-                      error={!!error.vendorName}
-                      helperText={error.vendorName}
-                    />
-                  )}
-                  onBlur={() => {
-                    if (!formData?.vendorName?.label) {
+
+                    if (value.trim()) {
                       setError((prev: any) => ({
                         ...prev,
-                        vendorName: "Vendor is required",
+                        amount: "",
                       }));
-                    } else {
-                      setError((prev: any) => ({ ...prev, vendorName: "" }));
                     }
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <Autocomplete
-                  options={customerOptions}
-                  getOptionLabel={(option: any) => option?.name || ""}
-                  value={
-                    customerOptions.find(
-                      (option: any) => option.id === formData.customerName?.value
-                    ) || null
                   }
-                  onChange={(event, newValue) => {
+                }}
+                onBlur={() => {
+                  const value = formData.amount;
+
+                  if (!value || value.trim() === "") {
+                    setError((prev: any) => ({
+                      ...prev,
+                      amount: "Amount is required",
+                    }));
+                  } else {
+                    const formatted = parseFloat(value).toFixed(2);
                     setFormData((prev: any) => ({
                       ...prev,
-                      customerName: newValue
-                        ? { label: newValue.name, value: newValue.id }
-                        : null,
+                      amount: formatted,
                     }));
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={
-                        <span>
-                          Customer name <span style={{ color: "red" }}> *</span>
-                        </span>
-                      }
-                      variant="outlined"
-                      fullWidth
-                      error={!!error.customerName}
-                      helperText={error.customerName}
-                    />
-                  )}
-                  onBlur={() => {
-                    if (!formData?.customerName?.label) {
-                      setError((prev: any) => ({
-                        ...prev,
-                        customerName: "Customer name is required",
-                      }));
-                    } else {
-                      setError((prev: any) => ({ ...prev, customerName: "" }));
-                    }
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-              </Grid>
+                  }
+                }}
+                inputProps={{
+                  inputMode: "decimal",
+                  pattern: "\\d*(\\.\\d{0,2})?",
+                }}
+              />
             </Grid>
-            <Grid container spacing={2} justifyContent="center" alignItems="center">
-              <Grid item xs={12} md={6}>
-                <TextField
-                  name="amount"
-                  label={
-                    <span>
-                      Amount <span style={{ color: "red" }}> *</span>
-                    </span>
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Voucher code<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="voucherCode"
+                fullWidth
+                disabled={isEdit}
+                value={formData.voucherCode}
+                onChange={handleChange}
+                onBlur={() => {
+                  if (!formData?.voucherCode?.trim()) {
+                    setError((prev: any) => ({
+                      ...prev,
+                      voucherCode: " Voucher code is required",
+                    }));
+                  } else {
+                    setError((prev: any) => ({ ...prev, voucherCode: "" }));
                   }
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={formData.amount}
-                  error={!!error.amount}
-                  helperText={error.amount}
-                  onChange={(e: any) => {
-                    const value = e.target.value;
-                    const isValid = value === "" || /^\d*\.?\d{0,2}$/.test(value);
-                    const [integerPart] = value.split(".");
-
-                    if (isValid && integerPart.length <= 8) {
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        amount: value,
-                      }));
-
-                      if (value.trim()) {
-                        setError((prev: any) => ({
-                          ...prev,
-                          amount: "",
-                        }));
-                      }
-                    }
-                  }}
-                  onBlur={() => {
-                    const value = formData.amount;
-
-                    if (!value || value.trim() === "") {
-                      setError((prev: any) => ({
-                        ...prev,
-                        amount: "Amount is required",
-                      }));
-                    } else {
-                      const formatted = parseFloat(value).toFixed(2);
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        amount: formatted,
-                      }));
-                    }
-                  }}
-                  inputProps={{
-                    inputMode: "decimal",
-                    pattern: "\\d*(\\.\\d{0,2})?",
-                  }}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Voucher code<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="voucherCode"
-                  fullWidth
-                  disabled={isEdit}
-                  value={formData.voucherCode}
-                  onChange={handleChange}
-                  onBlur={() => {
-                    if (!formData?.voucherCode?.trim()) {
-                      setError((prev: any) => ({
-                        ...prev,
-                        voucherCode: " Voucher code is required",
-                      }));
-                    } else {
-                      setError((prev: any) => ({ ...prev, voucherCode: "" }));
-                    }
-                  }}
-                  error={!!error.voucherCode}
-                  helperText={error.voucherCode}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Validity from <span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="validityFrom"
-                  type="date"
-                  value={formData.validityFrom}
-                  InputLabelProps={{ shrink: true }}
-                  onChange={handleChange}
-                  onBlur={() => {
-                    if (!formData?.validityFrom?.trim()) {
-                      setError((prev: any) => ({
-                        ...prev,
-                        validityFrom: "Validity from is required",
-                      }));
-                    } else {
-                      setError((prev: any) => ({ ...prev, validityFrom: "" }));
-                    }
-                  }}
-                  error={!!error.validityFrom}
-                  helperText={error.validityFrom}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label={
-                    <span>
-                      Validity to <span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="validityTo"
-                  type="date"
-                  value={formData.validityTo}
-                  InputLabelProps={{ shrink: true }}
-                  onChange={handleChange}
-                  onBlur={() => {
-                    const validityTo = formData.validityTo?.trim();
-                    const validityFrom = formData.validityFrom?.trim();
-
-                    if (!formData?.validityTo?.trim()) {
-                      setError((prev: any) => ({
-                        ...prev,
-                        validityTo: "Validity to is required",
-                      }));
-                    } else if (
-                      validityFrom &&
-                      new Date(validityTo).getTime() <
-                      new Date(validityFrom).getTime()
-                    ) {
-                      setError((prev: any) => ({
-                        ...prev,
-                        validityTo:
-                          "The 'Validity to' cannot be before the 'Validity from' time",
-                      }));
-                    } else {
-                      setError((prev: any) => ({ ...prev, validityTo: "" }));
-                    }
-                  }}
-                  error={!!error.validityTo}
-                  helperText={error.validityTo}
-                  fullWidth
-                />
-              </Grid>
+                }}
+                error={!!error.voucherCode}
+                helperText={error.voucherCode}
+              />
             </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onCloseDialog} color="secondary">
-              Cancel
-            </Button>
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Validity from <span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="validityFrom"
+                type="date"
+                value={formData.validityFrom}
+                InputLabelProps={{ shrink: true }}
+                onChange={handleChange}
+                onBlur={() => {
+                  if (!formData?.validityFrom?.trim()) {
+                    setError((prev: any) => ({
+                      ...prev,
+                      validityFrom: "Validity from is required",
+                    }));
+                  } else {
+                    setError((prev: any) => ({ ...prev, validityFrom: "" }));
+                  }
+                }}
+                error={!!error.validityFrom}
+                helperText={error.validityFrom}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label={
+                  <span>
+                    Validity to <span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="validityTo"
+                type="date"
+                value={formData.validityTo}
+                InputLabelProps={{ shrink: true }}
+                onChange={handleChange}
+                onBlur={() => {
+                  const validityTo = formData.validityTo?.trim();
+                  const validityFrom = formData.validityFrom?.trim();
+
+                  if (!formData?.validityTo?.trim()) {
+                    setError((prev: any) => ({
+                      ...prev,
+                      validityTo: "Validity to is required",
+                    }));
+                  } else if (
+                    validityFrom &&
+                    new Date(validityTo).getTime() <
+                    new Date(validityFrom).getTime()
+                  ) {
+                    setError((prev: any) => ({
+                      ...prev,
+                      validityTo:
+                        "The 'Validity to' cannot be before the 'Validity from' time",
+                    }));
+                  } else {
+                    setError((prev: any) => ({ ...prev, validityTo: "" }));
+                  }
+                }}
+                error={!!error.validityTo}
+                helperText={error.validityTo}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onCloseDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={isEdit ? handleUpdate : handleSubmit}
+            variant="contained"
+            color="primary"
+          >
+            {isEdit ? "Update" : "Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openPdfPopUp}
+        onClose={handleClosePdfPopUp}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Voucher</DialogTitle>
+        <DialogContent>
+          {viewSelectedVocher?.pdfURL ? (
             <Button
-              onClick={isEdit ? handleUpdate : handleSubmit}
               variant="contained"
               color="primary"
+              onClick={() => window.open(viewSelectedVocher.pdfURL, '_blank')}
             >
-              {isEdit ? "Update" : "Submit"}
+              Open PDF in New Tab
             </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog
-          open={openPdfPopUp}
-          onClose={handleClosePdfPopUp}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Voucher</DialogTitle>
-          <DialogContent>
-            {viewSelectedVocher?.pdfURL ? (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => window.open(viewSelectedVocher.pdfURL, '_blank')}
-              >
-                Open PDF in New Tab
-              </Button>
-            ) : (
-              <p>No PDF available</p>
-            )}
+          ) : (
+            <p>No PDF available</p>
+          )}
 
-            {/* PDF generator component commented */}
-            {/* <VoucherPdfView viewSelectedVocher={viewSelectedVocher} /> */}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClosePdfPopUp} color="primary">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-
-      </PageContainer>
+          {/* PDF generator component commented */}
+          {/* <VoucherPdfView viewSelectedVocher={viewSelectedVocher} /> */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePdfPopUp} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={openVoucherSuccessSnackbar}
         autoHideDuration={3000}

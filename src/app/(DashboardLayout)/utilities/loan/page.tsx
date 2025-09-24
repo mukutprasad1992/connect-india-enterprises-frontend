@@ -23,7 +23,8 @@ import {
   Alert,
   Snackbar,
   Tooltip,
-  Link
+  Link,
+  Paper
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { SetStateAction, useEffect, useState } from "react";
@@ -41,7 +42,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { useRouter } from 'next/navigation';
 import axios from "axios";
-import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
@@ -55,7 +56,7 @@ import { formatDateTime } from "@/utils/utils";
 import PersonalLoanFormDialog from "../../components/serviceTypeForm/personalLoanFormDialog";
 import CustomToolbar from "../../components/CustomToolbar";
 import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
-import StepProgress from "../../components/StepProgress";
+import LoanStepProgress from "../../components/LoanStepProgress";
 
 const defaultColumnVisibility = {
   id: false,
@@ -83,7 +84,7 @@ const defaultColumnVisibility = {
   aadharNumber: true,
   photoFileKey: false,
   panCardFileKey: false,
-  aadhaarCardFileKey: false,
+  aadharCardFileKey: false,
   salarySlipsFileKey: false,
   bankStatementFileKey: false,
   serviceId: false,
@@ -124,7 +125,7 @@ const Loan = () => {
   const [openLoanFormDialog, setOpenLoanFormDialog] = useState(false);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-  const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-enterprises-bucket.s3.ap-south-1.amazonaws.com';
+  const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
   const handleCloseAddLoanDialog = () => {
     setLoanType(null);
     setOpenAddLoanDialog(false);
@@ -200,41 +201,53 @@ const Loan = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       if (response.data.status) {
         const formattedData = response.data.data.map((item: any) => ({
           id: item.id,
           submit: item.submit === 1 ? true : false,
+          status: item.status,
           motherName: item.motherName,
           landmark: item.landmark,
           email: item.email,
           mobileNo: item.mobileNo,
           currentAddress: item.currentAddress,
           yearsOfCity: item.yearsOfCity,
-          alternateNo: item.alternateNo,
+          alternateNo: item.alternateNo?.toString()
+            .replace(/\s+/g, "")
+            .replace(/^\+91/, "")
+            .slice(-10),
           maritalStatus: item.maritalStatus,
           designation: item.designation,
           companyExp: item.companyExp,
           totalWorkExp: item.totalWorkExp,
           officeAddress: item.officeAddress,
-          officeMobile: item.officeMobile,
+          officeMobile: item.officeMobile?.toString()
+            .replace(/\s+/g, "")
+            .replace(/^\+91/, "")
+            .slice(-10),
           ref1Name: item.ref1Name,
-          ref1Mobile: item.ref1Mobile,
+          ref1Mobile: item.ref1Mobile?.toString()
+            .replace(/\s+/g, "")
+            .replace(/^\+91/, "")
+            .slice(-10),
           ref1Address: item.ref1Address,
           ref2Name: item.ref2Name,
-          ref2Mobile: item.ref2Mobile,
+          ref2Mobile: item.ref2Mobile?.toString()
+            .replace(/\s+/g, "")
+            .replace(/^\+91/, "")
+            .slice(-10),
           ref2Address: item.ref2Address,
           panNumber: item.panNumber,
           aadharNumber: item.aadharNumber,
           photoFileKey: item.photoFileKey,
           panCardFileKey: item.panCardFileKey,
-          aadhaarCardFileKey: item.aadhaarCardFileKey,
+          aadharCardFileKey: item.aadharCardFileKey,
           salarySlipsFileKey: item.salarySlipsFileKey,
           bankStatementFileKey: item.bankStatementFileKey,
           serviceId: item.serviceId,
           activeSteps: item.activeSteps,
           serviceSubTypeName: item.serviceSubTypeName,
-          status: item.status,
+
         }));
         setLoans(formattedData);
         setLoading(false)
@@ -267,11 +280,14 @@ const Loan = () => {
     }
     setDialogLoading(true)
     try {
-      await axios.delete(`${BASE_URL}/serviceType/deleteServiceTypeById/${selectedId}`, {
+      const response = await axios.delete(`${BASE_URL}/loan/deleteLoanById/${selectedId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      setSnackbarMessage(response.data.message);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
       setLoanUpdated(prev => !prev);
       setLoans((prevAllLoan: any[]) => {
         const updatedAllLoan = prevAllLoan
@@ -300,7 +316,7 @@ const Loan = () => {
     setSelectedRow(null);
   };
   const columns = [
-    { field: "id", headerName: "ID", flex: 0 },
+    { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
     { field: "panNumber", headerName: "PAN Number", flex: 0 },
     { field: "aadharNumber", headerName: "Aadhar Number", flex: 0 },
     { field: "serviceSubTypeName", headerName: "Type", flex: 0 },
@@ -308,34 +324,29 @@ const Loan = () => {
     { field: "mobileNo", headerName: "mobile No", flex: 0 },
     { field: "landmark", headerName: "Landmark", flex: 0 },
     { field: "motherName", headerName: "Mother Name", flex: 0 },
-    { field: "cityYears", headerName: "City Years", flex: 0 },
+    { field: "yearsOfCity", headerName: "City Of Years", flex: 0 },
     { field: "alternateNo", headerName: "Alternate No", flex: 0 },
     { field: "maritalStatus", headerName: "Marital Status", flex: 0 },
+    { field: "designation", headerName: "designation", flex: 0 },
+    { field: "companyExp", headerName: "company Exp", flex: 0 },
+    { field: "totalWorkExp", headerName: "totalWork Exp", flex: 0 },
+    { field: "officeAddress", headerName: "Office Address", flex: 0 },
+    { field: "officeMobile", headerName: "Office Mobile", flex: 0 },
+    { field: "officeAddress", headerName: "Office Address", flex: 0 },
+    // { field: "ref1Name", headerName: "Ref 1 Name", flex: 0 },
+    // { field: "ref1Mobile", headerName: "Ref 1 Mobile", flex: 0 },
+    // { field: "ref1Address", headerName: "Ref 2 Address", flex: 0 },
+    // { field: "ref2Name", headerName: "Ref 2 Name", flex: 0 },
+    // { field: "ref2Mobile", headerName: "Ref 2 Mobile", flex: 0 },
+    // { field: "ref2Address", headerName: "Ref 2 Address", flex: 0 },
+    // { field: "ref2Address", headerName: "Ref 2 Address", flex: 0 },
     {
       field: "status",
       headerName: "Status",
-      flex: 0.12,
+      flex: 0,
       renderCell: (params: any) => {
         const status = params.row.status;
-        let color = "#fbf774";
-
-        switch (status) {
-          case "Pending":
-            color = "#fbf774";
-            break;
-          case "In Progress":
-            color = "#fbe06f";
-            break;
-          case "Approved":
-            color = "#8df1b4";
-            break;
-          case "Rejected":
-            color = "#ff8780";
-            break;
-          default:
-            color = "#fbf774";
-        }
-
+        const color = getStatusColor(status);
         return (
           <Box
             sx={{
@@ -343,11 +354,13 @@ const Loan = () => {
               alignItems: "center",
               width: "100%",
               height: "100%",
+              fontFamily: "Verdana",
+              fontSize: "10px",
             }}
           >
             <Typography
               variant="body1"
-              sx={{ color, textAlign: "center" }}
+              sx={{ color, textAlign: "center", fontSize: "10px" }}
             >
               {status}
             </Typography>
@@ -368,7 +381,7 @@ const Loan = () => {
             gap: "4px",
           }}
         >
-          <StepProgress activeStep={params.value} />
+          <LoanStepProgress activeStep={params.value} />
         </Box>
       ),
     },
@@ -387,31 +400,34 @@ const Loan = () => {
           <Box display="flex" width="100%" height="100%" >
             <Tooltip title="View">
               <IconButton
+                sx={{ p: 0.1 }}
                 color="info"
                 size="small"
                 onClick={() => handleViewButton(params.row)}
               >
-                <VisibilityIcon fontSize="small" />
+                <VisibilityIcon fontSize="small" sx={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
             {!isEditDeleteHidden && (
               <>
                 <Tooltip title="Edit">
                   <IconButton
+                    sx={{ p: 0.1 }}
                     color="primary"
                     size="small"
                     onClick={() => handleEditButton(params.row)}
                   >
-                    <EditIcon fontSize="small" />
+                    <EditIcon fontSize="small" sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Delete">
                   <IconButton
+                    sx={{ p: 0.1 }}
                     color="error"
                     size="small"
                     onClick={() => handleDeleteButton(params.row.id)}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon fontSize="small" sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
               </>
@@ -446,15 +462,15 @@ const Loan = () => {
   let getStatusColor = (status: any) => {
     switch (status) {
       case "Pending":
-        return "#fbf774";
+        return "#8b8a3fff";
       case "In Progress":
-        return "#fbe06f";
+        return "orange";
       case "Approved":
-        return "#8df1b4";
+        return "#6ad392ff";
       case "Rejected":
         return "#ff8780";
       default:
-        return "#fbf774";
+        return "#8b8a3fff";
     }
   };
   const exportToPDF = async () => {
@@ -506,7 +522,7 @@ const Loan = () => {
       row.aadharNumber || 'N/A',
       row.email || 'N/A',
       row.landmark || 'N/A',
-      row.cityYears || 'N/A',
+      row.yearsOfCity || 'N/A',
       row.motherName || 'N/A',
       row.alternateNo || 'N/A',
       row.status || 'N/A',
@@ -518,7 +534,7 @@ const Loan = () => {
       head: [headers],
       body: bodyData,
       headStyles: {
-        fillColor: [165, 42, 42], // Brown color
+        fillColor: [165, 42, 42],
         textColor: 255,
         halign: 'center',
         fontStyle: 'bold',
@@ -606,50 +622,11 @@ const Loan = () => {
   const handleSelectChange = (event: any) => {
     setSelectedOption(event.target.value);
   };
-  const handleFormSubmit = async (formData: any, isEditMode: boolean) => {
-    setDialogLoading(true);
-    try {
-      const url = isEditMode
-        ? `${BASE_URL}/serviceType/updateServiceTypeById/${formData.id}`
-        : `${BASE_URL}/serviceType/createServiceType`;
 
-      const method = isEditMode ? 'put' : 'post';
-      const payload = JSON.stringify({
-        ...formData,
-        serviceId: 4,
-        ServiceSubType: selectedOption,
-        status: "Pending",
-      });
-      const response = await axios[method](url, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      setSnackbarMessage(response.data.message);
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-      fetchLoansData();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message ||
-        error.response?.data?.errors?.body ||
-        (isEditMode ? "Failed to update service type" : "Failed to create service type");
-
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      console.error('API Error:', error.response?.data || error.message);
-    } finally {
-      setDialogLoading(false);
-      setOpenDialog(false);
-      setEditData(null);
-      setIsEdit(false);
-    }
-  };
   const getDocumentName = (key: any) => {
     const documentNames = {
-      aadhaarCardFileKey: 'View Aadhaar Card',
+      photoFileKey: 'View Photo ',
+      aadharCardFileKey: 'View Aadhaar Card',
       panCardFileKey: 'View PAN Card',
       salarySlipsFileKey: 'View Salary Slip',
       bankStatementFileKey: 'View bank Statement',
@@ -678,128 +655,144 @@ const Loan = () => {
 
   return (
     <>
-      {loading && (
-        <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 1000,
-          }}
-        >
-          <CircularProgress />
-        </div>
-      )}
-      <PageContainer title="Loan" description="this is Loan page">
-        <Box>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end">
-                {/* <LoanDialog onConfirmYes={handleConfirmYes} /> */}
-                <Tooltip title="Add">
-                  <IconButton
-                    sx={{ textTransform: "none", color: "#44a7a2" }}
-                    onClick={() => setOpenLoanFormDialog(true)}
-                  >
-                    <AddCircleOutlineIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Export Excel'>
-                  <IconButton onClick={exportToExcel} sx={{ color: "#44a7a2" }}>
-                    <GridOnIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Export PDF'>
-                  <IconButton onClick={exportToPDF} sx={{ color: "#44a7a2" }}>
-                    <PictureAsPdfIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <DashboardCard >
-                <Container>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{ mb: 2 }}
-                  >
-                    <Typography variant="h4">Loan</Typography>
+      <Box sx={{ pr: 1.5 }}>
+        <Grid container spacing={0}>
+          <Grid item xs={12}>
+            <Paper >
+              <Box>
+                <Grid container justifyContent="space-between" alignItems="center">
+                  <Grid sx={{ ml: 3 }} >
+                    <Typography variant="h4"
+                      sx={{
+                        fontSize: { xs: "1.4rem", sm: "1.4rem", md: "1.4rem", }
+                      }}
+                    >Loan</Typography>
                   </Grid>
-                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
-                    <DataGrid
-                      rows={loans || []}
-                      columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
-                      pageSizeOptions={[5, 10, 20, 50, 100]}
-                      paginationModel={pagination}
-                      onPaginationModelChange={setPagination}
-                      disableRowSelectionOnClick
-                      autoHeight
-                      sortModel={[{ field: "id", sort: "desc" }]}
-                      slots={{
-                        toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
-                      }}
-                      slotProps={{
-                        columnsPanel: {
-                          sx: {
-                            maxHeight: 400,
-                            overflowY: "auto"
-                          }
-                        }
-                      }}
-                      columnVisibilityModel={columnsVisibilityModel}
-                      onColumnVisibilityModelChange={(newModel) =>
-                        setColumnsVisibilityModel(newModel)
-                      }
-                    />
-                  </Box>
-                </Container>
-              </DashboardCard>
-            </Grid>
-          </Grid>
-        </Box>
-        {/* Delet button */}
 
-        <Dialog
-          open={openDeleteLoanDialog}
-          onClose={() => setOpenDeleteLoanDialog(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          {dialogLoading && (
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1000,
-              }}
-            >
-              <CircularProgress />
-            </div>
-          )}
-          <DialogTitle>Delete Loan</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to delete ?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenDeleteLoanDialog(false)}
-              variant="outlined"
-            >
-              Cancel
-            </Button>
-            <Button onClick={deleteLoan} variant="contained" color="primary">
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </PageContainer>
-      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="sm">
+                  <Box display="flex" justifyContent="flex-end" alignItems="center" sx={{ p: 2 }}>
+                    <Tooltip title="Add">
+                      <IconButton
+                        size="small"
+                        sx={{ textTransform: "none", color: "#465fff", p: 0.2 }}
+                        onClick={() => setOpenLoanFormDialog(true)}
+                      >
+                        <AddCircleOutlineIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Export Excel'>
+                      <IconButton
+                        size="small"
+                        onClick={exportToExcel} sx={{ color: "#465fff", p: 0.2 }}>
+                        <GridOnIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Export PDF'>
+                      <IconButton
+                        size="small"
+                        onClick={exportToPDF} sx={{ color: "#465fff", p: 0.2 }}>
+                        <PictureAsPdfIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Grid>
+                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                  <DataGrid
+                    rows={loans || []}
+                    columns={columns.map((col: any) => {
+                      if (col.field === "actions" || col.field === "activeSteps" || col.field === "status") {
+                        return { ...col, flex: 1, editable: false };
+                      }
+                      return {
+                        ...col,
+                        flex: 1,
+                        editable: false,
+                        renderCell: (params: any) =>
+                          params.value === null || params.value === undefined || params.value === ""
+                            ? "-"
+                            : params.value,
+                      };
+                    })}
+                    pageSizeOptions={[5, 10, 20, 50, 100]}
+                    paginationModel={pagination}
+                    onPaginationModelChange={setPagination}
+                    disableRowSelectionOnClick
+                    autoHeight
+                    density="compact"
+                    sortModel={[{ field: "id", sort: "desc" }]}
+                    slots={{
+                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                    }}
+                    slotProps={{
+                      columnsPanel: {
+                        sx: {
+                          maxHeight: 400,
+                          overflowY: "auto"
+                        }
+                      }
+                    }}
+                    columnVisibilityModel={columnsVisibilityModel}
+                    onColumnVisibilityModelChange={(newModel) =>
+                      setColumnsVisibilityModel(newModel)
+                    }
+                    sx={{
+                      fontSize: "0.575rem",
+                      "& .MuiDataGrid-columnHeaders": {
+                        fontSize: "0.575rem",
+                        fontWeight: 600
+                      },
+                      "& .MuiDataGrid-cell": {
+                        fontSize: "0.575rem"
+                      },
+                      "& .MuiDataGrid-toolbarContainer": {
+                        fontSize: "0.575rem"
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+
+        </Grid>
+      </Box>
+      {/* Delet button */}
+
+      <Dialog
+        open={openDeleteLoanDialog}
+        onClose={() => setOpenDeleteLoanDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        {dialogLoading && (
+          <div
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1000,
+            }}
+          >
+            <CircularProgress />
+          </div>
+        )}
+        <DialogTitle>Delete Loan</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete ?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOpenDeleteLoanDialog(false)}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button onClick={deleteLoan} variant="contained" color="primary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openViewDialog} onClose={handleCloseViewDialog} fullWidth maxWidth="md">
         <Grid container spacing={2} sx={{ padding: 2 }}>
           <Grid item xs={12}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -816,7 +809,8 @@ const Loan = () => {
               Object.entries(selectedRow).map(([key, value]) => {
                 const isStatus = key.toLowerCase() === "status";
                 const isDocumentKey = [
-                  'aadhaarCardFileKey',
+                  'photoFileKey',
+                  'aadharCardFileKey',
                   'panCardFileKey',
                   'salarySlipsFileKey',
                   'bankStatementFileKey'
@@ -828,7 +822,7 @@ const Loan = () => {
                 return (
                   <React.Fragment key={key}>
                     <Grid item xs={6}>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 11 }}>
                         {displayKey}:
                       </Typography>
                     </Grid>
@@ -848,8 +842,17 @@ const Loan = () => {
                           {getDocumentName(key)}
                         </Link>
                       ) : (
-                        <Typography variant="body2" sx={{ color: isStatus ? statusColor : 'inherit' }}>
-                          {String(value || 'N/A')}
+                        <Typography
+                          variant="body2"
+                          sx={{ color: isStatus ? statusColor : 'inherit', fontSize: 11 }}
+                        >
+                          {key.toLowerCase() === "submit"
+                            ? value === true
+                              ? "Complete"
+                              : "In Complete"
+                            : key.toLowerCase() === "placeofbirth" && value && typeof value === "object"
+                              ? `${(value as any).city}`
+                              : String(value ?? "N/A")}
                         </Typography>
                       )}
                     </Grid>
@@ -858,17 +861,22 @@ const Loan = () => {
               })}
           </Grid>
         </DialogContent>
-      </Dialog>
+      </Dialog >
       <Dialog
         open={openLoanFormDialog}
-        onClose={handleCloseAddLoanDialog}
+        onClose={() => {
+          setSelectedOption("");
+          setOpenLoanFormDialog(false)
+        }}
         maxWidth="xs"
         fullWidth
         disableEscapeKeyDown
       >
         <DialogTitle>Select Loan Type</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
+          <FormControl
+            fullWidth sx={{ mt: 2 }}
+            className="customSelect">
             <InputLabel>Choose Option</InputLabel>
             <Select
               value={selectedOption}
@@ -880,7 +888,13 @@ const Loan = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseAddLoanDialog} variant="outlined">
+          <Button
+            onClick={() => {
+              setSelectedOption("");
+              setOpenLoanFormDialog(false);
+            }}
+            variant="outlined"
+          >
             Cancel
           </Button>
           <Button
@@ -902,7 +916,7 @@ const Loan = () => {
         initialData={editData}
         mode={isEdit ? "edit" : "create"}
         setOpenDialog={setOpenDialog}
-        onSuccess={loans}
+        onSuccess={fetchLoansData}
       />
       <Snackbar
         open={snackbarOpen}
@@ -913,11 +927,7 @@ const Loan = () => {
         <Alert
           onClose={handleSnackbarClose}
           severity={snackbarSeverity}
-          sx={{
-            width: "100%",
-            backgroundColor: "green",
-            color: "white",
-          }}
+          sx={{ width: '100%' }}
         >
           {snackbarMessage}
         </Alert>

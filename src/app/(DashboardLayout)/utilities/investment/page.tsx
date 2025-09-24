@@ -241,7 +241,7 @@ const Investment = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0 },
+    { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
     { field: "aadharNumber", headerName: "Aadhar Number", flex: 0 },
     { field: "panNumber", headerName: "PAN Number", flex: 0 },
     { field: "email", headerName: "Email", flex: 0 },
@@ -279,12 +279,23 @@ const Investment = () => {
         const status = params.row.status;
         const color = getStatusColor(status);
         return (
-          <Box sx={{ display: "flex", alignItems: "center", width: "100%", height: "100%" }}>
-            <Typography variant="body1" sx={{ color, textAlign: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              height: "100%",
+              fontFamily: "Verdana",
+              fontSize: "10px",
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={{ color, textAlign: "center", fontSize: "10px" }}
+            >
               {status}
             </Typography>
           </Box>
-
         );
       },
     },
@@ -299,6 +310,7 @@ const Investment = () => {
             alignItems: "center",
             flexShrink: 0,
             gap: "4px",
+
           }}
         >
           <StepProgress activeStep={params.value} />
@@ -321,34 +333,34 @@ const Investment = () => {
           <Box display="flex" width="100%" height="100%">
             <Tooltip title="View">
               <IconButton
-                sx={{ p: 0.2 }}
+                sx={{ p: 0.1 }}
                 color="info"
                 size="small"
                 onClick={() => handleViewButton(params.row)}
               >
-                <VisibilityIcon fontSize="small" />
+                <VisibilityIcon fontSize="small" sx={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
             {!isEditDeleteHidden && (
               <>
                 <Tooltip title="Edit">
                   <IconButton
-                    sx={{ p: 0.2 }}
+                    sx={{ p: 0.1 }}
                     color="primary"
                     size="small"
                     onClick={() => handleEditButton(params.row)}
                   >
-                    <EditIcon fontSize="small" />
+                    <EditIcon fontSize="small" sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Delete">
                   <IconButton
-                    sx={{ p: 0.2 }}
+                    sx={{ p: 0.1 }}
                     color="error"
                     size="small"
                     onClick={() => handleDeleteButton(params.row.id)}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon fontSize="small" sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
               </>
@@ -540,7 +552,7 @@ const Investment = () => {
 
   return (
     <>
-      <Box sx={{ pr: 1.8 }}>
+      <Box sx={{ pr: 1.5 }}>
         <Grid container spacing={0}>
           <Grid item xs={12}>
             <Paper >
@@ -583,7 +595,20 @@ const Investment = () => {
                 <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "block", }}>
                   <DataGrid
                     rows={allInvestment || []}
-                    columns={columns.map((col: any) => ({ ...col, flex: 1, editable: false }))}
+                    columns={columns.map((col: any) => {
+                      if (col.field === "actions" || col.field === "activeSteps" || col.field === "status") {
+                        return { ...col, flex: 1, editable: false };
+                      }
+                      return {
+                        ...col,
+                        flex: 1,
+                        editable: false,
+                        renderCell: (params: any) =>
+                          params.value === null || params.value === undefined || params.value === ""
+                            ? "-"
+                            : params.value,
+                      };
+                    })}
                     pageSizeOptions={[5, 10, 20, 50, 100]}
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
@@ -606,6 +631,19 @@ const Investment = () => {
                     onColumnVisibilityModelChange={(newModel) =>
                       setColumnsVisibilityModel(newModel)
                     }
+                    sx={{
+                      fontSize: "0.575rem",
+                      "& .MuiDataGrid-columnHeaders": {
+                        fontSize: "0.575rem",
+                        fontWeight: 600
+                      },
+                      "& .MuiDataGrid-cell": {
+                        fontSize: "0.575rem"
+                      },
+                      "& .MuiDataGrid-toolbarContainer": {
+                        fontSize: "0.575rem"
+                      }
+                    }}
                   />
                 </Box>
               </Box>
@@ -674,7 +712,7 @@ const Investment = () => {
                   <React.Fragment key={key}>
                     <Grid item xs={6}>
                       <Typography variant="body2">
-                        <Box component="span" sx={{ fontWeight: 'bold' }}>
+                        <Box component="span" sx={{ fontWeight: 'bold', fontSize: 11 }}>
                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                         </Box>
                       </Typography>
@@ -697,7 +735,7 @@ const Investment = () => {
                       ) : (
                         <Typography
                           variant="body2"
-                          sx={{ color: isStatus ? statusColor : 'inherit' }}
+                          sx={{ color: isStatus ? statusColor : 'inherit', fontSize: 11 }}
                         >
                           {key.toLowerCase() === "submit"
                             ? value === true
@@ -733,7 +771,7 @@ const Investment = () => {
               value={selectedOption}
               onChange={handleSelectChange}
               label="Choose Option"
-              className="customSelect"
+
             >
               <MenuItem value="mutualFund">Mutual Fund / SIP</MenuItem>
             </Select>

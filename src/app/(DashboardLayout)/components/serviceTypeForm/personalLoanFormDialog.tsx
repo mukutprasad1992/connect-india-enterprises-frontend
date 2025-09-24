@@ -27,26 +27,36 @@ import {
     Snackbar,
     Alert,
     FormControlLabel,
-    Checkbox
+    Checkbox,
+    Autocomplete,
+    InputAdornment,
+    Tooltip,
+    Chip
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useRouter } from 'next/navigation';
+import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import { jwtDecode } from "jwt-decode";
 import ArrowDropUpOutlinedIcon from '@mui/icons-material/ArrowDropUpOutlined';
+import CloseConfirmDialog from "../CloseConfirmDialog";
 interface LoanFormData {
-    id: number;
+    id: number | null;
     motherName: string;
     landmark: string;
     email: string;
     currentAddress: string;
-    yearsOfCity: number;
+    yearsOfCity: number | null;
     alternateNo: string;
     maritalStatus: string;
     designation: string;
-    companyExp: string;
-    totalWorkExp: string;
+    companyExp: number | null;
+    totalWorkExp: number | null;
     officeAddress: string;
     officeMobile: string;
     ref1Name: string;
@@ -64,6 +74,8 @@ interface LoanFormData {
     bankStatementFileKey: File | string | null;
     submit: boolean,
     activeSteps: string,
+    serviceSubTypeName: string,
+    status: string,
 
 }
 
@@ -73,12 +85,12 @@ const defaultFormData: LoanFormData = {
     landmark: "",
     email: "",
     currentAddress: "",
-    yearsOfCity: null as any,
+    yearsOfCity: null,
     alternateNo: "",
     maritalStatus: "",
     designation: "",
-    companyExp: "",
-    totalWorkExp: "",
+    companyExp: null,
+    totalWorkExp: null,
     officeAddress: "",
     officeMobile: "",
     ref1Name: "",
@@ -95,7 +107,9 @@ const defaultFormData: LoanFormData = {
     salarySlipsFileKey: null,
     bankStatementFileKey: null,
     submit: false,
-    activeSteps: ''
+    activeSteps: '',
+    serviceSubTypeName: '',
+    status: ''
 };
 
 interface Props {
@@ -198,6 +212,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
             router.push("/authentication/login");
         }
     }, []);
+
     useEffect(() => {
         if (mode === "edit" && initialData) {
             const updatedFormData: any = { ...initialData };
@@ -231,8 +246,13 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 if (initialData.activeSteps !== "review") {
                     initialStep += statusStepMap[initialData.activeSteps] || 1;
                 }
+                else if (initialData.activeSteps === "review") {
+                    initialStep = statusStepMap[initialData.activeSteps] || 6;
+                }
                 else {
-                    initialStep = statusStepMap[initialData.activeSteps] || 1;
+                    {
+                        initialStep = statusStepMap[initialData.activeSteps] || 1;
+                    }
                 }
             }
             setStep(initialStep);
@@ -248,18 +268,26 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         setSuccess(false);
     }, [open, initialData, mode, DOCUMENT_URL]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         let formattedValue = value;
+
         if (name === "panNumber") {
-            formattedValue = value.toUpperCase();
-        } else if (["aadharNumber", "mobile", "nomineeMobile"].includes(name)) {
-            formattedValue = value.replace(/\D/g, "").slice(0, name === "aadharNumber" ? 12 : 10);
+            formattedValue = value.replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 10);
+        } else if (
+            name === "aadharNumber"
+        ) {
+            const maxLength =
+                name === "aadharNumber" ? 16 : 12;
+
+            formattedValue = value.replace(/\D/g, "").slice(0, maxLength);
         }
 
-        setFormData(prev => ({ ...prev, [name]: formattedValue }));
+        setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+            setErrors((prev) => ({ ...prev, [name]: "" }));
         }
     };
 
@@ -282,10 +310,6 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
     };
 
     const validateField = useCallback((name: keyof LoanFormData, value: string | File | null): string => {
-        if (value === null || value === "") {
-            return "This field is required";
-        }
-
         switch (name) {
             // Personal Information
             case 'motherName':
@@ -315,9 +339,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(upperValue)) return "Invalid PAN format (e.g., ABCDE1234F)";
                 return "";
 
-            case 'aadharNumber':
-                if (typeof value !== 'string') return "Invalid Aadhar input";
-                if (!/^\d{12}$/.test(value)) return "Aadhar must be exactly 12 digits";
+            case "aadharNumber":
+                if (!value) return "Aadhar number is required";
+                if (typeof value === "string" && !/^(\d{12}|\d{16})$/.test(value))
+                    return "Aadhar must be 12 or 16 digits";
                 return "";
 
             // Address Information
@@ -346,14 +371,23 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
             // Numeric Fields with Range
             case 'yearsOfCity':
             case 'companyExp':
-            case 'totalWorkExp':
-                if (typeof value !== 'string') return "Invalid number input";
-                if (!/^\d{1,2}$/.test(value)) return "Must be a number (max 2 digits)";
-                const numValue = parseInt(value, 10);
+            case 'totalWorkExp': {
+                if (value === null || value === undefined || value === "") {
+                    return "This field is required";
+                }
+
+                // make sure it's a number
+                const numValue = Number(value);
+                if (Number.isNaN(numValue)) {
+                    return "Invalid number input";
+                }
+
                 if (numValue < 0) return "Cannot be negative";
                 if (numValue > 50) return "Cannot exceed 50 years";
-                return "";
+                if (numValue.toString().length > 2) return "Must be a number (max 2 digits)";
 
+                return "";
+            }
             // Reference Names
             case 'ref1Name':
             case 'ref2Name':
@@ -364,13 +398,31 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 return "";
 
             // File Uploads
-            case 'panCardFileKey':
-            case 'aadharCardFileKey':
-            case 'photoFileKey':
-            case 'salarySlipsFileKey':
-            case 'bankStatementFileKey':
-                if (!(value instanceof File) && typeof value !== 'string') return "File is required";
+            case "aadharCardFileKey":
+                if (!value) return "Aadhar card document is required";
+                if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
                 return "";
+
+            case "panCardFileKey":
+                if (!value) return "PAN card document is required";
+                if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
+                return "";
+
+            case "photoFileKey":
+                if (!value) return "Photo is required";
+                if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
+                return "";
+
+            case "salarySlipsFileKey":
+                if (!value) return "Salary slips is required";
+                if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
+                return "";
+
+            case "bankStatementFileKey":
+                if (!value) return "Bank statement is required";
+                if (!(typeof value === "string" || value instanceof File)) return "Invalid file input";
+                return "";
+
 
             default:
                 return "";
@@ -407,7 +459,9 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
             case 5:
                 validateFields([
                     'panCardFileKey',
-                    'aadharCardFileKey', 'photoFileKey', 'salarySlipsFileKey',
+                    'aadharCardFileKey',
+                    'photoFileKey',
+                    'salarySlipsFileKey',
                     'bankStatementFileKey'
                 ]);
                 break;
@@ -418,9 +472,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
     }, [step, formData, validateField]);
 
     const handleNext = async () => {
-        console.log("-------handle next button");
         const isValid = validateStep();
-        console.log("-------isValid-------", isValid);
         if (!isValid) {
             if (step === 5) {
                 setErrors((prev) => ({
@@ -448,13 +500,21 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                     ];
                     if (file instanceof File) {
                         const key = await uploadFileToServer(file, folder);
+                        if (!key) {
+                            setErrors((prev) => ({
+                                ...prev,
+                                form: `Failed to upload ${field}. Please try again.`,
+                            }));
+                            return;
+                        }
+
                         (formData as any)[field] = key;
                     }
                 }
                 await saveStepData(step);
                 setInitialFormData(formData);
                 setStep((prev) => prev + 1);
-                setMaxAllowedStep(5);
+                setMaxAllowedStep(6);
                 return;
             }
 
@@ -482,7 +542,6 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
             if (!stepKey) return;
 
             let stepData: Partial<LoanFormData> = {};
-            console.log("-----------stepKey---------", stepKey)
             switch (stepKey) {
                 case "personalDetails":
                     stepData = {
@@ -497,7 +556,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 case "contactDetails":
                     stepData = {
                         yearsOfCity: formData.yearsOfCity,
-                        alternateNo: formData.alternateNo,
+                        alternateNo: formData.alternateNo ? `+91 ${formData.alternateNo}` : undefined,
                         landmark: formData.landmark
                     };
                     break;
@@ -507,17 +566,17 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         designation: formData.designation,
                         companyExp: formData.companyExp,
                         totalWorkExp: formData.totalWorkExp,
-                        officeMobile: formData.officeMobile,
+                        officeMobile: formData.officeMobile ? `+91 ${formData.officeMobile}` : undefined,
                         officeAddress: formData.officeAddress
                     };
                     break;
                 case "referenceDetails":
                     stepData = {
                         ref1Name: formData.ref1Name,
-                        ref1Mobile: formData.ref1Mobile,
+                        ref1Mobile: formData.ref1Mobile ? `+91 ${formData.ref1Mobile}` : undefined,
                         ref1Address: formData.ref1Address,
                         ref2Name: formData.ref2Name,
-                        ref2Mobile: formData.ref2Mobile,
+                        ref2Mobile: formData.ref2Mobile ? `+91 ${formData.ref2Mobile}` : undefined,
                         ref2Address: formData.ref2Address
                     };
                     break;
@@ -545,7 +604,6 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 serviceSubType: "Personal loans",
                 status: "Pending",
             };
-            console.log("payload", payload)
             if (formData.id) {
                 const response = await axios.put(
                     `${BASE_URL}/loan/updateLoanById/${formData.id || serviceId}`,
@@ -588,7 +646,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
             setErrors(prev => ({ ...prev, [name]: error }));
         }
     };
-    const uploadFileToServer = async (file: File, folderName: string): Promise<string> => {
+    const uploadFileToServer = async (file: File, folderName: string): Promise<any> => {
         const token = localStorage.getItem('accessToken');
         if (!token) throw new Error('No authentication token found');
 
@@ -598,22 +656,47 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         formData.append('description', 'Insurance document');
         formData.append('folderName', folderName);
 
-        const response = await axios.post(
-            `${BASE_URL}/uploadDocumentSerciceTypeFile/dynamic`,
-            formData,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
+        try {
+            const response = await axios.post(
+                `${BASE_URL}/uploadDocumentSerciceTypeFile/dynamic`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
                 }
+            );
+
+            if (response.data?.status) {
+                setSnackbarSeverity("success");
+                setSnackbarMessage("File uploaded successfully.");
+                setSnackbarOpen(true);
+                return response.data.result?.key;
             }
-        );
 
-        if (!response.data.status) {
-            throw new Error(response.data.message || 'File upload failed');
+            // API returned status=false
+            setSnackbarSeverity("error");
+            setSnackbarMessage("Upload failed. Please try again.");
+            setSnackbarOpen(true);
+            return null;
+
+        } catch (error: any) {
+            let message = "An unexpected error occurred.";
+
+            if (error.response) {
+                message = "No response from server. Please check your network connection.";
+            } else if (error.request) {
+                message = "No response from server. Please check your network connection.";
+            } else {
+                message = "No response from server. Please check your network connection.";
+            }
+            setSavingStep(false);
+            setSnackbarSeverity("error");
+            setSnackbarMessage(message);
+            setSnackbarOpen(true);
+            return null;
         }
-
-        return response.data.result.key;
     };
 
     const handleStepClick = async (targetStep: number) => {
@@ -638,6 +721,85 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         }
     };
 
+    const renderFilePreviewDialog = () => (
+        <Dialog
+            open={openPreviewDialog}
+            onClose={() => setOpenPreviewDialog(false)}
+            BackdropProps={{
+                style: { backgroundColor: 'transparent' }
+            }}
+            fullScreen={fullScreen}
+            maxWidth="lg"
+            PaperProps={{
+                sx: {
+                    width: fullScreen ? "100%" : 400,
+                    height: fullScreen ? "100%" : 400,
+                    maxHeight: "95vh",
+                    maxWidth: fullScreen ? "95vw" : "400px",
+                    borderRadius: fullScreen ? 0 : "12px",
+                    p: 1,
+                },
+            }}
+        >
+            {/* Header */}
+            <Grid
+                container
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ borderBottom: "1px solid #eee", pb: 1 }}
+            >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    File Preview
+                </Typography>
+                <Box>
+                    <IconButton onClick={() => setFullScreen(!fullScreen)}>
+                        {fullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                    </IconButton>
+                    <IconButton onClick={() => setOpenPreviewDialog(false)}>
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
+            </Grid>
+
+            {/* Content */}
+            <Box
+                sx={{
+                    mt: 2,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: fullScreen ? "100%" : 350,
+                    overflow: "hidden",
+                }}
+            >
+                {dialogFileUrl && dialogFileType === "image" && (
+                    <img
+                        src={dialogFileUrl}
+                        alt="preview"
+                        style={{
+                            maxWidth: "100%",
+                            maxHeight: "100%",
+                            objectFit: "contain",
+                            borderRadius: "8px",
+                        }}
+                    />
+                )}
+                {dialogFileUrl && dialogFileType === "pdf" && (
+                    <iframe
+                        src={dialogFileUrl}
+                        title="pdf-preview"
+                        style={{
+                            width: "100%",
+                            height: "100%",
+                            border: "none",
+                            borderRadius: "8px",
+                        }}
+                    />
+                )}
+            </Box>
+        </Dialog>
+    );
+
     const handleClose = () => {
         setCloseConfirmDialog(true);
     };
@@ -647,8 +809,9 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         setErrors({});
         setSuccess(false);
         setFormData(defaultFormData);
-        setMaxAllowedStep(1);
+        setMaxAllowedStep(1)
         onClose();
+
 
         if (onSuccess) {
             onSuccess();
@@ -711,51 +874,189 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         }
     };
 
+
     const renderFileUpload = (label: string, name: keyof LoanFormData) => {
         const fileValue = formData[name];
         const error = errors[name];
-        const previewUrl = filePreviewUrls[name] || (fileValue instanceof File ? URL.createObjectURL(fileValue) : null);
+
+        const previewUrl =
+            filePreviewUrls[name] ||
+            (fileValue instanceof File
+                ? URL.createObjectURL(fileValue)
+                : typeof fileValue === "string" && fileValue
+                    ? `${DOCUMENT_URL}/${fileValue}`
+                    : null);
+
+        const fileName =
+            fileValue instanceof File
+                ? fileValue.name
+                : typeof fileValue === "string" && fileValue !== ""
+                    ? fileValue.split("/").pop() || "Uploaded File"
+                    : filePreviewUrls[name]
+                        ? "Uploaded File"
+                        : "";
+
+        const isImage =
+            fileName.toLowerCase().endsWith(".jpg") ||
+            fileName.toLowerCase().endsWith(".jpeg") ||
+            fileName.toLowerCase().endsWith(".png");
+        const isPdf = fileName.toLowerCase().endsWith(".pdf");
+
+        const handleRemoveFileConfirm = () => {
+            if (fileToRemove) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [fileToRemove]: "",
+                }));
+                setFilePreviewUrls((prev) => ({
+                    ...prev,
+                    [fileToRemove]: "",
+                }));
+            }
+            setFileToRemove(null);
+            setOpenConfirmDialog(false);
+        };
 
         return (
-            <Grid item {...gridSpacing}>
-                <FormControl fullWidth error={!!error}>
-                    <InputLabel shrink sx={{ transform: 'none', position: 'relative', mb: 1 }}>
-                        {label}
-                        <span style={{ color: 'red' }}>*</span>
-                    </InputLabel>
-                    <Button
-                        component="label"
-                        fullWidth
-                        variant={fileValue ? "contained" : "outlined"}
-                        startIcon={<AttachFileIcon />}
-                        disabled={loading}
-                    >
-                        {fileValue ? (fileValue instanceof File ? fileValue.name : 'Uploaded') : 'Choose File'}
-                        <input
-                            hidden
-                            type="file"
-                            name={name}
-                            accept="image/*,application/pdf"
-                            onChange={handleFileChange}
-                            disabled={loading}
-                        />
-                    </Button>
-                    {previewUrl && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            <Link href={previewUrl} target="_blank" rel="noopener">
-                                {fileValue instanceof File ? 'Preview Document' : 'View Document'}
-                            </Link>
+            <>
+                <Grid item xs={12}>
+                    <FormControl fullWidth error={!!error}>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 1,
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 2,
+                                "&:hover": { borderColor: "primary.main", boxShadow: 2 },
+                            }}
+                        >
+                            <Grid container alignItems="center" spacing={1}>
+                                {/* 1. Label */}
+                                <Grid item xs={12} sm={3}>
+                                    <Typography variant="body1" sx={{ fontWeight: 600, ml: 3, fontSize: 11 }}>
+                                        {label} <span style={{ color: "red" }}>*</span>
+                                    </Typography>
+                                </Grid>
+
+                                {/* 2. File Name */}
+                                <Grid item xs={12} sm={5}>
+                                    {fileName ? (
+                                        <Tooltip title={fileName || "No file chosen"} arrow>
+                                            <Chip
+                                                icon={<InsertDriveFileIcon />}
+                                                label={fileName}
+                                                variant="outlined"
+                                                sx={{
+                                                    maxWidth: "100%",
+                                                    textOverflow: "ellipsis",
+                                                    overflow: "hidden",
+                                                    fontSize: 11
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary" sx={{ pl: 15 }}>
+                                            No file chosen
+                                        </Typography>
+                                    )}
+                                </Grid>
+
+                                {/* 3. Actions (Preview + Remove) */}
+                                <Grid item xs={12} sm={1} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    {previewUrl && (isImage || isPdf) && (
+                                        <Tooltip title="Preview">
+                                            <IconButton
+                                                onClick={() => {
+                                                    setDialogFileUrl(previewUrl);
+                                                    setDialogFileType(isImage ? "image" : "pdf");
+                                                    setFullScreen(false);
+                                                    setOpenPreviewDialog(true);
+                                                }}
+                                                size="small"
+                                            >
+                                                <FileOpenOutlinedIcon fontSize="small" sx={{ color: "blue" }} />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+
+                                    {fileName && (
+                                        <Tooltip title="Remove">
+                                            <IconButton
+                                                onClick={() => {
+                                                    setFileToRemove(name);
+                                                    setOpenConfirmDialog(true);
+                                                }}
+                                                size="small"
+                                                color="error"
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </Grid>
+
+                                {/* 4. Upload Button */}
+                                <Grid item xs={12} sm={2.5}>
+                                    <Button
+                                        component="label"
+                                        variant={fileValue ? "contained" : "outlined"}
+                                        startIcon={<AttachFileIcon />}
+                                        disabled={!!fileValue || !!filePreviewUrls[name] || loading}
+                                        color="secondary"
+                                        className={`customUploadBtn ${fileValue ? "uploaded" : ""}`}
+
+                                    >
+                                        {fileValue || filePreviewUrls[name] ? "File Uploaded" : "Choose File"}
+                                        <input
+                                            hidden
+                                            type="file"
+                                            name={name}
+                                            accept="image/*,application/pdf"
+                                            onChange={handleFileChange}
+                                            disabled={!!fileValue || !!filePreviewUrls[name] || loading}
+                                        />
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                        {error && (
+                            <Typography variant="caption" color="error" sx={{ mt: .1, ml: .7, display: "block" }}>
+                                {error}
+                            </Typography>
+                        )}
+                    </FormControl>
+
+                </Grid >
+                <Dialog
+                    open={openConfirmDialog}
+                    onClose={() => setOpenConfirmDialog(false)}
+                    BackdropProps={{
+                        style: { backgroundColor: 'transparent' }
+                    }}
+                >
+                    <DialogTitle>Confirm Delete</DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            Are you sure you want to remove this file?
                         </Typography>
-                    )}
-                    {error && (
-                        <Typography color="error" variant="caption" sx={{ display: 'block', mt: 0.5 }}>
-                            {error}
-                        </Typography>
-                    )}
-                </FormControl>
-            </Grid>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenConfirmDialog(false)} color="inherit">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleRemoveFileConfirm}
+                            color="error"
+                            variant="contained"
+                        >
+                            Confirm
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </>
         );
     };
+
     const renderReviewItem = (label: string, value: any) => {
         if (value === null || value === undefined || value === "") return null;
 
@@ -911,6 +1212,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 inputProps={{
                                     maxLength: 10
                                 }}
+                                className="customTextField"
                             />
                         </Grid>
                         <Grid item {...gridSpacing}>
@@ -923,16 +1225,13 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 error={!!errors.aadharNumber}
                                 helperText={errors.aadharNumber}
                                 disabled={loading}
-                                inputProps={{
-                                    maxLength: 12,
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                }}
+                                inputProps={{ maxLength: 16, inputMode: "numeric", pattern: "[0-9]*" }}
                                 onKeyPress={(e: React.KeyboardEvent) => {
                                     if (!/[0-9]/.test(e.key)) {
                                         e.preventDefault();
                                     }
                                 }}
+                                className="customTextField"
                             />
                         </Grid>
                         <Grid item {...gridSpacing} >
@@ -949,27 +1248,32 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 inputProps={{
                                     maxLength: 50
                                 }}
+                                className="customTextField"
                             />
                         </Grid>
                         <Grid item {...gridSpacing}>
                             <FormControl fullWidth error={!!errors.maritalStatus}>
-                                <InputLabel>Marital Status <span style={{ color: 'red' }}>*</span></InputLabel>
-                                <Select
-                                    name="maritalStatus"
-                                    value={formData.maritalStatus}
-                                    onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value as string })}
-                                    label="Marital Status"
+                                <Autocomplete
+                                    className="customAutocomplete"
+                                    options={maritalStatusOptions}
+                                    value={formData.maritalStatus || null}
+                                    onChange={(_, newValue) =>
+                                        setFormData({ ...formData, maritalStatus: newValue || "" })
+                                    }
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label={
+                                                <>
+                                                    Marital Status <span style={{ color: "red" }}>*</span>
+                                                </>
+                                            }
+                                            error={!!errors.maritalStatus}
+                                            helperText={errors.maritalStatus}
+                                        />
+                                    )}
                                     disabled={loading}
-                                >
-                                    {maritalStatusOptions.map(option => (
-                                        <MenuItem key={option} value={option}>{option}</MenuItem>
-                                    ))}
-                                </Select>
-                                {errors.maritalStatus && (
-                                    <Typography color="error" variant="caption">
-                                        {errors.maritalStatus}
-                                    </Typography>
-                                )}
+                                />
                             </FormControl>
                         </Grid>
                         <Grid item xs={12}>
@@ -983,8 +1287,9 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 error={!!errors.currentAddress}
                                 helperText={errors.currentAddress}
                                 disabled={loading}
-                                multiline
-                                rows={3}
+                                className="customTextField"
+                                // multiline
+                                // rows={3}
                                 inputProps={{
                                     maxLength: 200
                                 }}
@@ -997,30 +1302,38 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                     <Grid container spacing={2}>
                         <Grid item {...gridSpacing}>
                             <TextField
+
                                 fullWidth
-                                label={<span>Years in Current City <span style={{ color: 'red' }}>*</span></span>}
+                                label={
+                                    <span>
+                                        Years in Current City <span style={{ color: "red" }}>*</span>
+                                    </span>
+                                }
                                 name="yearsOfCity"
-                                value={formData.yearsOfCity || ""}
-                                onChange={handleInputChange}
+                                className="customTextField"
+                                value={formData.yearsOfCity !== null ? formData.yearsOfCity : ""}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, "");
+                                    setFormData({
+                                        ...formData,
+                                        yearsOfCity: value ? Number(value) : null,
+                                    });
+                                }}
                                 onBlur={handleBlur}
                                 error={!!errors.yearsOfCity}
-                                helperText={errors.yearsOfCity || "Number of years (max 50)"}
+                                helperText={errors.yearsOfCity}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 2,
-                                    inputMode: 'numeric',
-                                    pattern: '[0-9]*',
-                                }}
-                                onKeyPress={(e: React.KeyboardEvent) => {
-                                    if (!/[0-9]/.test(e.key)) {
-                                        e.preventDefault();
-                                    }
+                                    inputMode: "numeric",
+                                    pattern: "[0-9]*",
                                 }}
                             />
                         </Grid>
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Alternate Number <span style={{ color: 'red' }}>*</span></span>}
                                 name="alternateNo"
                                 value={formData.alternateNo || ""}
@@ -1039,11 +1352,31 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                 error={!!errors.alternateNo}
                                 helperText={errors.alternateNo || "10 digit mobile number"}
                                 disabled={loading}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment
+                                            position="start"
+                                            sx={{
+                                                marginRight: "0px",
+                                                pt: 0.2,
+                                                "& .MuiTypography-root": {
+                                                    fontSize: "11px",
+                                                },
+                                            }}
+                                        >
+                                            +91
+                                        </InputAdornment>
+                                    ),
+                                    inputProps: {
+                                        maxLength: 10,
+                                    },
+                                }}
                             />
                         </Grid>
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Landmark <span style={{ color: 'red' }}>*</span></span>}
                                 name="landmark"
                                 value={formData.landmark || ""}
@@ -1065,9 +1398,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Designation <span style={{ color: 'red' }}>*</span></span>}
                                 name="designation"
-                                value={formData.designation}
+                                value={formData.designation || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.designation}
@@ -1081,13 +1415,14 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Company Experience (Years) <span style={{ color: 'red' }}>*</span></span>}
                                 name="companyExp"
-                                value={formData.companyExp}
+                                value={formData.companyExp || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.companyExp}
-                                helperText={errors.companyExp || "Number of years (max 50)"}
+                                helperText={errors.companyExp}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 2,
@@ -1104,13 +1439,14 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Total Work Experience (Years) <span style={{ color: 'red' }}>*</span></span>}
                                 name="totalWorkExp"
-                                value={formData.totalWorkExp}
+                                value={formData.totalWorkExp || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.totalWorkExp}
-                                helperText={errors.totalWorkExp || "Number of years (max 50)"}
+                                helperText={errors.totalWorkExp}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 2,
@@ -1127,13 +1463,14 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Office Mobile <span style={{ color: 'red' }}>*</span></span>}
                                 name="officeMobile"
-                                value={formData.officeMobile}
+                                value={formData.officeMobile || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.officeMobile}
-                                helperText={errors.officeMobile || "10 digit mobile number"}
+                                helperText={errors.officeMobile}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 10,
@@ -1145,14 +1482,34 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                         e.preventDefault();
                                     }
                                 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment
+                                            position="start"
+                                            sx={{
+                                                marginRight: "0px",
+                                                pt: 0.2,
+                                                "& .MuiTypography-root": {
+                                                    fontSize: "11px",
+                                                },
+                                            }}
+                                        >
+                                            +91
+                                        </InputAdornment>
+                                    ),
+                                    inputProps: {
+                                        maxLength: 10,
+                                    },
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Office Address <span style={{ color: 'red' }}>*</span></span>}
                                 name="officeAddress"
-                                value={formData.officeAddress}
+                                value={formData.officeAddress || " "}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.officeAddress}
@@ -1173,9 +1530,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Reference 1 Name <span style={{ color: 'red' }}>*</span></span>}
                                 name="ref1Name"
-                                value={formData.ref1Name}
+                                value={formData.ref1Name || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.ref1Name}
@@ -1189,13 +1547,14 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Reference 1 Mobile <span style={{ color: 'red' }}>*</span></span>}
                                 name="ref1Mobile"
-                                value={formData.ref1Mobile}
+                                value={formData.ref1Mobile || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.ref1Mobile}
-                                helperText={errors.ref1Mobile || "10 digit mobile number"}
+                                helperText={errors.ref1Mobile}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 10,
@@ -1207,21 +1566,41 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                         e.preventDefault();
                                     }
                                 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment
+                                            position="start"
+                                            sx={{
+                                                marginRight: "0px",
+                                                pt: 0.2,
+                                                "& .MuiTypography-root": {
+                                                    fontSize: "11px",
+                                                },
+                                            }}
+                                        >
+                                            +91
+                                        </InputAdornment>
+                                    ),
+                                    inputProps: {
+                                        maxLength: 10,
+                                    },
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Reference 1 Address <span style={{ color: 'red' }}>*</span></span>}
                                 name="ref1Address"
-                                value={formData.ref1Address}
+                                value={formData.ref1Address || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.ref1Address}
                                 helperText={errors.ref1Address}
                                 disabled={loading}
-                                multiline
-                                rows={2}
+                                // multiline
+                                // rows={2}
                                 inputProps={{
                                     maxLength: 200
                                 }}
@@ -1230,9 +1609,10 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Reference 2 Name <span style={{ color: 'red' }}>*</span></span>}
                                 name="ref2Name"
-                                value={formData.ref2Name}
+                                value={formData.ref2Name || ""}
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
                                 error={!!errors.ref2Name}
@@ -1246,12 +1626,13 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                         <Grid item {...gridSpacing}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Reference 2 Mobile <span style={{ color: 'red' }}>*</span></span>}
                                 name="ref2Mobile"
-                                value={formData.ref2Mobile}
+                                value={formData.ref2Mobile || ""}
                                 onChange={handleInputChange}
                                 error={!!errors.ref2Mobile}
-                                helperText={errors.ref2Mobile || "10 digit mobile number"}
+                                helperText={errors.ref2Mobile}
                                 disabled={loading}
                                 inputProps={{
                                     maxLength: 10,
@@ -1263,20 +1644,40 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                                         e.preventDefault();
                                     }
                                 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment
+                                            position="start"
+                                            sx={{
+                                                marginRight: "0px",
+                                                pt: 0.2,
+                                                "& .MuiTypography-root": {
+                                                    fontSize: "11px",
+                                                },
+                                            }}
+                                        >
+                                            +91
+                                        </InputAdornment>
+                                    ),
+                                    inputProps: {
+                                        maxLength: 10,
+                                    },
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
                                 fullWidth
+                                className="customTextField"
                                 label={<span>Reference 2 Address <span style={{ color: 'red' }}>*</span></span>}
                                 name="ref2Address"
-                                value={formData.ref2Address}
+                                value={formData.ref2Address || ""}
                                 onChange={handleInputChange}
                                 error={!!errors.ref2Address}
                                 helperText={errors.ref2Address}
                                 disabled={loading}
-                                multiline
-                                rows={2}
+                                // multiline
+                                // rows={2}
                                 inputProps={{
                                     maxLength: 200
                                 }}
@@ -1286,13 +1687,16 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 );
             case 5:
                 return (
-                    <Grid container spacing={2}>
-                        {renderFileUpload("Upload PAN Card", "panCardFileKey")}
-                        {renderFileUpload("Upload Aadhar Card", "aadharCardFileKey")}
-                        {renderFileUpload("Upload Photo", "photoFileKey")}
-                        {renderFileUpload("Upload 3 Month Salary Slips", "salarySlipsFileKey")}
-                        {renderFileUpload("Upload 3 Month Bank Statement", "bankStatementFileKey")}
-                    </Grid>
+                    <>
+                        <Grid container spacing={2}>
+                            {renderFileUpload("PAN Card", "panCardFileKey")}
+                            {renderFileUpload("Aadhar Card", "aadharCardFileKey")}
+                            {renderFileUpload("Photo", "photoFileKey")}
+                            {renderFileUpload("3 Month Salary Slips", "salarySlipsFileKey")}
+                            {renderFileUpload("3 Month Bank Statement", "bankStatementFileKey")}
+                        </Grid>
+                        {renderFilePreviewDialog()}
+                    </>
                 );
             case 6:
                 return renderReviewStep();
@@ -1307,7 +1711,21 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+            <Dialog open={open} onClose={(event, reason) => {
+                if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                    handleClose();
+                }
+            }}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        height: "400px",
+                        maxHeight: "80vh",
+                        display: "flex",
+                        flexDirection: "column",
+                    },
+                }}>
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Typography variant="h6">
@@ -1325,7 +1743,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                             const completed =
                                 stepNumber < step ||
                                 (stepNumber < maxAllowedStep && stepNumber !== step) ||
-                                (isReviewSubmitted && stepNumber === 5);
+                                (isReviewSubmitted && stepNumber === 6);
                             const isEditable = stepNumber <= maxAllowedStep;
                             const isActive = stepNumber === step;
                             return (
@@ -1428,22 +1846,11 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                     </DialogActions>
                 )}
             </Dialog>
-            <Dialog open={closeConfirmDialog} onClose={handleCancelClose}>
-                <DialogTitle>Are you sure?</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Do you really want to close?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelClose} color="secondary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmClose} color="primary" variant="contained">
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <CloseConfirmDialog
+                open={closeConfirmDialog}
+                handleCancelClose={handleCancelClose}
+                handleConfirmClose={handleConfirmClose}
+            />
             <Snackbar
                 // open={true}
                 open={snackbarOpen}

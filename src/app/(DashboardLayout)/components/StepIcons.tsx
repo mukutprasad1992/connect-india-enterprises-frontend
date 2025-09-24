@@ -31,21 +31,21 @@ function LiquidFillIcon({
         >
             <defs>
                 <clipPath id="clipCircle">
-                    <circle cx="12" cy="12" r="12" />
+                    <circle cx="8" cy="8" r="8" />
                 </clipPath>
             </defs>
             <circle
-                cx="12"
-                cy="12"
-                r="11"
+                cx="8"
+                cy="8"
+                r="7"
                 stroke={fillColor}
                 strokeWidth="2"
                 fill="none"
             />
             <rect
                 x="0"
-                y={24 - fill}
-                width="24"
+                y={16 - fill}
+                width="16"
                 height={fill}
                 fill={fillColor}
                 clipPath="url(#clipCircle)"
@@ -57,15 +57,15 @@ function LiquidFillIcon({
     );
 }
 export function InProgressStepIcon(props: SvgIconProps) {
-    return <LiquidFillIcon {...props} fillColor="#4caf50" defaultFill={12} />;
+    return <LiquidFillIcon {...props} fillColor="#4caf50" defaultFill={8} />;
 }
 
 export function CompleteStepIcon(props: SvgIconProps) {
     return (
-        <LiquidFillIcon {...props} fillColor="#4caf50" defaultFill={24}>
+        <LiquidFillIcon {...props} fillColor="#4caf50" defaultFill={16}>
             <path
-                d="M7.5 12.5l3 3 6-6"
-                stroke="#ffffffff"
+                d="M4.5 8.5l3 3 6-6" // ✅ adjusted tick path
+                stroke="#ffffff"
                 strokeWidth="2"
                 fill="none"
                 strokeLinecap="round"
@@ -74,6 +74,7 @@ export function CompleteStepIcon(props: SvgIconProps) {
         </LiquidFillIcon>
     );
 }
+
 export default function InCompleteStepIcon(props: SvgIconProps) {
-    return <LiquidFillIcon {...props} fillColor="#2196f3" defaultFill={24} />;
+    return <LiquidFillIcon {...props} fillColor="#2196f3" defaultFill={16} />;
 }

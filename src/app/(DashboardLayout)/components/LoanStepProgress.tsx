@@ -3,14 +3,15 @@ import InCompleteStepIcon, { CompleteStepIcon, InProgressStepIcon } from "./Step
 import { Button, Grid, IconButton, Tooltip } from "@mui/material";
 
 const steps = {
-    basicDetails: 10,
     personalDetails: 10,
-    nomineeDetails: 10,
+    contactDetails: 10,
+    employmentDetails: 10,
+    referenceDetails: 10,
     documents: 10,
     review: 10,
 };
 
-export default function StepProgress({ activeStep }: any) {
+export default function LoanStepProgress({ activeStep }: any) {
 
     const [stepsUpdate, setUpdateSteps] = useState(steps);
 
@@ -42,74 +43,99 @@ export default function StepProgress({ activeStep }: any) {
                 spacing={0}
                 alignItems="center">
                 {
-                    stepsUpdate.basicDetails === 30 ?
+                    stepsUpdate.personalDetails === 30 ?
                         <Grid item>
-                            <Tooltip title={stepsUpdate.basicDetails === 30 ? "Basic Details" : "Basic Details"}>
-                                <IconButton sx={{ p: 0.1 }}>
+                            <Tooltip title={stepsUpdate.personalDetails === 30 ? "Personal Details" : "Personal Details"}>
+                                <IconButton sx={{ p: 0.2 }}>
                                     <CompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                 </IconButton>
                             </Tooltip>
                         </Grid> :
-                        (stepsUpdate.basicDetails === 20 ?
-                            <Tooltip title={stepsUpdate.basicDetails === 20 ? "Basic Details" : "Basic Details"}>
+                        (stepsUpdate.personalDetails === 20 ?
+                            <Tooltip title={stepsUpdate.personalDetails === 20 ? "Personal Details" : "Personal Details"}>
                                 <Grid item>
-                                    <IconButton sx={{ p: 0.1 }} >
+                                    <IconButton sx={{ p: 0.2 }} >
                                         <InProgressStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton></Grid>
                             </Tooltip> :
-                            <Tooltip title={stepsUpdate.basicDetails === 10 ? "Basic Details" : "Basic Details"}>
+                            <Tooltip title={stepsUpdate.personalDetails === 10 ? "Personal Details" : "Personal Details"}>
                                 <Grid item>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InCompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Grid>
                             </Tooltip>)
                 }
                 {
-                    stepsUpdate.personalDetails === 30 ?
+                    stepsUpdate.contactDetails === 30 ?
                         <Grid item>
-                            <Tooltip title={stepsUpdate.personalDetails === 30 ? "Personal Details" : "personal Details"}>
-                                <IconButton sx={{ p: 0.1 }}>
+                            <Tooltip title={stepsUpdate.contactDetails === 30 ? "Contact Details" : "Contact Details"}>
+                                <IconButton sx={{ p: 0.2 }}>
                                     <CompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                 </IconButton>
                             </Tooltip>
                         </Grid> :
-                        (stepsUpdate.personalDetails === 20 ?
+                        (stepsUpdate.contactDetails === 20 ?
                             <Grid item>
-                                <Tooltip title={stepsUpdate.personalDetails === 20 ? "Personal Details" : "personal Details"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                <Tooltip title={stepsUpdate.contactDetails === 20 ? "Contact Details" : "Contact Details"}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InProgressStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
                             </Grid> :
                             <Grid item>
-                                <Tooltip title={stepsUpdate.personalDetails === 10 ? "Personal Details" : "personal Details"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                <Tooltip title={stepsUpdate.contactDetails === 10 ? "Contact Details" : "Contact Details"}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InCompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
                             </Grid>)
                 }
                 {
-                    stepsUpdate.nomineeDetails === 30 ?
+                    stepsUpdate.employmentDetails === 30 ?
                         <Grid item>
-                            <Tooltip title={stepsUpdate.nomineeDetails === 30 ? "Nominee Details" : "Nominee Details"}>
-                                <IconButton sx={{ p: 0.1 }}>
+                            <Tooltip title={stepsUpdate.employmentDetails === 30 ? "Employment Details" : "Employment Details"}>
+                                <IconButton sx={{ p: 0.2 }}>
                                     <CompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                 </IconButton>
                             </Tooltip>
                         </Grid> :
-                        (stepsUpdate.nomineeDetails === 20 ?
+                        (stepsUpdate.employmentDetails === 20 ?
                             <Grid item>
-                                <Tooltip title={stepsUpdate.nomineeDetails === 20 ? "Nominee Details" : "Nominee Details"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                <Tooltip title={stepsUpdate.employmentDetails === 20 ? "Employment Details" : "Employment Details"}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InProgressStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
                             </Grid> :
                             <Grid item>
-                                <Tooltip title={stepsUpdate.nomineeDetails === 10 ? "Nominee Details" : "Nominee Details"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                <Tooltip title={stepsUpdate.employmentDetails === 10 ? "Employment Details" : "Employment Details"}>
+                                    <IconButton sx={{ p: 0.2 }}>
+                                        <InCompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
+                                    </IconButton>
+                                </Tooltip>
+                            </Grid>)
+                }
+                {
+                    stepsUpdate.referenceDetails === 30 ?
+                        <Grid item>
+                            <Tooltip title={stepsUpdate.referenceDetails === 30 ? "Reference Details" : "Reference Details"}>
+                                <IconButton sx={{ p: 0.2 }}>
+                                    <CompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
+                                </IconButton>
+                            </Tooltip>
+                        </Grid> :
+                        (stepsUpdate.referenceDetails === 20 ?
+                            <Grid item>
+                                <Tooltip title={stepsUpdate.referenceDetails === 20 ? "Reference Details" : "Reference Details"}>
+                                    <IconButton sx={{ p: 0.2 }}>
+                                        <InProgressStepIcon sx={{ fontSize: 15, color: "green" }} />
+                                    </IconButton>
+                                </Tooltip>
+                            </Grid> :
+                            <Grid item>
+                                <Tooltip title={stepsUpdate.referenceDetails === 10 ? "Reference Details" : "Reference Details"}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InCompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
@@ -119,7 +145,7 @@ export default function StepProgress({ activeStep }: any) {
                     stepsUpdate.documents === 30 ?
                         <Grid item>
                             <Tooltip title={stepsUpdate.documents === 30 ? "documents" : "documents"}>
-                                <IconButton sx={{ p: 0.1 }}>
+                                <IconButton sx={{ p: 0.2 }}>
                                     <CompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                 </IconButton>
                             </Tooltip>
@@ -127,14 +153,14 @@ export default function StepProgress({ activeStep }: any) {
                         (stepsUpdate.documents === 20 ?
                             <Grid item>
                                 <Tooltip title={stepsUpdate.documents === 20 ? "documents" : "documents"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InProgressStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
                             </Grid> :
                             <Grid item>
                                 <Tooltip title={stepsUpdate.documents === 10 ? "documents" : "documents"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InCompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
@@ -144,7 +170,7 @@ export default function StepProgress({ activeStep }: any) {
                     stepsUpdate.review === 30 ?
                         <Grid item>
                             <Tooltip title={stepsUpdate.review === 30 ? "review" : "review"}>
-                                <IconButton sx={{ p: 0.1 }}>
+                                <IconButton sx={{ p: 0.2 }}>
                                     <CompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                 </IconButton>
                             </Tooltip>
@@ -152,14 +178,14 @@ export default function StepProgress({ activeStep }: any) {
                         (stepsUpdate.review === 20 ?
                             <Grid item>
                                 <Tooltip title={stepsUpdate.review === 20 ? "review" : "review"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InProgressStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>
                             </Grid> :
                             <Grid item>
                                 <Tooltip title={stepsUpdate.review === 10 ? "review" : "review"}>
-                                    <IconButton sx={{ p: 0.1 }}>
+                                    <IconButton sx={{ p: 0.2 }}>
                                         <InCompleteStepIcon sx={{ fontSize: 15, color: "green" }} />
                                     </IconButton>
                                 </Tooltip>

@@ -22,6 +22,8 @@ import { Person, VpnKey } from "@mui/icons-material";
 import axios from "axios";
 import ChangePasswordDialog from "../../components/changePassword/changePassword";
 import { jwtDecode } from "jwt-decode";
+import CloseConfirmDialog from "../CloseConfirmDialog";
+import LogOutConfirmDialog from "../LogOutConfirmDialog";
 
 interface ProfileData {
   firstName: string;
@@ -162,20 +164,11 @@ const Profile = () => {
           </Box>
         </Menu>
         <ChangePasswordDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-        <Dialog open={openLogoutDialog} onClose={handleLogoutCancel}>
-          <DialogTitle>Confirm Logout</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to logout?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleLogoutCancel} variant="outlined" color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleLogoutConfirm} variant="contained" color="error">
-              Log Out
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <LogOutConfirmDialog
+          open={openLogoutDialog}
+          handleCancelClose={handleLogoutCancel}
+          handleConfirmClose={handleLogoutConfirm}
+        />
       </Box>
     </>
   );

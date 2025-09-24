@@ -47,6 +47,7 @@ import { formatDate } from "@/utils/utils";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 import { error } from "console";
+import CloseConfirmDialog from "../CloseConfirmDialog";
 
 type FilePreviewUrls = {
     panCardFileKey?: string;
@@ -686,141 +687,56 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
             throw error;
         }
     };
-    const validateStep = (): boolean => {
+    const validateStep = useCallback(() => {
         const newErrors: Record<string, string> = {};
+        let isValid = true;
 
-        const runValidation = (field: string, value: any) => {
-            let message = "";
+        switch (step) {
+            case 1:
+                (['aadharNumber', 'panNumber'] as (keyof LifeInsuranceData)[]).forEach(field => {
+                    const error = validateField(field, formData[field] as string | File | null);
+                    if (error) {
+                        newErrors[field] = error;
+                        isValid = false;
+                    }
+                });
+                break;
+            case 2:
+                (['heightCM', 'weightKG', 'placeOfBirth', 'income', 'occupation', 'motherName', 'placeOfBirth', 'smoker', 'alcohol'] as (keyof LifeInsuranceData)[]).forEach(field => {
+                    const error = validateField(field, formData[field as keyof LifeInsuranceData] as string | File | null);
+                    if (error) {
+                        newErrors[field] = error;
+                        isValid = false;
+                    }
+                });
+                break;
+            case 3:
+                (['nomineeName', 'nomineeDOB', 'nomineeRelation'] as (keyof LifeInsuranceData)[]).forEach(field => {
+                    const error = validateField(field, formData[field as keyof LifeInsuranceData] as string | File | null);
+                    if (error) {
+                        newErrors[field] = error;
+                        isValid = false;
+                    }
+                });
+                break;
+            case 4:
+                const documentFields: (keyof LifeInsuranceData)[] = ['aadharCardFileKey', 'panCardFileKey', 'bankProofFileKey'];
+                if (formData.occupation === "Job") documentFields.push('salarySlipsFileKey');
+                if (formData.occupation === "Business") documentFields.push('itrDocumentsFileKey');
 
-            switch (field) {
-                case "panNumber":
-                    if (!value) message = "PAN number is required";
-                    else if (typeof value !== "string" || !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(value))
-                        message = "Invalid PAN format (e.g., ABCDE1234F)";
-                    break;
-
-                case "aadharNumber":
-                    if (!value) message = "Aadhar number is required";
-                    else if (!/^(\d{12}|\d{16})$/.test(value))
-                        message = "Aadhar must be 12 or 16 digits";
-                    break;
-
-                case "heightCM":
-                    if (!value) message = "Height is required";
-                    else if (isNaN(Number(value)) || Number(value) < 50 || Number(value) > 300)
-                        message = "Height must be between 50cm and 300cm";
-                    break;
-
-                case "weightKG":
-                    if (!value) message = "Weight is required";
-                    else if (isNaN(Number(value)) || Number(value) < 10 || Number(value) > 500)
-                        message = "Weight must be between 10kg and 500kg";
-                    break;
-
-                case "income":
-                    if (!value) return "Income is required";
-                    if (typeof value !== "string") return "Invalid income input";
-                    return "";
-
-                case "motherName":
-                    if (!value) message = "Mother's name is required";
-                    else if (typeof value === "string" && value.trim().length < 3)
-                        message = "Mother's name must be at least 3 characters";
-                    else if (typeof value === "string" && value.length > 50)
-                        message = "Mother's name cannot exceed 50 characters";
-                    break;
-
-                case "placeOfBirth":
-                    if (!value?.city) message = "Place of birth is required";
-                    break;
-
-                case "occupation":
-                    if (!value) message = "Occupation is required";
-                    break;
-
-                case "smoker":
-                    if (!value) message = "Smoker status is required";
-                    else if (value !== "Yes" && value !== "No")
-                        message = "Smoker must be Yes or No";
-                    break;
-
-                case "alcohol":
-                    if (!value) message = "Alcohol consumption status is required";
-                    else if (value !== "Yes" && value !== "No")
-                        message = "Alcohol must be Yes or No";
-                    break;
-
-                case "nomineeName":
-                    if (!value) message = "Nominee name is required";
-                    else if (typeof value === "string" && value.trim().length < 3)
-                        message = "Nominee name must be at least 3 characters";
-                    else if (typeof value === "string" && value.length > 50)
-                        message = "Nominee name cannot exceed 50 characters";
-                    break;
-
-                case "nomineeDOB":
-                    if (!value) message = "Nominee DOB is required";
-                    else if (isNaN(Date.parse(value)))
-                        message = "Invalid date format";
-                    else if (new Date(value).getTime() > Date.now())
-                        message = "Date cannot be in the future";
-                    break;
-
-                case "nomineeRelation":
-                    if (!value) message = "Nominee relation is required";
-                    break;
-
-                default:
-                    break;
-            }
-
-            if (message) newErrors[field] = message;
-        };
-
-        // ✅ step-based validation
-        if (step === 1) {
-            runValidation("email", formData.email);
-            runValidation("mobile", formData.mobile);
-            runValidation("panNumber", formData.panNumber);
-            runValidation("aadharNumber", formData.aadharNumber);
-        }
-
-        if (step === 2) {
-            runValidation("motherName", formData.motherName);
-            runValidation("heightCM", formData.heightCM);
-            runValidation("weightKG", formData.weightKG);
-            runValidation("income", formData.income);
-            runValidation("occupation", formData.occupation);
-            runValidation("placeOfBirth", formData.placeOfBirth);
-            runValidation("smoker", formData.smoker);
-            runValidation("alcohol", formData.alcohol);
-        }
-
-        if (step === 3) {
-            runValidation("nomineeName", formData.nomineeName);
-            runValidation("nomineeDOB", formData.nomineeDOB);
-            runValidation("nomineeRelation", formData.nomineeRelation);
-        }
-
-        if (step === 4) {
-            if (!formData.panCardFileKey)
-                newErrors.panCardFileKey = "PAN card is required";
-            if (!formData.aadharCardFileKey)
-                newErrors.aadharCardFileKey = "Aadhar card is required";
-            if (!formData.bankProofFileKey)
-                newErrors.bankProofFileKey = "Bank proof is required";
-
-            if (formData.occupation === "Job" && !formData.salarySlipsFileKey) {
-                newErrors.salarySlipsFileKey = "Salary slip is required for Job";
-            }
-            if (formData.occupation === "Business" && !formData.itrDocumentsFileKey) {
-                newErrors.itrDocumentsFileKey = "ITR proof is required for Business";
-            }
+                documentFields.forEach(field => {
+                    const error = validateField(field, formData[field] as string | File | null);
+                    if (error) {
+                        newErrors[field] = error;
+                        isValid = false;
+                    }
+                });
+                break;
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        return isValid;
+    }, [step, formData, validateField]);
 
     const handleNext = async () => {
         const isValid = validateStep();
@@ -852,26 +768,32 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                         : []),
                 ];
 
-                // ✅ clone formData before modifying uploaded file keys
                 const updatedFormData = { ...formData };
 
                 for (const { field, folder } of fileKeys) {
                     const file = formData[field as keyof LifeInsuranceData];
                     if (file instanceof File) {
                         const key = await uploadFileToServer(file, folder);
-                        (updatedFormData as any)[field] = key;
+                        if (!key) {
+                            setErrors((prev) => ({
+                                ...prev,
+                                form: `Failed to upload ${field}. Please try again.`,
+                            }));
+                            return;
+                        }
+
+                        (formData as any)[field] = key;
                     }
                 }
 
                 await saveStepData(step);
                 setInitialFormData(updatedFormData);
-                setFormData(updatedFormData); // ✅ keep UI in sync
+                setFormData(updatedFormData);
                 setStep((prev) => prev + 1);
                 setMaxAllowedStep(5);
                 return;
             }
 
-            // ✅ for steps 1–3
             await saveStepData(step);
             setInitialFormData(formData);
             setStep((prev) => prev + 1);
@@ -919,7 +841,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
         }
     };
 
-    const uploadFileToServer = async (file: File, folderName: string): Promise<string> => {
+    const uploadFileToServer = async (file: File, folderName: string): Promise<any> => {
         const token = localStorage.getItem('accessToken');
         if (!token) throw new Error('No authentication token found');
 
@@ -929,21 +851,47 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
         formData.append('description', 'Life insurance document');
         formData.append('folderName', folderName);
 
-        const response = await axios.post(
-            `${BASE_URL}/uploadDocumentSerciceTypeFile/dynamic`,
-            formData,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
+        try {
+            const response = await axios.post(
+                `${BASE_URL}/uploadDocumentSerciceTypeFile/dynamic`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
                 }
+            );
+
+            if (response.data?.status) {
+                setSnackbarSeverity("success");
+                setSnackbarMessage("File uploaded successfully.");
+                setSnackbarOpen(true);
+                return response.data.result?.key;
             }
-        );
-        if (!response.data.status) {
-            throw new Error(response.data.message || 'File upload failed');
+
+            // API returned status=false
+            setSnackbarSeverity("error");
+            setSnackbarMessage("Upload failed. Please try again.");
+            setSnackbarOpen(true);
+            return null;
+
+        } catch (error: any) {
+            let message = "An unexpected error occurred.";
+
+            if (error.response) {
+                message = "No response from server. Please check your network connection.";
+            } else if (error.request) {
+                message = "No response from server. Please check your network connection.";
+            } else {
+                message = "No response from server. Please check your network connection.";
+            }
+            setSavingStep(false);
+            setSnackbarSeverity("error");
+            setSnackbarMessage(message);
+            setSnackbarOpen(true);
+            return null;
         }
-        setSuccessVoucherMessage(response.data.message);
-        return response.data.result.key;
     };
 
     const handleClose = () => {
@@ -1195,7 +1143,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                                 {/* 1. Label */}
                                 <Grid item xs={12} sm={3}>
                                     <Typography variant="body1" sx={{ fontWeight: 600, ml: 3, fontSize: 11 }}>
-                                        <span style={{ color: "red" }}>*</span> {label}
+                                        {label} <span style={{ color: "red" }}>*</span>
                                     </Typography>
                                 </Grid>
 
@@ -1279,13 +1227,12 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                                     </Button>
                                 </Grid>
                             </Grid>
-
-                            {error && (
-                                <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
-                                    {error}
-                                </Typography>
-                            )}
                         </Paper>
+                        {error && (
+                            <Typography variant="caption" color="error" sx={{ mt: .1, ml: .7, display: "block" }}>
+                                {error}
+                            </Typography>
+                        )}
                     </FormControl>
 
                 </Grid >
@@ -1454,7 +1401,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
             case 1:
                 return (
                     <Grid container spacing={3}>
-                        <Grid item {...gridSpacing}>
+                        <Grid item xs={6} >
                             <TextField
                                 fullWidth
                                 label={
@@ -1480,7 +1427,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                                 className="customTextField"
                             />
                         </Grid>
-                        <Grid item {...gridSpacing}>
+                        <Grid item xs={6} sx={{ mt: 1 }} >
                             <TextField
                                 fullWidth
                                 label={
@@ -1873,7 +1820,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Typography variant="h6">
-                            {mode === 'edit' ? 'Edit mutual fund' : 'New mutual fund / SIP'}
+                            {mode === 'edit' ? 'Edit Personal loans' : 'New Personal loans'}
                         </Typography>
                         <IconButton onClick={handleClose} disabled={loading}>
                             <CloseIcon />
@@ -2027,22 +1974,11 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                     </Button>
                 </DialogActions>
             </Dialog>
-            <Dialog open={closeConfirmDialog} onClose={handleCancelClose}>
-                <DialogTitle>Are you sure?</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Do you really want to close?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelClose} color="secondary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmClose} color="primary" variant="contained">
-                        Confirm
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <CloseConfirmDialog
+                open={closeConfirmDialog}
+                handleCancelClose={handleCancelClose}
+                handleConfirmClose={handleConfirmClose}
+            />
             <Snackbar
                 // open={true}
                 open={snackbarOpen}

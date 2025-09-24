@@ -15,6 +15,7 @@ import {
   Alert,
   Snackbar,
   Avatar,
+  Paper,
 } from "@mui/material";
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -30,10 +31,9 @@ import dayjs from "dayjs";
 import axios from 'axios';
 import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
-import { formatDate } from "../../../../utils/utils";
 import { DataGrid, GridColDef, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer, } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
-import { formatDateToIST } from '../../../../utils/utils';
+import { formatDate } from '../../../../utils/utils';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
 import React from "react";
@@ -42,7 +42,26 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
+import CustomToolbar from "../../components/CustomToolbar";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
 
+const defaultColumnVisibility = {
+  id: true,
+  code: true,
+  firstName: false,
+  lastName: false,
+  dateOfBirth: false,
+  businessName: true,
+  businessRepresentative: false,
+  email: false,
+  mobileNo: false,
+  vendorCode: false,
+  address: false,
+  createdAt: false,
+  status: true,
+  actions: true,
+
+}
 interface Collaborator {
   id: number;
   code?: string;
@@ -54,6 +73,8 @@ interface Collaborator {
     address: string;
   };
 }
+
+const pageName = "collaboratorPage";
 const Collaborator = () => {
   const [rows, setRows] = useState<
     {
@@ -89,6 +110,7 @@ const Collaborator = () => {
   const [vendorUpdated, setVendorUpdated] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
   const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
   const [vendorFormData, setVendorFormData] = useState({
     id: "",
@@ -395,7 +417,7 @@ const Collaborator = () => {
           },
         });
         setVendorList(response?.data?.data)
-        const formattedDate = formatDateToIST(response.data.data.createdAt);
+        const formattedDate = formatDate(response.data.data.createdAt);
       }
       catch (error) {
         console.error('Error fetching vendors:', error);
@@ -415,7 +437,7 @@ const Collaborator = () => {
     setSelectedRow(null);
   };
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
     { field: "firstName", headerName: "First name", flex: 1 },
     { field: "lastName", headerName: "Last name", flex: 1 },
     { field: "dateOfBirth", headerName: "DOB", flex: 1 },
@@ -470,7 +492,7 @@ const Collaborator = () => {
               size="small"
               onClick={() => handleViewButton(params.row)}
             >
-              <VisibilityIcon fontSize="small" />
+              <VisibilityIcon fontSize="small" sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Edit">
@@ -479,7 +501,7 @@ const Collaborator = () => {
               size="small"
               onClick={() => handleEditButton(params.row)}
             >
-              <EditIcon fontSize="small" />
+              <EditIcon fontSize="small" sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
           <Tooltip
@@ -491,9 +513,9 @@ const Collaborator = () => {
               onClick={() => handleStatusButton(params.row)}
             >
               {params.row.status === "Enable" ? (
-                <LockOpenIcon fontSize="small" />
+                <LockOpenIcon fontSize="small" sx={{ fontSize: 14 }} />
               ) : (
-                <BlockIcon fontSize="small" />
+                <BlockIcon fontSize="small" sx={{ fontSize: 14 }} />
               )}
             </IconButton>
           </Tooltip>
@@ -588,13 +610,6 @@ const Collaborator = () => {
     setOpenVendorSuccessSnackbar(false);
   }
 
-  function CustomToolbar({ onButtonClick }: any) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-      </GridToolbarContainer>
-    );
-  }
   const exportToPDF = async (vendorList: any[], userName: string) => {
     const doc = new jsPDF({ orientation: "landscape" });
     const logoWidth = 60;
@@ -685,6 +700,18 @@ const Collaborator = () => {
     saveAs(blob, "vendors.xlsx");
   }
 
+
+  useEffect(() => {
+    const saved = loadLayoutFromLocalStorage(pageName);
+    if (saved) {
+      setColumnsVisibilityModel(saved);
+    }
+  }, []);
+
+  const handleSaveLayout = () => {
+    saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
+  };
+
   return (
     <>
       {loading && (
@@ -700,380 +727,399 @@ const Collaborator = () => {
           <CircularProgress />
         </div>
       )}
-      <PageContainer title="Vendor" description="This is Vendor page">
-        <Box>
-          <Grid container spacing={1}>
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="flex-end">
-                <IconButton
-                  sx={{ color: "#44a7a2" }}
-                  onClick={() => {
-                    setIsEdit(false);
-                    generateUniqueCode();
-                    setErrorVendorFormData({
-                      id: "",
-                      businessName: "",
-                      businessRepresentative: "",
-                      email: "",
-                      mobileNo: "",
-                      vendorCode: "",
+      <Box sx={{ pr: 1.5 }}>
+        <Grid container spacing={0}>
+          <Grid item xs={12}>
+            <Paper >
+              <Box>
+                <Grid
+                  container
+                  justifyContent="space-between"
+                  alignItems="center"
 
-                    });
-                    setVendorFormData({
-                      id: "",
-                      businessName: "",
-                      businessRepresentative: "",
-                      email: "",
-                      mobileNo: "",
-                      roleId: 2,
-                      vendorCode: "",
-                      address: "",
-                      status: "",
-                    });
-                    setOpenAddVendorDialog(true);
-                  }}
-
-                >
-                  <AddCircleOutlineIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-                <IconButton onClick={exportToExcel}>
-                  <GridOnIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-                <IconButton
-                  onClick={() => exportToPDF(vendorList, userName)}
-                >
-                  <PictureAsPdfIcon sx={{ color: "#44a7a2" }} />
-                </IconButton>
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <DashboardCard>
-                <Box>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{ mb: 2 }}
-                  >
+                > <Grid sx={{ m: 2 }} >
                     <Typography variant="h4">Vendor</Typography>
                   </Grid>
+                  <Box display="flex" justifyContent="flex-end" sx={{ mr: 1, mt: 1, mb: 1 }}>
+                    <IconButton
+                      sx={{ color: "#465fff" }}
+                      onClick={() => {
+                        setIsEdit(false);
+                        generateUniqueCode();
+                        setErrorVendorFormData({
+                          id: "",
+                          businessName: "",
+                          businessRepresentative: "",
+                          email: "",
+                          mobileNo: "",
+                          vendorCode: "",
 
-                  <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
-                    <DataGrid
-                      rows={vendorList || []}
-                      columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
-                      pageSizeOptions={[5, 10, 20, 50, 100]}
-                      paginationModel={pagination}
-                      onPaginationModelChange={setPagination}
-                      disableRowSelectionOnClick
-                      autoHeight
-                      sortModel={[{ field: "id", sort: "desc" }]}
-                      slots={{
-                        toolbar: GridToolbar,
+                        });
+                        setVendorFormData({
+                          id: "",
+                          businessName: "",
+                          businessRepresentative: "",
+                          email: "",
+                          mobileNo: "",
+                          roleId: 2,
+                          vendorCode: "",
+                          address: "",
+                          status: "",
+                        });
+                        setOpenAddVendorDialog(true);
                       }}
-                      slotProps={{
-                        toolbar: {
-                          showQuickFilter: true,
-                          quickFilterProps: { debounceMs: 500 },
-                          sx: {
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: "4px",
-                            padding: "8px",
-                            '& .MuiButton-text': {
-                              color: '#44a7a2',
-                            },
-                          },
-                        },
-                      }}
-                    />
+
+                    >
+                      <AddCircleOutlineIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
+                    <IconButton onClick={exportToExcel}>
+                      <GridOnIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => exportToPDF(vendorList, userName)}
+                    >
+                      <PictureAsPdfIcon sx={{ color: "#465fff" }} />
+                    </IconButton>
                   </Box>
+                </Grid>
+                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                  <DataGrid
+                    rows={vendorList || []}
+                    columns={columns.map((col: any) => {
+                      if (col.field === "actions") {
+                        return { ...col, flex: 1, editable: false };
+                      }
+                      return {
+                        ...col,
+                        flex: 1,
+                        editable: false,
+                        renderCell: (params: any) =>
+                          params.value === null || params.value === undefined || params.value === ""
+                            ? "-"
+                            : params.value,
+                      };
+                    })}
+                    pageSizeOptions={[5, 10, 20, 50, 100]}
+                    paginationModel={pagination}
+                    onPaginationModelChange={setPagination}
+                    disableRowSelectionOnClick
+                    autoHeight
+                    density="compact"
+                    sortModel={[{ field: "id", sort: "desc" }]}
+                    slots={{
+                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                    }}
+                    columnVisibilityModel={columnsVisibilityModel}
+                    onColumnVisibilityModelChange={(newModel) =>
+                      setColumnsVisibilityModel(newModel)
+                    }
+                    sx={{
+                      fontSize: "0.575rem",
+                      "& .MuiDataGrid-columnHeaders": {
+                        fontSize: "0.575rem",
+                        fontWeight: 600
+                      },
+                      "& .MuiDataGrid-cell": {
+                        fontSize: "0.575rem"
+                      },
+                      "& .MuiDataGrid-toolbarContainer": {
+                        fontSize: "0.575rem"
+                      }
+                    }}
+                  />
                 </Box>
-              </DashboardCard>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+      <Dialog
+        open={openAddVendorDialog}
+        onClose={() => setOpenAddVendorDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle> Vendor </DialogTitle>
+        <Divider></Divider>
+        <DialogContent sx={{ overflow: "visible", marginTop: "5px" }}>
+          {loading && (
+            <div
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+              }}
+            >
+              <CircularProgress />
+            </div>
+          )}
+          {vendorErrorMessage && (
+            <Grid item>
+              <Box sx={{
+                border: 1,
+                borderColor: '#ff9999',
+                p: 0,
+                mb: 2,
+                backgroundColor: '#f8bbd0'
+              }}>
+                <Alert severity="error">{vendorErrorMessage}</Alert>
+              </Box>
+            </Grid>
+          )}
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label={
+                  <span>
+                    Business name<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="businessName"
+                className="customTextField"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={vendorFormData.businessName}
+                onChange={handleChange}
+                onBlur={() => {
+                  if (!vendorFormData.businessName.trim()) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      businessName: "Business name is required",
+                    }));
+                  } else {
+                    setErrorVendorFormData((prev: any) => ({ ...prev, businessName: "" }));
+                  }
+                }}
+                error={!!errorVendorFormData.businessName}
+                helperText={errorVendorFormData.businessName}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+
+                label={
+                  <span>
+                    Business representative<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="businessRepresentative"
+                type="text"
+                className="customTextField"
+                fullWidth
+                variant="outlined"
+                value={vendorFormData.businessRepresentative}
+                onChange={handleChange}
+                onBlur={() => {
+                  if (!vendorFormData.businessRepresentative.trim()) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      businessRepresentative: "Business representative  is required",
+                    }));
+                  } else {
+                    setErrorVendorFormData((prev: any) => ({ ...prev, businessRepresentative: "" }));
+                  }
+                }}
+                error={!!errorVendorFormData.businessRepresentative}
+                helperText={errorVendorFormData.businessRepresentative}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+
+                label={
+                  <span>
+                    Email<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="email"
+                type="text"
+                className="customTextField"
+                fullWidth
+                variant="outlined"
+                value={vendorFormData.email}
+                onChange={handleChange}
+                InputProps={{
+                  readOnly: isEdit,
+                }}
+                onBlur={() => {
+                  const emailRegex = /^[^\s@]+@([^\s@.]+\.)+[a-zA-Z]{2,}$/;
+
+
+                  if (!vendorFormData.email.trim()) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      email: "Email is required",
+                    }));
+                  } else if (!emailRegex.test(vendorFormData.email)) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      email: "Enter a valid email address",
+                    }));
+                  } else {
+                    setErrorVendorFormData((prev: any) => ({ ...prev, email: "" }));
+                  }
+                }}
+                error={!!errorVendorFormData.email}
+                helperText={errorVendorFormData.email}
+              />
+
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label={
+                  <span>
+                    mobileNo<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="mobileNo"
+                type="text"
+                className="customTextField"
+                fullWidth
+                variant="outlined"
+                value={vendorFormData.mobileNo}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^[+-]?\d{0,13}$/.test(value)) {
+                    handleChange(e);
+                    setErrorVendorFormData((prev: any) => ({ ...prev, mobileNo: "" }));
+                  }
+                }}
+                onBlur={() => {
+                  const mobileNo = vendorFormData.mobileNo.trim();
+                  if (!mobileNo) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      mobileNo: "Phone is required.",
+                    }));
+                  } else if (mobileNo.length < 10) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      mobileNo: "Phone number must be at least 10 digits",
+                    }));
+                  }
+                }}
+                error={!!errorVendorFormData.mobileNo}
+                helperText={errorVendorFormData.mobileNo}
+              />
+
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label={
+                  <span>
+                    Vendor code<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="vendorCode"
+                className="customTextField"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={vendorFormData.vendorCode}
+                onChange={handleChange}
+                InputProps={{
+                  readOnly: isEdit,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label={
+                  <span>
+                    Address<span style={{ color: "red" }}> *</span>
+                  </span>
+                }
+                name="address"
+                className="customTextField"
+                multiline
+                rows={2}
+                maxRows={2}
+                fullWidth
+                variant="outlined"
+                inputProps={{
+                  maxLength: 100,
+                  style: { lineHeight: 1.0, wordBreak: "break-word" },
+                }}
+                value={vendorFormData.address}
+                onChange={(e) => {
+                  let inputValue = e.target.value;
+                  inputValue = inputValue.replace(/\s{2,}/g, " ");
+
+                  setVendorFormData((prev: any) => ({ ...prev, address: inputValue }));
+                }}
+                onBlur={() => {
+                  let trimmedAddress = vendorFormData.address.trim();
+
+                  setVendorFormData((prev: any) => ({ ...prev, address: trimmedAddress }));
+
+                  if (!trimmedAddress) {
+                    setErrorVendorFormData((prev: any) => ({
+                      ...prev,
+                      address: "Address is required",
+                    }));
+                  } else {
+                    setErrorVendorFormData((prev: any) => ({ ...prev, address: "" }));
+                  }
+                }}
+                error={!!errorVendorFormData.address}
+                helperText={errorVendorFormData.address}
+              />
             </Grid>
           </Grid>
-        </Box>
-        <Dialog
-          open={openAddVendorDialog}
-          onClose={() => setOpenAddVendorDialog(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle> Vendor </DialogTitle>
-          <Divider></Divider>
-          <DialogContent sx={{ overflow: "visible", marginTop: "5px" }}>
-            {loading && (
-              <div
-                style={{
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  zIndex: 1000,
-                }}
-              >
-                <CircularProgress />
-              </div>
-            )}
-            {vendorErrorMessage && (
-              <Grid item>
-                <Box sx={{
-                  border: 1,
-                  borderColor: '#ff9999',
-                  p: 0,
-                  mb: 2,
-                  backgroundColor: '#f8bbd0'
-                }}>
-                  <Alert severity="error">{vendorErrorMessage}</Alert>
-                </Box>
-              </Grid>
-            )}
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label={
-                    <span>
-                      Business name<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="businessName"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={vendorFormData.businessName}
-                  onChange={handleChange}
-                  onBlur={() => {
-                    if (!vendorFormData.businessName.trim()) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        businessName: "Business name is required",
-                      }));
-                    } else {
-                      setErrorVendorFormData((prev: any) => ({ ...prev, businessName: "" }));
-                    }
-                  }}
-                  error={!!errorVendorFormData.businessName}
-                  helperText={errorVendorFormData.businessName}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-
-                  label={
-                    <span>
-                      Business representative<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="businessRepresentative"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={vendorFormData.businessRepresentative}
-                  onChange={handleChange}
-                  onBlur={() => {
-                    if (!vendorFormData.businessRepresentative.trim()) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        businessRepresentative: "Business representative  is required",
-                      }));
-                    } else {
-                      setErrorVendorFormData((prev: any) => ({ ...prev, businessRepresentative: "" }));
-                    }
-                  }}
-                  error={!!errorVendorFormData.businessRepresentative}
-                  helperText={errorVendorFormData.businessRepresentative}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-
-                  label={
-                    <span>
-                      Email<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="email"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={vendorFormData.email}
-                  onChange={handleChange}
-                  InputProps={{
-                    readOnly: isEdit,
-                  }}
-                  onBlur={() => {
-                    const emailRegex = /^[^\s@]+@([^\s@.]+\.)+[a-zA-Z]{2,}$/;
-
-
-                    if (!vendorFormData.email.trim()) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        email: "Email is required",
-                      }));
-                    } else if (!emailRegex.test(vendorFormData.email)) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        email: "Enter a valid email address",
-                      }));
-                    } else {
-                      setErrorVendorFormData((prev: any) => ({ ...prev, email: "" }));
-                    }
-                  }}
-                  error={!!errorVendorFormData.email}
-                  helperText={errorVendorFormData.email}
-                />
-
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label={
-                    <span>
-                      mobileNo<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="mobileNo"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={vendorFormData.mobileNo}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^[+-]?\d{0,13}$/.test(value)) {
-                      handleChange(e);
-                      setErrorVendorFormData((prev: any) => ({ ...prev, mobileNo: "" }));
-                    }
-                  }}
-                  onBlur={() => {
-                    const mobileNo = vendorFormData.mobileNo.trim();
-                    if (!mobileNo) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        mobileNo: "Phone is required.",
-                      }));
-                    } else if (mobileNo.length < 10) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        mobileNo: "Phone number must be at least 10 digits",
-                      }));
-                    }
-                  }}
-                  error={!!errorVendorFormData.mobileNo}
-                  helperText={errorVendorFormData.mobileNo}
-                />
-
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label={
-                    <span>
-                      Vendor code<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="vendorCode"
-                  type="text"
-                  fullWidth
-                  variant="outlined"
-                  value={vendorFormData.vendorCode}
-                  onChange={handleChange}
-                  InputProps={{
-                    readOnly: isEdit,
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={
-                    <span>
-                      Address<span style={{ color: "red" }}> *</span>
-                    </span>
-                  }
-                  name="address"
-                  multiline
-                  rows={2}
-                  maxRows={2}
-                  fullWidth
-                  variant="outlined"
-                  inputProps={{
-                    maxLength: 100,
-                    style: { lineHeight: 1.0, wordBreak: "break-word" },
-                  }}
-                  value={vendorFormData.address}
-                  onChange={(e) => {
-                    let inputValue = e.target.value;
-                    inputValue = inputValue.replace(/\s{2,}/g, " ");
-
-                    setVendorFormData((prev: any) => ({ ...prev, address: inputValue }));
-                  }}
-                  onBlur={() => {
-                    let trimmedAddress = vendorFormData.address.trim();
-
-                    setVendorFormData((prev: any) => ({ ...prev, address: trimmedAddress }));
-
-                    if (!trimmedAddress) {
-                      setErrorVendorFormData((prev: any) => ({
-                        ...prev,
-                        address: "Address is required",
-                      }));
-                    } else {
-                      setErrorVendorFormData((prev: any) => ({ ...prev, address: "" }));
-                    }
-                  }}
-                  error={!!errorVendorFormData.address}
-                  helperText={errorVendorFormData.address}
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button variant="outlined" onClick={handleCloseAddVendorDialog}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-            >
-              {isEdit ? "Update" : "Submit"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog
-          open={openStatusVendorDialog}
-          onClose={() => !loading && setOpenStatusVendorDialog(false)} // Disable close on backdrop click while loading
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle>
-            {vendorFormData.status === "Enable" ? "Block" : "Unblock"} Vendor
-          </DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to{" "}
-              <strong>
-                {vendorFormData.status === "Enable" ? "Block" : "Unblock"}
-              </strong>{" "}
-              this vendor?
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenStatusVendorDialog(false)}
-              variant="outlined"
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={toggleVendorStatus}
-              variant="contained"
-              color="primary"
-              disabled={loading}
-            >
-              {loading ? <CircularProgress color="inherit" size={24} /> : vendorFormData.status === "Enable" ? "Block" : "Unblock"}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </PageContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={handleCloseAddVendorDialog}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+          >
+            {isEdit ? "Update" : "Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openStatusVendorDialog}
+        onClose={() => !loading && setOpenStatusVendorDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          {vendorFormData.status === "Enable" ? "Block" : "Unblock"} Vendor
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to{" "}
+            <strong>
+              {vendorFormData.status === "Enable" ? "Block" : "Unblock"}
+            </strong>{" "}
+            this vendor?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOpenStatusVendorDialog(false)}
+            variant="outlined"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={toggleVendorStatus}
+            variant="contained"
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? <CircularProgress color="inherit" size={24} /> : vendorFormData.status === "Enable" ? "Block" : "Unblock"}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={viewDialogOpen} onClose={handleViewDialogClose} maxWidth="sm" fullWidth>
         <DialogTitle>View Details</DialogTitle>
         <DialogContent dividers>
@@ -1088,7 +1134,7 @@ const Collaborator = () => {
             />
           </Box>
           <Divider sx={{ marginBottom: 2 }} />
-          <Grid container spacing={1}>
+          <Grid container spacing={1} sx={{ fontSize: 12 }}>
             {selectedRow &&
               Object.entries(selectedRow)
                 .filter(([key]) => key !== 'profileImageURL')

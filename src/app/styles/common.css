@@ -3,27 +3,27 @@
 .customTextField .MuiInputBase-root {
     height: 35px;
     width: 20;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customTextField .MuiInputLabel-root {
-    top: -10px;
-    font-size: 12px;
+    top: -7px;
+    font-size: 11px;
 }
 
 .customTextField .MuiInputLabel-shrink {
     top: 0px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customTextField .MuiFormHelperText-root {
     margin-top: 2px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customTextField .MuiOutlinedInput-root {
     height: 35px;
-    font-size: 12px;
+    font-size: 11px;
     background-color: transparent;
 }
 
@@ -34,31 +34,10 @@
     border-radius: 4px;
 }
 
-/* .customSelect .MuiSelect-select {
-    height: 35px;
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-.customSelect .MuiFormHelperText-root {
-    margin-top: 0px;
-    font-size: 11px;
-}
-
-.customSelect .MuiInputLabel-root {
-    top: -10px;
-    /* transform: translateY(-50%); */
-/* font-size: 14px;
-pointer-events: none;
-} */
-
 .customSelect .MuiInputLabel-shrink {
     /* top: 0; */
     /* transform: translateY(-50%); */
-    font-size: 12px;
+    font-size: 11px;
 }
 
 */ .customSelect .MuiOutlinedInput-root {
@@ -78,7 +57,7 @@ pointer-events: none;
 /* Helper text */
 .customSelect .MuiFormHelperText-root {
     margin-top: 0;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 /* ===== Label fixes (Outlined variant uses transform) ===== */
@@ -88,7 +67,7 @@ pointer-events: none;
     transform: translate(14px, 7px) scale(1) !important;
     /* ~center for 35px height */
     transform-origin: left top;
-    font-size: 12px;
+    font-size: 11px;
     pointer-events: none;
 }
 
@@ -111,27 +90,27 @@ pointer-events: none;
 
 .customAutocomplete .MuiInputBase-root {
     height: 35px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customAutocomplete .MuiInputLabel-root {
     top: -10px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customAutocomplete .MuiInputLabel-shrink {
     top: 0px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customAutocomplete .MuiFormHelperText-root {
     margin-top: 2px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customAutocomplete .MuiOutlinedInput-root {
     height: 35px;
-    font-size: 12px;
+    font-size: 11px;
     background-color: transparent;
 }
 
@@ -155,7 +134,7 @@ pointer-events: none;
 .customAutocomplete .MuiAutocomplete-listbox {
     max-height: 200px;
     /* adjust as needed */
-    font-size: 12px;
+    font-size: 11px;
     padding: 0;
 }
 
@@ -175,7 +154,7 @@ pointer-events: none;
     background-color: rgb(236, 234, 234);
     color: var(--mui-palette-primary-main);
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .customUploadBtn.uploaded {
