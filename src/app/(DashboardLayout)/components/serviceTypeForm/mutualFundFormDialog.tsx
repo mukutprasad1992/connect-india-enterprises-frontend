@@ -921,6 +921,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
             setSuccess(true);
             onSuccess?.();
             setTimeout(() => {
+
                 setOpenDialog(false);
             }, 3000);
 
@@ -1296,21 +1297,30 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 >
                     Declaration
                 </Typography>
+
                 <FormControlLabel
                     control={
                         <Checkbox
                             checked={!!formData.submit}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 setFormData(prev => ({
                                     ...prev,
                                     submit: e.target.checked
-                                }))
-                            }
+                                }));
+                                if (errors.form) {
+                                    setErrors(prev => ({ ...prev, form: "" }));
+                                }
+                            }}
+                            onBlur={() => {
+                                if (errors.form) {
+                                    setErrors(prev => ({ ...prev, form: "" }));
+                                }
+                            }}
                         />
                     }
                     label="I hereby declare that the information provided above is true, complete
-                     and correct to the best of my knowledge. I understand that any false information 
-                     may result in rejection of my application."
+                           and correct to the best of my knowledge. I understand that any false information 
+                           may result in rejection of my application."
                 />
 
                 {errors.form && (
@@ -1319,6 +1329,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                     </Typography>
                 )}
             </Box>
+
         </Box >
     );
     const renderStepContent = () => {
@@ -1751,7 +1762,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Typography variant="h6">
-                            {mode === 'edit' ? 'Edit mutual fund / SIP' : 'New mutual fund / SIP'}
+                            {mode === 'edit' ? 'Edit mutual fund or SIP' : 'New mutual fund or SIP'}
                         </Typography>
                         <IconButton onClick={handleClose} disabled={loading}>
                             <CloseIcon />
@@ -1838,7 +1849,7 @@ const MutualFundFormDialog: React.FC<Props> = ({
                                 Application Submitted Successfully!
                             </Typography>
                             <Typography color="text.secondary">
-                                Your mutual fund application has been received. We'll contact you shortly.
+                                Your mutual fund application has been received. Well contact you shortly.
                             </Typography>
                         </Box>
                     ) : (

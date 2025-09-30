@@ -7,7 +7,6 @@ import {
     Typography,
     useMediaQuery,
     Tooltip,
-    Divider,
     Grid,
 } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
@@ -22,20 +21,18 @@ type Props = {
 };
 
 export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
-    const isMobile = useMediaQuery("(max-width:768px)");
+    const isMobile = useMediaQuery("(max-width:768px)", { noSsr: true });
     const router = useRouter();
     const pathname = usePathname();
 
-    const getRoleId = () => {
-        if (typeof window !== "undefined") {
-            const storedRole = localStorage.getItem("roleId");
-            const roleId = storedRole ? parseInt(storedRole, 10) : null;
-            return roleId;
-        }
-    };
+    const [roleId, setRoleId] = React.useState<number | null>(null);
+    React.useEffect(() => {
+        const storedRole = localStorage.getItem("roleId");
+        setRoleId(storedRole ? parseInt(storedRole, 10) : null);
+    }, []);
 
-    const roleId = getRoleId();
-    const currentMenuItems = (roleId && menuItems[roleId]) ? menuItems[roleId] : [];
+    const currentMenuItems = roleId && menuItems[roleId] ? menuItems[roleId] : [];
+
     const renderMenu = () => (
         <Box sx={{ display: "flex", flexDirection: "column", p: 1, gap: 1 }}>
             <Box
@@ -81,8 +78,9 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
 
                 )}
             </Box>
-            {currentMenuItems.map((item: any) => {
+            {currentMenuItems.map((item) => {
                 const isActive = pathname === item.route;
+                const Icon = item.icon; // ✅ component reference
 
                 return (
                     <Tooltip
@@ -99,7 +97,7 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
                             sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                p: .5,
+                                p: 0.5,
                                 borderRadius: 2,
                                 cursor: "pointer",
                                 backgroundColor: isActive ? "#ebf4f5ff" : "transparent",
@@ -121,9 +119,8 @@ export default function Sidebar({ isOpen, isMobileOpen, onClose }: Props) {
                                     },
                                 }}
                             >
-                                {item.icon}
+                                <Icon /> {/* ✅ render inside component */}
                             </IconButton>
-
                             {(isOpen || isMobile) && (
                                 <Typography sx={{ ml: 1 }}>{item.label}</Typography>
                             )}

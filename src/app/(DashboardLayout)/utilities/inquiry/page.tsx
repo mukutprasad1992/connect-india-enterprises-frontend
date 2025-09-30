@@ -85,7 +85,7 @@ const InquiryPage = () => {
         }
     }
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
-    const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
+    const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
     const DOCUMENT_KEYS = [
         'panCardFileKey',
         'aadharCardFileKey',
@@ -645,6 +645,14 @@ const InquiryPage = () => {
                                             onColumnVisibilityModelChange={(newModel) =>
                                                 setColumnsVisibilityModel(newModel)
                                             }
+                                            slotProps={{
+                                                columnsPanel: {
+                                                    sx: {
+                                                        maxHeight: 365,
+                                                        overflowY: "auto"
+                                                    }
+                                                }
+                                            }}
                                             sx={{
                                                 fontSize: "0.575rem",
                                                 "& .MuiDataGrid-columnHeaders": {
@@ -757,13 +765,19 @@ const InquiryPage = () => {
                     sx={{
                         width: "100%",
                         border: "1px solid",
-                        borderColor: "error.main",
+                        borderColor:
+                            snackbarSeverity === "error"
+                                ? "error.main"
+                                : snackbarSeverity === "success"
+                                    ? "success.main"
+                                    : snackbarSeverity === "warning"
+                                        ? "warning.main"
+                                        : "info.main",
                     }}
                 >
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
-
         </>
     );
 };

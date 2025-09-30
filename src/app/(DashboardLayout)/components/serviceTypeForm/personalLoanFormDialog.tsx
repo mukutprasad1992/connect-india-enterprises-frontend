@@ -172,7 +172,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
         "Review": 6
     };
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-    const steps = ["personalDetails", "contactDetails", "employmentDetails", "referenceDetails", "documents", "Review"];
+    const steps = ["Personal Details", "Contact Details", "Employment Details", "Reference Details", "Documents", "Review"];
     const maritalStatusOptions = ["Single", "Married", "Divorced", "Widowed"];
     const gridSpacing = { xs: 12, sm: 6 };
     const DOCUMENT_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
@@ -1168,21 +1168,30 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                 >
                     Declaration
                 </Typography>
+
                 <FormControlLabel
                     control={
                         <Checkbox
                             checked={!!formData.submit}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 setFormData(prev => ({
                                     ...prev,
                                     submit: e.target.checked
-                                }))
-                            }
+                                }));
+                                if (errors.form) {
+                                    setErrors(prev => ({ ...prev, form: "" })); // clear error on change
+                                }
+                            }}
+                            onBlur={() => {
+                                if (errors.form) {
+                                    setErrors(prev => ({ ...prev, form: "" })); // clear error on blur
+                                }
+                            }}
                         />
                     }
                     label="I hereby declare that the information provided above is true, complete
-                         and correct to the best of my knowledge. I understand that any false information 
-                         may result in rejection of my application."
+                           and correct to the best of my knowledge. I understand that any false information 
+                           may result in rejection of my application."
                 />
 
                 {errors.form && (
@@ -1191,6 +1200,7 @@ const PersonalLoanFormDialog: React.FC<Props> = ({
                     </Typography>
                 )}
             </Box>
+
         </Box >
     );
 

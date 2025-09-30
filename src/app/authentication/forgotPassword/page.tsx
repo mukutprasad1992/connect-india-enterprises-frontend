@@ -11,6 +11,7 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  TextField,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "../../(DashboardLayout)/components/layout/Logo";
@@ -88,11 +89,11 @@ const ForgotPassword = () => {
       <Box
         sx={{
           position: "relative",
-          opacity: 0.8,
+          opacity: 0.9,
           "&:before": {
             content: '""',
             background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
-            backgroundSize: "400% 400%",
+            backgroundSize: "100% 100%",
             animation: "gradient 15s ease infinite",
             position: "absolute",
             height: "100%",
@@ -103,10 +104,17 @@ const ForgotPassword = () => {
       >
         <Grid container spacing={0} justifyContent="center" sx={{ height: "100vh" }}>
           <Grid item xs={12} sm={12} lg={4} xl={3} display="flex" justifyContent="center" alignItems="center">
-            <Card elevation={9} sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}>
-              <Box display="flex" alignItems="center" justifyContent="center">
-                <Logo />
-              </Box>
+            <Card elevation={9} sx={{ p: 3, zIndex: 1, width: "100%", maxWidth: "350px" }}>
+              <Grid
+                container
+                justifyContent="center"
+                alignItems="center"
+                mb={3}
+              >
+                <Grid item>
+                  <Logo />
+                </Grid>
+              </Grid>
               <Typography variant="h5" fontWeight="700" textAlign="center" mt={2} mb={2}>
                 Forgot Password
               </Typography>
@@ -114,11 +122,11 @@ const ForgotPassword = () => {
                 Enter your email address and we&apos;ll send you a link to reset your password.
               </Typography>
 
-              <CustomTextField
+              <TextField
                 fullWidth
                 label="Email Address"
                 variant="outlined"
-                size="small"
+                className="customTextField"
                 value={email}
                 onChange={handleEmailChange}
                 error={Boolean(emailError)}
@@ -129,7 +137,7 @@ const ForgotPassword = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
-                sx={{ mt: 3, height: "40px" }}
+                sx={{ mt: 3, height: "35px" }}
                 onClick={handleForgotPassword}
                 disabled={loading}
               >

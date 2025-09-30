@@ -13,13 +13,10 @@ import {
   CircularProgress,
   TextField,
 } from "@mui/material";
-import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
-import LogoRegister from "@/app/(DashboardLayout)/components/layout/LogoRegister";
-import LogoLogin from "@/app/(DashboardLayout)/components/layout/Logo";
 
 const RegisterPage = () => {
   const router = useRouter();

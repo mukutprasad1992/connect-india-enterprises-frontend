@@ -1148,6 +1148,14 @@ const VoucherTable: React.FC = () => {
                     onColumnVisibilityModelChange={(newModel) =>
                       setColumnsVisibilityModel(newModel)
                     }
+                    slotProps={{
+                      columnsPanel: {
+                        sx: {
+                          maxHeight: 365,
+                          overflowY: "auto"
+                        }
+                      }
+                    }}
                     sx={{
                       fontSize: "0.575rem",
                       "& .MuiDataGrid-columnHeaders": {

@@ -1,118 +1,182 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Grid,
   Box,
   Card,
-  Typography,
   Stack,
+  TextField,
   Button,
-  Snackbar,
-  Alert,
-  Checkbox,
+  Divider,
+  Typography,
+  Grid,
+  CircularProgress,
   FormGroup,
   FormControlLabel,
-  CircularProgress,
-  TextField,
-  Divider,
+  Checkbox,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import Link from "next/link";
-import axios from "axios";
-import { validateEmail, validatePassword } from "@/utils/utils";
-import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
-import FacebookIcon from "@mui/icons-material/Facebook";
 import { FcGoogle } from "react-icons/fc";
-import LogoLogin from "@/app/(DashboardLayout)/components/layout/Logo";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import axios from "axios";
+import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
+import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
-const LoginPage = () => {
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+type FieldName = "email" | "password";
+interface FormState {
+  email: string;
+  password: string;
+}
+interface ErrorState {
+  email: string;
+  password: string;
+}
+
+export default function LoginPage() {
   const router = useRouter();
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const searchParams = useSearchParams();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [values, setValues] = useState<FormState>({ email: "", password: "" });
+  const [errors, setErrors] = useState<ErrorState>({ email: "", password: "" });
+  const [touched, setTouched] = useState<Record<FieldName, boolean>>({
+    email: false,
+    password: false,
+  });
+
   const [loading, setLoading] = useState(false);
+  const [loadingOAuth, setLoadingOAuth] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
 
-  // Handlers
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setEmail(e.target.value);
+  // Single-field validator
+  const validateField = (name: FieldName, value: string): string => {
+    if (name === "email") {
+      if (!value.trim()) return "Email is required.";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) return "Invalid email format.";
+    }
+    if (name === "password") {
+      if (!value.trim()) return "Password is required.";
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(value))
+        return "Must contain upper, lower, number & special char (min 8 chars).";
+    }
+    return "";
+  };
 
-  const handlePasswordChange = (value: string) => {
-    setPassword(value);
-    if (!validatePassword(value)) {
-      setPasswordError(
-        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
-      );
-    } else {
-      setPasswordError("");
+  // Change handler — validate only if field was already touched
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target as { name: FieldName; value: string };
+    setValues((prev) => ({ ...prev, [name]: value }));
+
+    if (touched[name]) {
+      setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
   };
 
-  const validateEmailInput = () => {
-    if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address.");
-      return false;
-    }
-    setEmailError("");
-    return true;
+  // Blur handler — mark touched + validate
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target as { name: FieldName; value: string };
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
-  const validatePasswordInput = () => {
-    if (!validatePassword(password)) {
-      setPasswordError("Password is required!");
-      return false;
-    }
-    setPasswordError("");
-    return true;
+  // Validate all fields and mark all touched (used on submit)
+  const validateAll = (): boolean => {
+    const newErrors: ErrorState = {
+      email: validateField("email", values.email),
+      password: validateField("password", values.password),
+    };
+    setErrors(newErrors);
+    setTouched({ email: true, password: true });
+    return !Object.values(newErrors).some(Boolean);
   };
+
 
   // Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isEmailValid = validateEmailInput();
-    const isPasswordValid = validatePasswordInput();
-    if (isEmailValid && isPasswordValid) {
-      setLoading(true);
-      try {
-        const response = await axios.post(`${BASE_URL}/auth/login`, {
-          email,
-          password,
-        });
-        const data = response.data;
+    if (!validateAll()) return;
 
-        localStorage.setItem("accessToken", data.data.accessToken);
-        localStorage.setItem("user", JSON.stringify(data.data));
-        localStorage.setItem("roleId", data.data.roleId);
+    setLoading(true);
+    try {
+      const response = await axios.post(`${BASE_URL}/auth/login`, values);
+      const data = response.data.data;
 
-        setSnackbarSeverity("success");
-        setSnackbarMessage("Login successful!");
-        setSnackbarOpen(true);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("roleId", data.roleId);
 
-        if (data.data.roleId === 2) {
-          setTimeout(() => router.push("/utilities/customer"), 2000);
-        } else {
-          setTimeout(() => router.push("/"), 2000);
-        }
-      } catch (error: any) {
-        console.error("Login error:", error);
-        setSnackbarSeverity("error");
-        setSnackbarMessage(
-          error.response?.data?.message || "Login failed. Please try again."
-        );
-        setSnackbarOpen(true);
-      }
+      setSnackbarSeverity("success");
+      setSnackbarMessage("Login successful!");
+      setSnackbarOpen(true);
+
+      setTimeout(() => {
+        if (data.roleId === 2) router.replace("/utilities/customer");
+        else router.replace("/");
+      }, 500);
+    } catch (err: any) {
+      setSnackbarSeverity("error");
+      setSnackbarMessage(err.response?.data?.message || "Login failed.");
+      setSnackbarOpen(true);
+    } finally {
       setLoading(false);
     }
   };
+
+  // Google login redirect
+  const handleGoogleLogin = () => {
+    window.location.href = `${BASE_URL}/auth/google`;
+  };
+
+  const handleFacebookLogin = () => {
+    // Redirect to your backend Facebook auth route
+    window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/facebook`;
+  };
+  // OAuth token handler
+  useEffect(() => {
+    const token = searchParams?.get("token");
+    if (!token) return;
+
+    const fetchUserData = async () => {
+      setLoadingOAuth(true);
+      try {
+        const res = await axios.get(`${BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = res.data.data;
+
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("roleId", data.roleId);
+
+        setTimeout(() => {
+          if (data.roleId === 2) router.replace("/utilities/customer");
+          else router.replace("/");
+        }, 300);
+
+        // remove token query param from URL
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, "", cleanUrl);
+      } catch (err) {
+        console.error("OAuth fetch error:", err);
+        setSnackbarSeverity("error");
+        setSnackbarMessage("Google login failed. Try again.");
+        setSnackbarOpen(true);
+      } finally {
+        setLoadingOAuth(false);
+      }
+    };
+
+    fetchUserData();
+  }, [searchParams, router]);
 
   return (
     <PageContainer title="Login" description="this is Login page">
@@ -166,15 +230,16 @@ const LoginPage = () => {
             <Grid container spacing={2}>
               <Grid item xs={11}>
                 <TextField
-                  variant="outlined"
-                  fullWidth
                   label="Email"
+                  name="email"
+                  fullWidth
                   className="customTextField"
-                  value={email}
-                  onChange={handleEmailChange}
-                  error={!!emailError}
-                  helperText={emailError}
-                  onBlur={validateEmailInput}
+                  autoComplete="email"
+                  value={values.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.email && !!errors.email}
+                  helperText={touched.email ? errors.email : ""}
                   sx={{
                     borderRadius: 1,
                     "& .MuiOutlinedInput-root": {
@@ -186,16 +251,17 @@ const LoginPage = () => {
               {/* Password */}
               <Grid item xs={11}>
                 <TextField
+                  label="Password"
+                  name="password"
                   type="password"
-                  variant="outlined"
                   className="customTextField"
                   fullWidth
-                  label="Password"
-                  value={password}
-                  onChange={(e) => handlePasswordChange(e.target.value)}
-                  error={!!passwordError}
-                  helperText={passwordError}
-                  onBlur={validatePasswordInput}
+                  autoComplete="current-password"
+                  value={values.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.password && !!errors.password}
+                  helperText={touched.password ? errors.password : ""}
                   sx={{
                     borderRadius: 1,
                     "& .MuiOutlinedInput-root": {
@@ -253,7 +319,7 @@ const LoginPage = () => {
               </Grid>
             </Grid>
             {/* Divider */}
-            <Divider >Or continue with</Divider>
+            <Divider sx={{ fontSize: 12 }}>Or continue with</Divider>
 
             {/* Social Buttons */}
             <Grid container >
@@ -273,7 +339,7 @@ const LoginPage = () => {
                       backgroundColor: "#f7f8f8",
                     },
                   }}
-                  onClick={() => console.log("Google login clicked")}
+                  onClick={handleGoogleLogin}
                 >
                   Google
                 </Button>
@@ -292,7 +358,7 @@ const LoginPage = () => {
                       backgroundColor: "#145dbf",
                     },
                   }}
-                  onClick={() => console.log("Facebook login clicked")}
+                  onClick={handleFacebookLogin}
                 >
                   Facebook
                 </Button>
@@ -305,7 +371,7 @@ const LoginPage = () => {
               href="/authentication/register"
               fontWeight={500}
               textAlign="center"
-              sx={{ mt: 2, textDecoration: "none", color: "primary.main" }}
+              sx={{ mt: 2, textDecoration: "none", color: "primary.main", fontSize: 12 }}
             >
               Create an account
             </Typography>
@@ -330,6 +396,4 @@ const LoginPage = () => {
       </Box>
     </PageContainer >
   );
-};
-
-export default LoginPage;
+}

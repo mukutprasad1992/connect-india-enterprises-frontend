@@ -739,18 +739,12 @@ const Policy = () => {
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
                     }}
                     slotProps={{
-                      toolbar: {
-                        showQuickFilter: true,
-                        quickFilterProps: { debounceMs: 500 },
+                      columnsPanel: {
                         sx: {
-                          backgroundColor: "#f5f5f5",
-                          borderRadius: "4px",
-                          padding: "8px",
-                          '& .MuiButton-text': {
-                            color: '#44a7a2',
-                          },
-                        },
-                      },
+                          maxHeight: 400,
+                          overflowY: "auto"
+                        }
+                      }
                     }}
                     columnVisibilityModel={columnsVisibilityModel}
                     onColumnVisibilityModelChange={(newModel) =>

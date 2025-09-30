@@ -191,7 +191,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
     const [openLifeInsuranceSuccessSnackbar, setOpenLifeInsuranceSuccessSnackbar] = useState(false);
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
     const DOCUMENT_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL || 'https://connect-india-upload-documents.s3.ap-south-1.amazonaws.com';
-    const steps = ["basicDetails", "personalDetails", "nomineeDetails", "Documents", "Review"];
+    const steps = ["Basic Details", "Personal Details", "Nominee Details", "Documents", "Review"];
     const gridSpacing = { xs: 12, sm: 6 };
     const stepStatusMap: { [key: number]: string } = {
         1: "basicDetails",
@@ -1365,21 +1365,30 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                     >
                         Declaration
                     </Typography>
+
                     <FormControlLabel
                         control={
                             <Checkbox
                                 checked={!!formData.submit}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     setFormData(prev => ({
                                         ...prev,
                                         submit: e.target.checked
-                                    }))
-                                }
+                                    }));
+                                    if (errors.form) {
+                                        setErrors(prev => ({ ...prev, form: "" })); // clear error on change
+                                    }
+                                }}
+                                onBlur={() => {
+                                    if (errors.form) {
+                                        setErrors(prev => ({ ...prev, form: "" })); // clear error on blur
+                                    }
+                                }}
                             />
                         }
                         label="I hereby declare that the information provided above is true, complete
-                                     and correct to the best of my knowledge. I understand that any false information 
-                                     may result in rejection of my application."
+                               and correct to the best of my knowledge. I understand that any false information 
+                               may result in rejection of my application."
                     />
 
                     {errors.form && (
@@ -1388,6 +1397,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                         </Typography>
                     )}
                 </Box>
+
             </Box>
         );
     };
@@ -1458,7 +1468,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                                     label=
                                     {
                                         <React.Fragment>
-                                            Mother's Name<span style={{ color: "red" }}>*</span>
+                                            Mothers Name<span style={{ color: "red" }}>*</span>
                                         </React.Fragment>
                                     }
                                     name="motherName"
@@ -1820,7 +1830,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                 <DialogTitle>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Typography variant="h6">
-                            {mode === 'edit' ? 'Edit Personal loans' : 'New Personal loans'}
+                            {mode === 'edit' ? 'Edit Life Insurance' : 'New Life Insurance'}
                         </Typography>
                         <IconButton onClick={handleClose} disabled={loading}>
                             <CloseIcon />
@@ -1904,7 +1914,7 @@ const LifeInsuranceFormDialog: React.FC<Props> = ({
                                 Application Submitted Successfully!
                             </Typography>
                             <Typography color="text.secondary">
-                                Your mutual fund application has been received. We'll contact you shortly.
+                                Your mutual fund application has been received. Well contact you shortly.
                             </Typography>
                         </Box>
                     ) : (

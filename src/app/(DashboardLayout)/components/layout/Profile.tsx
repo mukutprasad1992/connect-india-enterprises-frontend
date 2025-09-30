@@ -44,7 +44,20 @@ const Profile = () => {
   const router = useRouter();
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  let profileImageURL: string | undefined;
 
+  if (typeof window !== 'undefined') {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString); // parse JSON string
+        profileImageURL = user?.profileImageURL; // safely access property
+        console.log(profileImageURL);
+      } catch (error) {
+        console.error('Error parsing user from localStorage', error);
+      }
+    }
+  }
   const handleClick = (event: any) => {
     fetchProfile();
     setAnchorEl(event.currentTarget);

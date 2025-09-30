@@ -14,6 +14,7 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  TextField,
 } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "../../(DashboardLayout)/components/layout/Logo";
@@ -105,7 +106,7 @@ const ResetPassword = () => {
       <Box
         sx={{
           position: "relative",
-          opacity: 0.8,
+          opacity: 0.9,
           "&:before": {
             content: '""',
             background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
@@ -120,23 +121,28 @@ const ResetPassword = () => {
       >
         <Grid container spacing={0} justifyContent="center" sx={{ height: "100vh" }}>
           <Grid item xs={12} sm={12} lg={4} xl={3} display="flex" justifyContent="center" alignItems="center">
-            <Card elevation={9} sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}>
-              <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
-                <Logo />
-              </Box>
+            <Card elevation={9} sx={{ p: 3, zIndex: 1, width: "100%", maxWidth: "350px" }}>
+              <Grid
+                container
+                justifyContent="center"
+                alignItems="center"
+                mb={2.5}
+              >
+                <Grid item>
+                  <Logo />
+                </Grid>
+              </Grid>
               <Typography fontWeight="700" variant="h4" mb={1} textAlign="center">Reset Password</Typography>
-              <Typography variant="body2" textAlign="center" mb={3}>
+              <Typography variant="body2" textAlign="center" mb={2.5}>
                 Enter your new password and confirm it to reset your password.
               </Typography>
               <Stack component="form" onSubmit={handleSubmit}>
                 <Box>
-                  <Typography variant="subtitle1" fontWeight={600} component="label" htmlFor="new-password" mb="5px">
-                    New Password
-                  </Typography>
-                  <CustomTextField
+                  <TextField
                     variant="outlined"
+                    label='New Password'
+                    className="customTextField"
                     fullWidth
-                    size="small"
                     type="password"
                     value={newPassword}
                     onChange={handleNewPasswordChange}
@@ -145,13 +151,11 @@ const ResetPassword = () => {
                   />
                 </Box>
                 <Box mt={3}>
-                  <Typography variant="subtitle1" fontWeight={600} component="label" htmlFor="confirm-password" mb="5px">
-                    Reset Password
-                  </Typography>
-                  <CustomTextField
+                  <TextField
                     variant="outlined"
+                    label='Reset Password'
                     fullWidth
-                    size="small"
+                    className="customTextField"
                     type="password"
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}

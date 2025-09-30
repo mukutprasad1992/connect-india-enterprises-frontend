@@ -14,7 +14,6 @@ import {
   Alert,
   CircularProgress,
   Snackbar,
-  Container,
   Tooltip,
   Paper
 } from "@mui/material";
@@ -22,12 +21,9 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import axios from 'axios';
-import { DataGrid, GridColDef, GridToolbar, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
-import DashboardCard from "../../components/shared/DashboardCard";
-import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
@@ -636,6 +632,14 @@ const User = () => {
                     onColumnVisibilityModelChange={(newModel) =>
                       setColumnsVisibilityModel(newModel)
                     }
+                    slotProps={{
+                      columnsPanel: {
+                        sx: {
+                          maxHeight: 500,
+                          overflowY: "auto"
+                        }
+                      }
+                    }}
                     sx={{
                       fontSize: "0.575rem",
                       "& .MuiDataGrid-columnHeaders": {
