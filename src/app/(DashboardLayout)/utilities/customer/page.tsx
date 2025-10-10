@@ -47,9 +47,9 @@ interface CustomerData {
 const defaultColumnVisibility = {
   id: true,
   name: true,
-  email: false,
-  address: false,
-  phone: false,
+  email: true,
+  address: true,
+  phone: true,
   pincode: false,
   actions: true
 }
@@ -574,7 +574,7 @@ const User = () => {
       <Box >
         <Grid container spacing={1}>
           <Grid item xs={12}>
-            <Paper sx={{ mr: 1.5 }} >
+            <Paper>
               <Grid
                 container
                 justifyContent="space-between"
@@ -601,7 +601,14 @@ const User = () => {
                     </IconButton>
                   </Box>
                 </Grid>
-                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "74vh",
+                    display: "flex",
+                  }}
+                >
                   <DataGrid
                     rows={rows || []}
                     columns={columns.map((col: any) => {
@@ -622,8 +629,9 @@ const User = () => {
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
                     disableRowSelectionOnClick
-                    density="compact"
-                    autoHeight
+                    initialState={{
+                      density: "compact",
+                    }}
                     sortModel={[{ field: "id", sort: "desc" }]}
                     slots={{
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />

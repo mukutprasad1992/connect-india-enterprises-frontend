@@ -48,7 +48,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { formatDateInd, formatDateTime } from "@/utils/utils";
+import { formatDateInd, formatDateTime, formatToDDMMYYYY } from "@/utils/utils";
 import LifeInsuranceFormDialog from "../../components/serviceTypeForm/lifeInsuranceFormDialog";
 import StepProgress from "../../components/StepProgress";
 import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
@@ -337,7 +337,9 @@ const Policy = () => {
       field: "nomineeDOB",
       headerName: "Nominee DOB",
       flex: 0.12,
-      valueFormatter: (params: any) => formatDateInd(params),
+      valueGetter: (params: any) => {
+        return formatToDDMMYYYY(params);
+      },
     },
     {
       field: 'placeOfBirth',
@@ -671,7 +673,7 @@ const Policy = () => {
   };
   return (
     <>
-      <Box sx={{ pr: 1.5 }}>
+      <Box >
         <Grid container spacing={0}>
           <Grid item xs={12}>
             <Paper >
@@ -711,7 +713,14 @@ const Policy = () => {
                     </Tooltip>
                   </Box>
                 </Grid>
-                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "75vh",
+                    display: "flex",
+                  }}
+                >
                   <DataGrid
                     rows={policies || []}
                     columns={columns.map((col: any) => {
@@ -732,8 +741,9 @@ const Policy = () => {
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
                     disableRowSelectionOnClick
-                    autoHeight
-                    density="compact"
+                    initialState={{
+                      density: "compact",
+                    }}
                     sortModel={[{ field: "id", sort: "desc" }]}
                     slots={{
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
@@ -871,7 +881,7 @@ const Policy = () => {
                           {getDocumentName(key)}
                         </Link>
                       ) : (
-                        < Typography
+                        <Typography
                           variant="body2"
                           sx={{ color: isStatus ? statusColor : 'inherit', fontSize: 11 }}
                         >
@@ -879,9 +889,7 @@ const Policy = () => {
                             ? value === true
                               ? "Complete"
                               : "In Complete"
-                            : key.toLowerCase() === "placeofbirth" && value && typeof value === "object"
-                              ? `${(value as any).city}`
-                              : String(value ?? "N/A")}
+                            : displayValue} {/* <-- Use displayValue here */}
                         </Typography>
                       )}
                     </Grid>

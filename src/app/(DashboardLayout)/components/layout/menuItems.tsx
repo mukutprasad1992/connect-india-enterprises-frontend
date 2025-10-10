@@ -23,7 +23,7 @@ export type RoleBasedMenu = {
 
 export const menuItems: RoleBasedMenu = {
     1: [
-        { label: "Dashboard", icon: Dashboard, route: "/" },
+        { label: "Dashboard", icon: Dashboard, route: "/dashboard" },
         { label: "Vendor", icon: Business, route: "/utilities/collaborator" },
         { label: "Customer", icon: People, route: "/utilities/customer" },
         { label: "Inquiry", icon: HelpOutline, route: "/utilities/inquiry" },
@@ -34,7 +34,7 @@ export const menuItems: RoleBasedMenu = {
         { label: "Voucher", icon: CardGiftcard, route: "/utilities/coupon" },
     ],
     3: [
-        { label: "Dashboard", icon: Dashboard, route: "/" },
+        { label: "Dashboard", icon: Dashboard, route: "/dashboard" },
         { label: "Investment", icon: Business, route: "/utilities/investment" },
         { label: "Policy", icon: Policy, route: "/utilities/policy" },
         { label: "Insurance", icon: Lock, route: "/utilities/insurance" },

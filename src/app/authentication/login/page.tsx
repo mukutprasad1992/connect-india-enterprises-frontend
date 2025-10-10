@@ -118,10 +118,8 @@ export default function LoginPage() {
       setSnackbarMessage("Login successful!");
       setSnackbarOpen(true);
 
-      setTimeout(() => {
-        if (data.roleId === 2) router.replace("/utilities/customer");
-        else router.replace("/");
-      }, 500);
+      if (data.roleId === 2) router.replace("/utilities/customer");
+      else router.replace("/dashboard");
     } catch (err: any) {
       setSnackbarSeverity("error");
       setSnackbarMessage(err.response?.data?.message || "Login failed.");
@@ -157,10 +155,8 @@ export default function LoginPage() {
         localStorage.setItem("user", JSON.stringify(data));
         localStorage.setItem("roleId", data.roleId);
 
-        setTimeout(() => {
-          if (data.roleId === 2) router.replace("/utilities/customer");
-          else router.replace("/");
-        }, 300);
+        if (data.roleId === 2) router.replace("/utilities/customer");
+        else router.replace("/dashboard")
 
         // remove token query param from URL
         const cleanUrl = window.location.origin + window.location.pathname;

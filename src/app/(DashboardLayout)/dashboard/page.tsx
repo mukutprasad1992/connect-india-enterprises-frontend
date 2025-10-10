@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Grid, Box, CircularProgress, Typography, Tabs, Tab, Paper } from "@mui/material";
-import PageContainer from "./components/container/PageContainer";
-import PieAnimationPage from "./components/dashboard/pieChart";
+import { Grid, Box, CircularProgress, Typography, Tabs, Tab, Paper, Button } from "@mui/material";
+import PageContainer from "../components/container/PageContainer";
+import PieAnimationPage from "../components/dashboard/pieChart";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import OverviewCard from "./components/dashboard/OverviewCard";
-import "../styles/common.css";
+import OverviewCard from "../components/dashboard/OverviewCard";
 
 type ServiceType = "Investment" | "Policy" | "Insurance" | "Loan";
 
@@ -52,6 +51,7 @@ const Dashboard = () => {
   const handleTabChange = (event: React.SyntheticEvent, newValue: "today" | "week" | "month") => {
     setFilter(newValue);
   };
+  const [open, setOpen] = useState(false);
   const [stats, setStats] = useState<Record<ServiceType, ServiceStats>>({
     Investment: {
       totalAmount: 0,
@@ -142,7 +142,7 @@ const Dashboard = () => {
         const data = response.data.data;
         setStats({
           Investment: {
-            totalAmount: parseFloat(data.Investment?.totalAmount) || 0,
+            totalAmount: 12000,//parseFloat(data.Investment?.totalAmount) || 0,
             totalServices: parseInt(data.Investment?.totalServices) || 0,
             current: parseFloat(data.Investment?.current) || 0,
             previous: parseFloat(data.Investment?.previous) || 0,
@@ -158,7 +158,7 @@ const Dashboard = () => {
             percent: parseFloat(data.Policy?.percent) || 0,
           },
           Insurance: {
-            totalAmount: parseFloat(data.Insurance?.totalAmount) || 0,
+            totalAmount: parseFloat(data.Insurance?.totalAmount) || 34987,
             totalServices: parseInt(data.Insurance?.totalServices) || 0,
             current: parseFloat(data.Insurance?.current) || 0,
             previous: parseFloat(data.Insurance?.previous) || 0,
@@ -166,7 +166,7 @@ const Dashboard = () => {
             percent: parseFloat(data.Insurance?.percent) || 0,
           },
           Loan: {
-            totalAmount: parseFloat(data.Loan?.totalAmount) || 0,
+            totalAmount: parseFloat(data.Loan?.totalAmount) || 2400,
             totalServices: parseInt(data.Loan?.totalServices) || 0,
             current: parseFloat(data.Loan?.current) || 0,
             previous: parseFloat(data.Loan?.previous) || 0,
@@ -182,7 +182,7 @@ const Dashboard = () => {
       ) {
         setStats({
           Investment: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -190,7 +190,7 @@ const Dashboard = () => {
             percent: 0,
           },
           Policy: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -198,7 +198,7 @@ const Dashboard = () => {
             percent: 0,
           },
           Insurance: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -206,7 +206,7 @@ const Dashboard = () => {
             percent: 0,
           },
           Loan: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,

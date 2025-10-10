@@ -1,0 +1,750 @@
+"use client";
+import type { NextPage } from "next";
+import {
+    Box,
+    Typography,
+    Button,
+    IconButton,
+    Fade,
+    Grid,
+    ListItemIcon,
+    ListItem,
+    List,
+    ListItemText,
+} from "@mui/material";
+import { motion } from "framer-motion";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CheckIcon from '@mui/icons-material/Check';
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
+import EastOutlinedIcon from "@mui/icons-material/EastOutlined";
+import KeyboardBackspaceOutlinedIcon from "@mui/icons-material/KeyboardBackspaceOutlined";
+import Header from "../(DashboardLayout)/components/landingPage/Header";
+import FeatureCard from "../(DashboardLayout)/components/landingPage/FeatureCard";
+import LoanCalculator from "../(DashboardLayout)/components/landingPage/LoanCalculator";
+import PaymentIcon from "@mui/icons-material/Payment";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import StarIcon from "@mui/icons-material/Star";
+import SecurityIcon from "@mui/icons-material/Security";
+import { useState } from "react";
+import InfoCard from "../(DashboardLayout)/components/landingPage/InfoCard";
+import SimpleCard from "../(DashboardLayout)/components/landingPage/SimpleCard";
+import PromoCard from "../(DashboardLayout)/components/landingPage/PromoCard";
+import StepCard from "../(DashboardLayout)/components/landingPage/StepCard";
+import TrustedCompanyCard from "../(DashboardLayout)/components/landingPage/TrustedCompanyCard";
+import ChooseUsCard from "../(DashboardLayout)/components/landingPage/ChooseUsCard";
+import CustomersTestimonials from "../(DashboardLayout)/components/landingPage/CustomersTestimonials";
+import ProgressList from "../(DashboardLayout)/components/landingPage/ProgressList";
+
+const slides = [
+    {
+        image: "images/landingPage/IMG20250224152939.jpg",
+        title: "Connecting Your Loan Needs",
+        subtitle: "Simple & Secure Payment Process",
+        buttonText: "Apply for Loan",
+    },
+    {
+        image: "images/landingPage/main-slider2.jpg",
+        title: "Connecting Your Loan Needs",
+        subtitle: "Simple & Secure Payment Process",
+        buttonText: "Apply for Loan",
+    },
+];
+
+const Home: NextPage = () => {
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    const handleNext = () => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+    };
+
+    const handlePrev = () => {
+        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    };
+
+    const slide = slides[currentSlide];
+
+    const features = [
+        {
+            icon: <PaymentIcon sx={{ fontSize: 56, color: "#0d6efd" }} />,
+            title: "Quick Payment",
+            subtitle: "Process",
+        },
+        {
+            icon: <ReceiptLongIcon sx={{ fontSize: 56, color: "#0d6efd" }} />,
+            title: "No Prepayment",
+            subtitle: "Fees",
+        },
+    ];
+
+    return (
+        <Box >
+            {/* HEADER */}
+            <Header />
+            <Box sx={{ position: "relative" }}>
+                {/* HERO SECTION */}
+                <Box
+                    sx={{
+                        position: "relative",
+                        height: { xs: 520, md: 600 },
+                        width: "100%",
+                        overflow: "hidden",
+                    }}
+                >
+                    {/* Background Image */}
+                    <motion.div
+                        key={slide.image}
+                        initial={{ scale: 1 }}
+                        animate={{ scale: 1.15 }}
+                        transition={{ duration: 5, ease: "easeInOut" }}
+                        style={{
+                            backgroundImage: `url(${slide.image})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            width: "100%",
+                            height: "100%",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            zIndex: 1,
+
+                        }}
+                    />
+
+                    {/* Slide Content */}
+                    <Fade in timeout={600}>
+                        <Box
+                            sx={{
+                                position: "relative",
+                                zIndex: 3,
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "flex-start",
+                                px: { xs: 3, sm: 6, md: 10 },
+                                textAlign: "left",
+                            }}
+                        >
+                            <Box sx={{ maxWidth: "600px", color: "#fff" }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{ mb: 2, color: "#d3d3d3", fontSize: "1rem" }}
+                                >
+                                    {slide.subtitle}
+                                </Typography>
+
+                                <Typography
+                                    variant="h3"
+                                    sx={{
+                                        mb: 3,
+                                        fontWeight: "bold",
+                                        lineHeight: 1.2,
+                                        fontSize: { xs: "2rem", md: "3rem" },
+                                    }}
+                                >
+                                    {slide.title}
+                                </Typography>
+
+                                <Button
+                                    variant="contained"
+                                    sx={{
+                                        backgroundColor: "#1976d2",
+                                        textTransform: "none",
+                                        fontWeight: "bold",
+                                        px: 3,
+                                        py: 1.2,
+                                        borderRadius: "8px",
+                                        "&:hover": { backgroundColor: "#1565c0" },
+                                    }}
+                                >
+                                    {slide.buttonText}
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Fade>
+
+                    {/* Arrows */}
+                    <IconButton
+                        onClick={handlePrev}
+                        sx={{
+                            position: "absolute",
+                            top: "45%",
+                            right: 20,
+                            transform: "translateY(-50%)",
+                            color: "#fff",
+                            border: "2px solid #fff",
+                            borderRadius: "50%",
+                            width: 50,
+                            height: 50,
+                            "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+                            zIndex: 4,
+                        }}
+                    >
+                        <KeyboardBackspaceOutlinedIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+
+                    <IconButton
+                        onClick={handleNext}
+                        sx={{
+                            position: "absolute",
+                            top: "55%",
+                            right: 20,
+                            transform: "translateY(-50%)",
+                            color: "#fff",
+                            border: "2px solid #fff",
+                            borderRadius: "50%",
+                            width: 50,
+                            height: 50,
+                            "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+                            zIndex: 4,
+                        }}
+                    >
+                        <EastOutlinedIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+
+                    {/* Feature Cards - bottom left */}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            bottom: -1,
+                            left: { xs: -10, sm: 40, md: 80 },
+                            zIndex: 10, // ensure above calculator
+                            display: "flex",
+                            flexDirection: { xs: "column", sm: "row" },
+                            gap: 2,
+                            pointerEvents: "auto", // allow hover/click
+                        }}
+                    >
+                        {features.map((feature) => (
+                            <FeatureCard
+                                key={feature.title}
+                                icon={feature.icon}
+                                title={feature.title}
+                                subtitle={feature.subtitle}
+                            />
+                        ))}
+                    </Box>
+                </Box>
+
+                {/* Loan Calculator - right side */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: { xs: "auto", md: "129.8%" },
+                        right: { xs: 20, md: 80 },
+                        transform: { md: "translateY(-50%)" },
+                        zIndex: 8,
+                        pointerEvents: "auto",
+                    }}
+                >
+                    <LoanCalculator />
+                </Box>
+            </Box>
+            <Grid
+                container
+                sx={{
+                    px: { xs: 3, sm: 6, md: 10 },
+                    backgroundColor: 'white'
+                }}
+            >
+                <Grid item xs={12} md={8}>
+                    <Box display="flex" alignItems="center" mb={2} sx={{ pb: 2, pt: 2 }}>
+                        <Typography
+                            variant="h6"
+                            sx={{ fontWeight: "bold", mr: 1 }}
+                        >
+                            Company Introductions
+                        </Typography>
+                        <Box
+                            sx={{
+                                border: "2px solid blue",
+                                width: 40,
+                                height: 2,
+                            }}
+                        />
+                    </Box>
+                    <Typography sx={{ fontSize: 45, pb: 4.5 }}>
+                        Our Loans will Fill Your Dreams
+                    </Typography>
+                    <Typography sx={{ fontSize: 45, pb: 4.5 }}>
+                        Come True
+                    </Typography>
+                    <Grid item xs={10}>
+                        <Typography sx={{ fontSize: 19, fontFamily: '"Rajdhani", serif' }}>
+                            There are many variations of passages of lorem ipsum available the majority have suffered
+                            alteration in some form by injected humour. Duis aute irure dolor lipsum is simply free
+                            text available in the local markets in reprehenderit.Nam aliquam sem et tortor consequat
+                            mattis pellentesque semper tailored for specific uses and specific market segment.
+                        </Typography>
+                    </Grid>
+
+                </Grid>
+                <Grid item xs={8}>
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        <InfoCard
+                            icon={<StarIcon />}
+                            title="Premium Quality"
+                            description="We deliver only the best products with top-notch quality assurance."
+                        />
+                        <InfoCard
+                            icon={<SecurityIcon />}
+                            title="Secure & Safe"
+                            description="Your data is protected with advanced security protocols."
+                        />
+                    </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+
+                </Grid>
+            </Grid>
+            <Box display="flex" alignItems="center" justifyContent={'center'} sx={{ pt: 10, backgroundColor: 'white', }}>
+                <Typography
+                    variant="h6"
+                    sx={{ mr: 1 }}
+                >
+                    What Were Offering
+                </Typography>
+                <Box
+                    sx={{
+                        border: "2px solid blue",
+                        width: 40,
+                        height: 2,
+                        mt: .5
+                    }}
+                />
+            </Box>
+            <Typography
+                variant="h2"
+                sx={{
+                    display: 'flex',
+                    backgroundColor: 'white',
+                    justifyContent: 'center',
+                    pb: 2
+                }}
+            >
+                All Loans Services
+            </Typography>
+            <Box display="flex" gap={3} flexWrap="wrap" sx={{ justifyContent: 'center', backgroundColor: 'white' }}>
+                <SimpleCard
+                    image="images/landingPage/main-slider2.jpg"
+                    title="Personal Loan"
+                    description="There are many variations of passages of lorem ipsum available the majority have some."
+                />
+                <SimpleCard
+                    image="images/landingPage/main-slider2.jpg"
+                    title="Business Loan"
+                    description="There are many variations of passages of lorem ipsum available the majority have some."
+                />
+                <SimpleCard
+                    image="images/landingPage/main-slider1.jpg"
+                    title="Education Loan"
+                    description="There are many variations of passages of lorem ipsum available the majority have some."
+                />
+            </Box>
+            <Grid
+                container
+                spacing={1}
+                sx={{
+                    m: 3,
+                    pt: 7,
+                    pb: 7,
+                    display: 'relative',
+                    position: "relative",
+                    overflow: "hidden",
+                    // backgroundColor: "#f9f9ff",
+                    "&::before, &::after": {
+                        content: '""',
+                        position: "absolute",
+                        width: "100px",
+                        height: "100px",
+                        backgroundSize: "contain",
+                        backgroundRepeat: "no-repeat",
+                        opacity: 0.6,
+                        animation: "float 6s ease-in-out infinite",
+                    },
+                    "&::before": {
+                        backgroundImage: 'url(/images/landingPage/why-choose-shape-1-2.png)',
+                        top: "10%",
+                        left: "15%",
+                        animationDelay: "0s",
+                    },
+
+                    "&::after": {
+                        backgroundImage: 'url(/images/landingPage/feature-shape-1-2.png)',
+                        bottom: "10%",
+                        right: "15%",
+                        animationDelay: "3s",
+                    },
+                    "@keyframes float": {
+                        "0%, 100%": { transform: "translateY(0px)" },
+                        "50%": { transform: "translateY(-20px)" },
+                    },
+                }}
+            >
+                <Grid item xs={6}>
+                    <Box display="flex" alignItems="center" mb={2} sx={{ pt: 2, pl: 5 }}>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", mr: 1 }}>
+                            Get to Know About
+                        </Typography>
+                        <Box sx={{ border: "2px solid blue", width: 40, height: 2 }} />
+                    </Box>
+                    <Typography variant="h2" sx={{ display: "flex", pl: 5 }}>
+                        Flexible and Quick Business Loans For You
+                    </Typography>
+                </Grid>
+
+                <Grid item xs={5}>
+                    Turpis cursus in hac habitasse platea dictumst quisque. Aenean euismod
+                    elementum nisi quis eleifend quam adipiscing vitae proin. There of
+                    available but the majority have suffered alteration in some form, by
+                    injected humour or randomised words which don’t look even slightly
+                    believable. Nam aliquam sem et tortor consequat at urna mattis
+                    pellentesque...
+                </Grid>
+            </Grid>
+            <Box sx={{ position: "relative" }}>
+                <Grid
+                    item
+                    xs={12}
+                    sx={{
+                        m: 3,
+                        pt: 7,
+                        pb: 7,
+                        position: "relative",
+                        overflow: "hidden",
+                        "&::before, &::after": {
+                            content: '""',
+                            position: "absolute",
+                            width: "100px",
+                            height: "100px",
+                            backgroundSize: "contain",
+                            backgroundRepeat: "no-repeat",
+                            opacity: 0.6,
+                            animation: "float 6s ease-in-out infinite",
+                        },
+                        "&::before": {
+                            backgroundImage: 'url(/images/landingPage/why-choose-shape-1-2.png)',
+                            top: "10%",
+                            left: "0%",
+                            animationDelay: "0s",
+                        },
+                        "&::after": {
+                            backgroundImage: 'url(/images/landingPage/feature-shape-1-2.png)',
+                            bottom: "10%",
+                            right: "0%",
+                            animationDelay: "3s",
+                        },
+                        "@keyframes float": {
+                            "0%, 100%": { transform: "translateY(0px)" },
+                            "50%": { transform: "translateY(-20px)" },
+                        },
+                    }}
+                >
+                    <Box sx={{ display: "flex", justifyContent: "center", gap: 3, flexWrap: "wrap" }}>
+                        <PromoCard
+                            icon={<StarIcon />}
+                            description="We deliver only the best products with top-notch quality assurance."
+                        />
+                        <PromoCard
+                            icon={<SecurityIcon />}
+                            description="Your data is protected with advanced security protocols."
+                        />
+                        <PromoCard
+                            icon={<SecurityIcon />}
+                            description="Your data is protected with advanced security protocols."
+                        />
+                    </Box>
+                </Grid>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "60%",
+                        left: "75%",
+                        transform: "translate(-50%, -50%)",
+                        zIndex: 10,
+                    }}
+                >
+                    <TrustedCompanyCard />
+                </Box>
+                <Grid
+                    container
+                    spacing={0}
+                    sx={{
+                        overflow: "hidden",
+                        position: "relative",
+                        backgroundColor: "#0d0d30ff",
+                        color: "#fff",
+                        backgroundImage: "url('/images/landingPage/pattern-bg.png')",
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: "cover",
+                        px: { xs: 3, md: 8 },
+                        alignItems: "center",
+                        pt: 10,
+                        mt: 13,
+                        pb: 10,
+                    }}
+                >
+                    <Grid item xs={12} md={6}>
+                        <Typography
+                            variant="subtitle2"
+                            sx={{
+                                color: "#1E90FF",
+                                textTransform: "uppercase",
+                                letterSpacing: 1,
+                                fontWeight: 600,
+                                mb: 1,
+                            }}
+                        >
+                            Trusted Company
+                        </Typography>
+
+                        <Typography
+                            variant="h1"
+                            sx={{
+                                fontWeight: "bold",
+                                mb: 2,
+                                lineHeight: 1.4,
+                            }}
+                        >
+                            Most of the People Trust on Us For Fast Services
+                        </Typography>
+                        <Grid container sx={{
+                            mt: 5
+                        }}>
+                            <Grid item xs={4} >
+                                <Box
+                                    component="img"
+                                    src="/images/landingPage/trust-1-1.png"
+                                    alt="Trusted Company"
+                                    sx={{
+                                        width: 180,
+                                        borderRadius: 2,
+                                        mb: 2,
+                                        boxShadow: 3,
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={8}>
+                                <Typography variant="body1" sx={{ opacity: 0.8, mb: 3, maxWidth: 360 }}>
+                                    There are many variations of passages of lorem ipsum available,
+                                    the majority have suffered alteration in some form by injected humour.
+                                    Duis aute irure dolor in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                                </Typography>
+                            </Grid>
+                            {/* Image */}
+
+                        </Grid>
+                        <Grid container spacing={1}>
+                            <Grid item xs={4.5}>
+                                <List dense>
+                                    {["Credit Card Per Day", "Personal Loan", "Car / Auto Loan", "Home Loan"].map((item, i) => (
+                                        <ListItem key={i} sx={{ p: 0.5 }}>
+                                            <ListItemIcon sx={{ minWidth: 32 }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: "50%",
+                                                        border: "2px solid #1E90FF",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    <CheckIcon sx={{ fontSize: 16, color: "#1E90FF" }} />
+                                                </Box>
+                                            </ListItemIcon>
+                                            <ListItemText primary={item} />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <List dense>
+                                    {[
+                                        "Gold Loan Per Day",
+                                        "Mortgage Loan",
+                                        "Education / Student Loan",
+                                        "Wedding Loan",
+                                    ].map((item, i) => (
+                                        <ListItem key={i} sx={{ p: 0.5 }}>
+                                            <ListItemIcon sx={{ minWidth: 32 }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: "50%",
+                                                        border: "2px solid #1E90FF",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    <CheckIcon sx={{ fontSize: 16, color: "#1E90FF" }} />
+                                                </Box>
+                                            </ListItemIcon>
+                                            <ListItemText primary={item} />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Box>
+            <Box sx={{ position: "relative" }}>
+                <Grid
+                    item
+                    xs={12}
+                >
+                    <CustomersTestimonials />
+                </Grid>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "68.9%",
+                        right: "25%",
+                        transform: "translate(-50%, -50%)",
+                        zIndex: 10,
+                    }}
+                >
+                    <ChooseUsCard />
+                </Box>
+                <Grid
+                    container
+                    spacing={0}
+                    sx={{
+                        overflow: "hidden",
+                        position: "relative",
+                        color: "#000000ff",
+                        backgroundColor: "#ffffffff",
+                        px: { xs: 3, md: 8 },
+                        alignItems: "center",
+                        pt: 10,
+                        mt: 12,
+                        pb: 8,
+                        "&::before, &::after": {
+                            content: '""',
+                            position: "absolute",
+                            width: "100px",
+                            height: "100px",
+                            backgroundSize: "contain",
+                            backgroundRepeat: "no-repeat",
+                            opacity: 0.6,
+                            animation: "float 6s ease-in-out infinite",
+                        },
+                        "&::before": {
+                            backgroundImage: 'url(/images/landingPage/why-choose-shape-1-2.png)',
+                            top: "10%",
+                            left: "70%",
+                            animationDelay: "0s",
+                        },
+                        "&::after": {
+                            backgroundImage: 'url(/images/landingPage/feature-shape-1-2.png)',
+                            bottom: "10%",
+                            right: "10%",
+                            animationDelay: "3s",
+                        },
+                        "@keyframes float": {
+                            "0%, 100%": { transform: "translateY(0px)" },
+                            "50%": { transform: "translateY(-20px)" },
+                        },
+                    }}
+                >
+                    <Grid item xs={12} md={6}></Grid>
+                    <Grid item xs={12} md={6}>
+                        <Box display="flex" alignItems="center" justifyContent={'start'} sx={{ pl: 3 }} >
+                            <Typography
+                                variant="subtitle2"
+                                sx={{
+                                    color: "#000000ff",
+                                    textTransform: "uppercase",
+                                    letterSpacing: 1,
+                                    fontWeight: 600,
+                                    mb: .5,
+                                }}
+                            >
+                                Our Benfits
+                            </Typography>
+                            <Box
+                                sx={{
+                                    border: "2px solid blue",
+                                    width: 40,
+                                    height: 2,
+                                    mb: 1,
+                                    ml: 1
+                                }}
+                            />
+                        </Box>
+                        <Typography
+                            variant="h1"
+                            sx={{
+                                fontWeight: "bold",
+                                mb: 2,
+                                lineHeight: 1.4,
+                                pl: 3
+                            }}
+                        >
+                            Why Choose Us?
+                        </Typography>
+                        <Grid container sx={{
+                            mt: 4
+                        }}>
+                            <Grid item xs={12}>
+                                <Typography variant="body1" sx={{ mb: 3, ml: 3 }}>
+                                    There are many variations of passages of lorem ipsum available,
+                                    the majority have suffered alteration in some form by injected humour.
+                                    Duis aute irure dolor in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                                </Typography>
+                            </Grid>
+                            {/* Image */}
+
+                        </Grid>
+                        <Grid
+                            container
+                            spacing={1}
+                        >
+                            <Grid item xs={6}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        gap: 1,
+                                        ml: 2
+                                    }}
+                                >
+                                    <PlayArrowIcon sx={{ color: "blue" }} />
+                                    <Typography sx={{ fontWeight: 600, fontSize: 20, lineHeight: 1 }}>
+                                        Professional Team
+                                    </Typography>
+                                </Box>
+                                <Typography sx={{ pl: 3, pt: 3 }}>
+                                    Lorem ipsum dolor sit is amet, consectetur notted.
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={6}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <PlayArrowIcon sx={{ color: "blue" }} />
+                                    <Typography sx={{ fontWeight: 600, fontSize: 20, lineHeight: 1 }}>
+                                        Quick Payments
+                                    </Typography>
+                                </Box>
+                                <Typography sx={{ pt: 3, ml: 1 }}>
+                                    Lorem ipsum dolor sit is amet, consectetur notted.
+                                </Typography>
+                            </Grid>
+                            <ProgressList />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Box>
+        </Box >
+    );
+};
+
+export default Home;

@@ -341,7 +341,6 @@ const InquiryPage = () => {
             minWidth: 130,
             flex: 0.12,
             renderCell: (params: any) => {
-                console.log("-------params-----", params.row.serviceId)
                 const status = params.row.status;
                 return (
                     <Box sx={{ display: "flex", gap: 0.01, alignItems: "center", px: 0.5, width: "100%", height: "100%" }}>
@@ -584,7 +583,7 @@ const InquiryPage = () => {
                 </div>
             )}
             <PageContainer title="Inquiry" description="This is the inquiry page">
-                <Box sx={{ pr: 1.5 }}>
+                <Box >
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
                             <Paper >
@@ -597,7 +596,7 @@ const InquiryPage = () => {
                                     ><Grid sx={{ m: 2 }} >
                                             <Typography variant="h4">Inquiry</Typography>
                                         </Grid>
-                                        <Grid item xs={6} sx={{ mt: 1, mb: 1, mr: 1 }}>
+                                        <Grid item xs={6} sx={{ mt: 1 }}>
                                             <Box display="flex" justifyContent="flex-end" alignItems="center">
                                                 <Tooltip title="Export to Excel">
                                                     <IconButton onClick={exportToExcel}>
@@ -614,7 +613,14 @@ const InquiryPage = () => {
                                             </Box>
                                         </Grid>
                                     </Grid>
-                                    <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                                    <Box
+                                        sx={{
+                                            flexGrow: 1,
+                                            width: "100%",
+                                            height: "74vh",
+                                            display: "flex",
+                                        }}
+                                    >
                                         <DataGrid
                                             rows={inquiries || []}
                                             columns={columns.map((col: any) => {
@@ -633,10 +639,11 @@ const InquiryPage = () => {
                                             })}
                                             pageSizeOptions={[5, 10, 20, 50, 100]}
                                             paginationModel={pagination}
-                                            density="compact"
+                                            initialState={{
+                                                density: "compact",
+                                            }}
                                             onPaginationModelChange={setPagination}
                                             disableRowSelectionOnClick
-                                            autoHeight
                                             sortModel={[{ field: "id", sort: "desc" }]}
                                             slots={{
                                                 toolbar: () => <CustomToolbar onSave={handleSaveLayout} />

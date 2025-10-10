@@ -673,7 +673,7 @@ const Insurance = () => {
   };
   return (
     <>
-      <Box sx={{ pr: 1.5 }}>
+      <Box >
         <Grid container spacing={0}>
           <Grid item xs={12}>
             <Paper >
@@ -713,11 +713,22 @@ const Insurance = () => {
                     </Tooltip>
                   </Box>
                 </Grid>
-                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "74vh",
+                    display: "flex",
+                  }}
+                >
                   <DataGrid
                     rows={insurances || []}
                     columns={columns.map((col: any) => {
-                      if (col.field === "actions" || col.field === "activeSteps" || col.field === "status") {
+                      if (
+                        col.field === "actions" ||
+                        col.field === "activeSteps" ||
+                        col.field === "status"
+                      ) {
                         return { ...col, flex: 1, editable: false };
                       }
                       return {
@@ -734,19 +745,20 @@ const Insurance = () => {
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
                     disableRowSelectionOnClick
-                    autoHeight
                     sortModel={[{ field: "id", sort: "desc" }]}
                     slots={{
-                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                      toolbar: () => <CustomToolbar onSave={handleSaveLayout} />,
                     }}
-                    density="compact"
+                    initialState={{
+                      density: "compact",
+                    }}
                     slotProps={{
                       columnsPanel: {
                         sx: {
                           maxHeight: 400,
-                          overflowY: "auto"
-                        }
-                      }
+                          overflowY: "auto",
+                        },
+                      },
                     }}
                     columnVisibilityModel={columnsVisibilityModel}
                     onColumnVisibilityModelChange={(newModel) =>
@@ -756,17 +768,18 @@ const Insurance = () => {
                       fontSize: "0.575rem",
                       "& .MuiDataGrid-columnHeaders": {
                         fontSize: "0.575rem",
-                        fontWeight: 600
+                        fontWeight: 600,
                       },
                       "& .MuiDataGrid-cell": {
-                        fontSize: "0.575rem"
+                        fontSize: "0.575rem",
                       },
                       "& .MuiDataGrid-toolbarContainer": {
-                        fontSize: "0.575rem"
-                      }
+                        fontSize: "0.575rem",
+                      },
                     }}
                   />
                 </Box>
+
               </Box>
             </Paper>
           </Grid>

@@ -552,7 +552,7 @@ const Investment = () => {
 
   return (
     <>
-      <Box sx={{ pr: 1.5 }}>
+      <Box >
         <Grid container spacing={0}>
           <Grid item xs={12}>
             <Paper >
@@ -592,7 +592,14 @@ const Investment = () => {
                     </Tooltip>
                   </Box>
                 </Grid>
-                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "block", }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "74vh", // 👈 fixed height
+                    display: "block",
+                  }}
+                >
                   <DataGrid
                     rows={allInvestment || []}
                     columns={columns.map((col: any) => {
@@ -613,8 +620,9 @@ const Investment = () => {
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
                     disableRowSelectionOnClick
-                    autoHeight
-                    density="compact"
+                    initialState={{
+                      density: "compact",
+                    }}
                     sortModel={[{ field: "id", sort: "desc" }]}
                     slots={{
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />

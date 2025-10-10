@@ -50,8 +50,8 @@ const Profile = () => {
     const userString = localStorage.getItem('user');
     if (userString) {
       try {
-        const user = JSON.parse(userString); // parse JSON string
-        profileImageURL = user?.profileImageURL; // safely access property
+        const user = JSON.parse(userString);
+        profileImageURL = user?.profileImageURL;
         console.log(profileImageURL);
       } catch (error) {
         console.error('Error parsing user from localStorage', error);
@@ -75,7 +75,7 @@ const Profile = () => {
   const handleLogoutConfirm = () => {
     localStorage.clear();
     setOpenLogoutDialog(false);
-    router.push("/authentication/login");
+    router.push("/");
   };
 
   const handleLogoutCancel = () => {

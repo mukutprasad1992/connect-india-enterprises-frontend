@@ -727,7 +727,7 @@ const Collaborator = () => {
           <CircularProgress />
         </div>
       )}
-      <Box sx={{ pr: 1.5 }}>
+      <Box>
         <Grid container spacing={0}>
           <Grid item xs={12}>
             <Paper >
@@ -740,7 +740,7 @@ const Collaborator = () => {
                 > <Grid sx={{ m: 2 }} >
                     <Typography variant="h4">Vendor</Typography>
                   </Grid>
-                  <Box display="flex" justifyContent="flex-end" sx={{ mr: 1, mt: 1, mb: 1 }}>
+                  <Box display="flex" justifyContent="flex-end" sx={{ mr: 1 }}>
                     <IconButton
                       sx={{ color: "#465fff" }}
                       onClick={() => {
@@ -782,7 +782,14 @@ const Collaborator = () => {
                     </IconButton>
                   </Box>
                 </Grid>
-                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "74vh",
+                    display: "flex",
+                  }}
+                >
                   <DataGrid
                     rows={vendorList || []}
                     columns={columns.map((col: any) => {
@@ -803,8 +810,9 @@ const Collaborator = () => {
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
                     disableRowSelectionOnClick
-                    autoHeight
-                    density="compact"
+                    initialState={{
+                      density: "compact",
+                    }}
                     sortModel={[{ field: "id", sort: "desc" }]}
                     slots={{
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />

@@ -36,7 +36,7 @@ import VoucherPdfView from "../../components/generatePdf/VoucherPdfView";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from "jwt-decode";
-import { formatDate } from "../../../../utils/utils";
+import { formatDate, formatDateInd, formatToDDMMYYYY } from "../../../../utils/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -692,8 +692,8 @@ const VoucherTable: React.FC = () => {
       headerName: "Validity From",
       flex: 1,
       editable: true,
-      renderCell: (params: any) => {
-        return formatDate(params.value || params.row.validityFrom);
+      valueGetter: (params: any) => {
+        return formatToDDMMYYYY(params);
       },
     },
     {
@@ -701,8 +701,8 @@ const VoucherTable: React.FC = () => {
       headerName: "Validity To",
       flex: 1,
       editable: true,
-      renderCell: (params: any) => {
-        return formatDate(params.value || params.row.validityTo);
+      valueGetter: (params: any) => {
+        return formatToDDMMYYYY(params);
       },
     },
     {
@@ -716,6 +716,7 @@ const VoucherTable: React.FC = () => {
       headerName: "Actions",
       flex: .01,
       renderCell: (params: any) => (
+
         <Box display="flex" justifyContent="flex-start" width="100%" mt={1}>
           {/* <IconButton color="primary" onClick={() => {
             handleClickOpenPdfPopUp(params.row)
@@ -739,6 +740,7 @@ const VoucherTable: React.FC = () => {
             </IconButton>
           </Tooltip>
           {roleId === 1 && (
+
             <>
               <Tooltip title={params.row.status === 'Disable' ? 'User has already redeemed' : 'Redeem'}>
                 <span>
@@ -1088,18 +1090,17 @@ const VoucherTable: React.FC = () => {
         </div>
       )}
       <Box>
-        <Grid container spacing={1}>
+        <Grid container >
           <Grid item xs={12}>
-            <Paper sx={{ mr: 1.5 }}>
+            <Paper >
               <Grid
                 container
                 justifyContent="space-between"
                 alignItems="center"
-                sx={{ mb: 2 }}
               ><Grid sx={{ m: 2 }}>
                   <Typography variant="h4">Voucher</Typography>
                 </Grid>
-                <Grid item xs={6} sx={{ mr: 1, mt: 1, mb: 1 }}>
+                <Grid item xs={6} sx={{ mr: 1 }}>
                   <Box display="flex" justifyContent="flex-end" >
                     {roleId === 1 && (
                       <IconButton
@@ -1117,7 +1118,14 @@ const VoucherTable: React.FC = () => {
                     </IconButton>
                   </Box>
                 </Grid>
-                <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "74vh",
+                    display: "flex",
+                  }}
+                >
                   <DataGrid
                     rows={rows || []}
                     columns={columns.map((col: any) => {
@@ -1138,8 +1146,9 @@ const VoucherTable: React.FC = () => {
                     paginationModel={pagination}
                     onPaginationModelChange={setPagination}
                     disableRowSelectionOnClick
-                    autoHeight
-                    density="compact"
+                    initialState={{
+                      density: "compact",
+                    }}
                     sortModel={[{ field: "id", sort: "desc" }]}
                     slots={{
                       toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
