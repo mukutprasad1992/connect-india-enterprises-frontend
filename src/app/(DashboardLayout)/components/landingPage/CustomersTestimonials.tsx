@@ -10,32 +10,32 @@ const testimonials = [
         name: "Clyde Williamson",
         role: "Analytics",
         text: "I was very impressed by the company service lore ipsum is simply free text used by copy typing refreshing. Neque porro est dolorem ipsum quia.",
-        image: "/images/client1.jpg",
+        image: "/images/landingPage/testimonials-1-1.png",
     },
     {
         name: "Gary Dawson",
         role: "Analytics",
         text: "I was very impressed by the company service lore ipsum is simply free text used by copy typing refreshing. Neque porro est dolorem ipsum quia.",
-        image: "/images/client3.jpg",
+        image: "/images/landingPage/testimonials-1-2.png",
     },
 
     {
         name: "Vernon Ray",
         role: "Analytics",
         text: "I was very impressed by the company service lore ipsum is simply free text used by copy typing refreshing. Neque porro est dolorem ipsum quia.",
-        image: "/images/client2.jpg",
+        image: "/images/landingPage/testimonials-1-3.png",
     },
     {
         name: "Clyde Williamson",
         role: "Analytics",
         text: "I was very impressed by the company service lore ipsum is simply free text used by copy typing refreshing. Neque porro est dolorem ipsum quia.",
-        image: "/images/client1.jpg",
+        image: "/images/landingPage/testimonials-1-1.png",
     },
     {
         name: "Gary Dawson",
         role: "Analytics",
         text: "I was very impressed by the company service lore ipsum is simply free text used by copy typing refreshing. Neque porro est dolorem ipsum quia.",
-        image: "/images/client3.jpg",
+        image: "/images/landingPage/testimonials-1-2.png",
     },
 ];
 

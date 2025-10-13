@@ -11,6 +11,8 @@ import {
     ListItem,
     List,
     ListItemText,
+    Slider,
+    Divider,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -35,6 +37,13 @@ import TrustedCompanyCard from "../(DashboardLayout)/components/landingPage/Trus
 import ChooseUsCard from "../(DashboardLayout)/components/landingPage/ChooseUsCard";
 import CustomersTestimonials from "../(DashboardLayout)/components/landingPage/CustomersTestimonials";
 import ProgressList from "../(DashboardLayout)/components/landingPage/ProgressList";
+import StatsSection from "../(DashboardLayout)/components/landingPage/StatsSection";
+import BlogCard from "../(DashboardLayout)/components/landingPage/BlogCard";
+import CollaboratorCard from "../(DashboardLayout)/components/landingPage/CollaboratorCard";
+import Collaborators from "../(DashboardLayout)/components/landingPage/CollaboratorCard";
+import LoanApplySection from "../(DashboardLayout)/components/landingPage/LoanApplySection";
+import Footer from "../(DashboardLayout)/components/landingPage/Footer";
+import { useRouter } from 'next/navigation';
 
 const slides = [
     {
@@ -44,19 +53,33 @@ const slides = [
         buttonText: "Apply for Loan",
     },
     {
-        image: "images/landingPage/main-slider2.jpg",
+        image: "images/landingPage/DSC_7964.jpg",
         title: "Connecting Your Loan Needs",
         subtitle: "Simple & Secure Payment Process",
         buttonText: "Apply for Loan",
     },
 ];
+const collaborators = [
+    { logo: "/images/landingPage/testimonials-1-3.png", name: "John Doe" },
+    { logo: "/images/landingPage/testimonials-1-1.png", name: "Jane Smith" },
+    { logo: "/images/landingPage/testimonials-1-2.png", name: "Alice Johnson" },
+    { logo: "/images/landingPage/testimonials-1-3.png", name: "John Doe" },
+    { logo: "/images/landingPage/testimonials-1-1.png", name: "Jane Smith" },
+    { logo: "/images/landingPage/testimonials-1-2.png", name: "Alice Johnson" },
+    { logo: "/images/landingPage/testimonials-1-3.png", name: "John Doe" },
+    { logo: "/images/landingPage/testimonials-1-1.png", name: "Jane Smith" },
+    { logo: "/images/landingPage/testimonials-1-2.png", name: "Alice Johnson" },
+    { logo: "/images/landingPage/testimonials-1-3.png", name: "John Doe" },
+    { logo: "/images/landingPage/testimonials-1-1.png", name: "Jane Smith" },
+    { logo: "/images/landingPage/testimonials-1-2.png", name: "Alice Johnson" },
+];
 
 const Home: NextPage = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
-
-    const handleNext = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
-    };
+    const router = useRouter()
+        ; const handleNext = () => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        };
 
     const handlePrev = () => {
         setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
@@ -76,6 +99,11 @@ const Home: NextPage = () => {
             subtitle: "Fees",
         },
     ];
+
+    const handleApplyLoan = () => {
+        // Logic to navigate to the loan application page
+        router.push("/authentication/login")
+    }
 
     return (
         <Box >
@@ -107,10 +135,21 @@ const Home: NextPage = () => {
                             top: 0,
                             left: 0,
                             zIndex: 1,
-
                         }}
-                    />
-
+                    >
+                        {/* Smooth Gradient Overlay */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                background: "linear-gradient(to right, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)",
+                                zIndex: 2,
+                            }}
+                        ></div>
+                    </motion.div>
                     {/* Slide Content */}
                     <Fade in timeout={600}>
                         <Box
@@ -156,6 +195,7 @@ const Home: NextPage = () => {
                                         borderRadius: "8px",
                                         "&:hover": { backgroundColor: "#1565c0" },
                                     }}
+                                    onClick={handleApplyLoan}
                                 >
                                     {slide.buttonText}
                                 </Button>
@@ -329,16 +369,19 @@ const Home: NextPage = () => {
                     image="images/landingPage/main-slider2.jpg"
                     title="Personal Loan"
                     description="There are many variations of passages of lorem ipsum available the majority have some."
+                    buttonImage="images/landingPage/loan-1.png"
                 />
                 <SimpleCard
                     image="images/landingPage/main-slider2.jpg"
                     title="Business Loan"
                     description="There are many variations of passages of lorem ipsum available the majority have some."
+                    buttonImage="images/landingPage/insurance-1.png"
                 />
                 <SimpleCard
                     image="images/landingPage/main-slider1.jpg"
                     title="Education Loan"
                     description="There are many variations of passages of lorem ipsum available the majority have some."
+                    buttonImage="images/landingPage/investment-1.png"
                 />
             </Box>
             <Grid
@@ -743,6 +786,88 @@ const Home: NextPage = () => {
                     </Grid>
                 </Grid>
             </Box>
+            <StatsSection />
+            <Box
+                sx={{
+                    px: { xs: 2, md: 10 },
+                    backgroundColor: "#eef2f7",
+                }}
+            >
+                <Box display="flex" alignItems="center" justifyContent={'center'} sx={{ pt: 10 }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ mr: 1 }}
+                    >
+                        Directly From the Blog
+                    </Typography>
+                    <Box
+                        sx={{
+                            border: "2px solid blue",
+                            width: 40,
+                            height: 2,
+                        }}
+                    />
+                </Box>
+                <Typography
+                    variant="h2"
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        pb: 10,
+                    }}
+                >
+                    News & Articles
+                </Typography>
+                <Grid container spacing={0} sx={{ pb: 10 }}>
+                    <Grid item xs={4} md={4}>
+                        <BlogCard
+                            image="/images/landingPage/blog-1-1.png"
+                            date="20 Sep, 2023"
+                            author="Admin"
+                            category="Credit Card"
+                            title="For Car auto you will get 90% loan amount"
+                            comments={0}
+                        />
+                    </Grid>
+                    <Grid item xs={4} md={4}>
+
+                        <BlogCard
+                            image="/images/landingPage/blog-1-2.png"
+                            date="20 Sep, 2023"
+                            author="Admin"
+                            category="Credit Card"
+                            title="For Car auto you will get 90% loan amount"
+                            comments={0}
+                        />
+                    </Grid>
+                    <Grid item xs={4} md={4}>
+                        <BlogCard
+                            image="/images/landingPage/blog-1-3.png"
+                            date="20 Sep, 2023"
+                            author="Admin"
+                            category="Credit Card"
+                            title="For Car auto you will get 90% loan amount"
+                            comments={0}
+                        />
+                    </Grid>
+                </Grid>
+            </Box>
+            <Grid container >
+                <Grid item xs={12} >
+                    <Divider />
+                </Grid>
+
+            </Grid>
+            <Box sx={{ p: 4, pl: 10, pr: 10, backgroundColor: "#eef2f7", }}>
+                <Typography variant="h5" sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', mb: 2 }}>
+                    Our Collaborators
+                </Typography>
+                <Collaborators collaborators={collaborators} />
+            </Box>
+            <Box>
+                <LoanApplySection />
+            </Box>
+            <Footer />
         </Box >
     );
 };

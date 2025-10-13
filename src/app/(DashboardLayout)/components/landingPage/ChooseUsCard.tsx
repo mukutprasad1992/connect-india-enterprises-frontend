@@ -23,9 +23,29 @@ const ChooseUsCard: React.FC = () => {
         >
             {/* Top Icon */}
             <Grid container>
-                <Grid item xs={3} sx={{ pl: 14 }}>
-                    <StarIcon sx={{ color: "#FFD700", fontSize: 36 }} />
+                <Grid
+                    item
+                    xs={3}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        pl: { xs: 2, md: 17 },
+                    }}
+                >
+                    <Box
+                        component="img"
+                        src="/images/landingPage/business-growth-1.png"
+                        alt="Choose Us Icon"
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            filter: "brightness(0) invert(1)",
+
+                        }}
+                    />
                 </Grid>
+
                 <Grid item xs={8} >
                     {/* Text */}
                     <Typography
@@ -43,7 +63,7 @@ const ChooseUsCard: React.FC = () => {
             {/* Image below text */}
             <Box
                 component="img"
-                src="/images/landingPage/IMG20250224152930.jpg"
+                src="/images/landingPage/DSC_7789.jpg"
                 alt="Choose Us"
                 sx={{
                     width: 570,

@@ -9,12 +9,13 @@ import {
     Grid,
     Button,
 } from "@mui/material";
+import { useRouter } from 'next/navigation';
 
 const LoanCalculator: React.FC = () => {
     const [amount, setAmount] = useState(1000);
     const [months, setMonths] = useState(6);
     const [interestRate, setInterestRate] = useState(5);
-
+    const router = useRouter();
     const totalPayback = Math.round(amount * (1 + interestRate / 100));
     const monthlyPayment = Math.round(totalPayback / months);
 
@@ -220,6 +221,7 @@ const LoanCalculator: React.FC = () => {
                         borderRadius: 1.5,
                         "&:hover": { backgroundColor: "#1565c0" },
                     }}
+                    onClick={() => router.push("/authentication/login")}
                 >
                     Apply For Loan
                 </Button>
