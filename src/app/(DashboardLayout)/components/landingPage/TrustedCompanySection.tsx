@@ -7,19 +7,19 @@ export default function TrustedCompanySection() {
     return (
         <Grid
             container
-            spacing={0}
+            spacing={4}
             sx={{
                 overflow: "hidden",
-                display: 'relative',
+                position: "relative",
                 borderRadius: 0,
                 backgroundColor: "#0d0d30ff",
                 color: "#fff",
                 backgroundImage: "url('/images/landingPage/pattern-bg.png')",
                 backgroundRepeat: "no-repeat",
                 backgroundSize: "cover",
-
                 px: { xs: 3, md: 8 },
-                alignItems: "center",
+                py: { xs: 6, md: 12 },
+                alignItems: "flex-start",
             }}
         >
             {/* LEFT SIDE */}
@@ -50,7 +50,7 @@ export default function TrustedCompanySection() {
 
                 <Typography
                     variant="body1"
-                    sx={{ opacity: 0.8, mb: 3, maxWidth: 480 }}
+                    sx={{ opacity: 0.8, mb: 3, maxWidth: { xs: "100%", md: 480 } }}
                 >
                     There are many variations of passages of lorem ipsum available,
                     the majority have suffered alteration in some form by injected humour.
@@ -72,7 +72,7 @@ export default function TrustedCompanySection() {
 
                 {/* Loan Type List */}
                 <Grid container spacing={1}>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6}>
                         <List dense>
                             {["Credit Card Per Day", "Personal Loan", "Car / Auto Loan", "Home Loan"].map((item, i) => (
                                 <ListItem key={i} sx={{ p: 0.5 }}>
@@ -84,7 +84,7 @@ export default function TrustedCompanySection() {
                             ))}
                         </List>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid item xs={12} sm={6}>
                         <List dense>
                             {["Gold Loan Per Day", "Mortgage Loan", "Education / Student Loan", "Wedding Loan"].map(
                                 (item, i) => (
@@ -105,12 +105,12 @@ export default function TrustedCompanySection() {
             <Grid
                 item
                 xs={12}
-                top={-10}
                 md={6}
                 sx={{
-                    display: "absolute",
-                    justifyContent: "center",
+                    display: "flex",
+                    justifyContent: { xs: "center", md: "flex-end" },
                     alignItems: "center",
+                    mt: { xs: 4, md: 0 },
                 }}
             >
                 <TrustedCompanyCard />

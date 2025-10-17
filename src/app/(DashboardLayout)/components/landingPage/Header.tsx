@@ -11,19 +11,19 @@ const Header: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const router = useRouter();
+    const handleLogoClick = () => {
+        router.push("/");
+    };
+
     return (
         <Grid container direction="column">
             {/* Top Bar */}
-
-
-            {/* Main Navigation */}
             <AppBar position="static" elevation={0} sx={{ backgroundColor: '#ffffff' }}>
                 <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', px: { xs: 2, md: 10 } }}>
                     {/* Logo */}
-                    <Grid item>
+                    <Grid item onClick={handleLogoClick} sx={{ cursor: "pointer" }}>
                         <Logo />
                     </Grid>
-
                     {/* Call to Action */}
                     <Grid item>
                         <Stack

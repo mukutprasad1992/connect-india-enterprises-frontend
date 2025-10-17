@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Grid, LinearProgress, Typography } from "@mui/material";
 import { styled } from "@mui/system";
 
@@ -11,6 +11,7 @@ const CustomLinearProgress = styled(LinearProgress)(({ theme }) => ({
     "& .MuiLinearProgress-bar": {
         borderRadius: 5,
         backgroundColor: "#0288d1", // blue color
+        transition: "width 1s ease-in-out", // smooth animation
     },
 }));
 
@@ -20,6 +21,22 @@ const ProgressList = () => {
         { label: "Consultancy", value: 80 },
         { label: "Payment Benefits", value: 85 },
     ];
+
+    const [progress, setProgress] = useState(data.map(() => 0));
+
+    useEffect(() => {
+        const timers = data.map((item, index) =>
+            setTimeout(() => {
+                setProgress((prev) => {
+                    const updated = [...prev];
+                    updated[index] = item.value;
+                    return updated;
+                });
+            }, index * 400) // delay each bar animation slightly
+        );
+
+        return () => timers.forEach((t) => clearTimeout(t));
+    }, []);
 
     return (
         <Box sx={{ width: "100%", mt: 5, ml: 4 }}>
@@ -40,14 +57,17 @@ const ProgressList = () => {
                             {/* Right Percentage */}
                             <Grid item>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
-                                    {item.value}%
+                                    {progress[index]}%
                                 </Typography>
                             </Grid>
                         </Grid>
 
                         {/* Progress Bar */}
                         <Box sx={{ mt: 1 }}>
-                            <CustomLinearProgress variant="determinate" value={item.value} />
+                            <CustomLinearProgress
+                                variant="determinate"
+                                value={progress[index]}
+                            />
                         </Box>
                     </Grid>
                 ))}

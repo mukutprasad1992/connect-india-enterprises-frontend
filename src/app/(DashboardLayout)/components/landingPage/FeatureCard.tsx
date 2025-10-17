@@ -1,10 +1,7 @@
 "use client";
 import React from "react";
-import { Box, Grid, Typography } from "@mui/material";
-import PaymentIcon from "@mui/icons-material/Payment";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 
-/* ------------------- FeatureCard Component ------------------- */
 interface FeatureCardProps {
     icon: React.ReactNode;
     title: string;
@@ -12,25 +9,31 @@ interface FeatureCardProps {
 }
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, subtitle }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
     return (
         <Box
             sx={{
                 position: "relative",
                 overflow: "hidden",
-                p: 4,
+                p: { xs: 2, sm: 3, md: 4 },
                 borderTopLeftRadius: 5,
                 borderTopRightRadius: 5,
                 cursor: "pointer",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-                gap: 3,
-                width: 350,
-                height: 120,
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: { xs: "center", sm: "flex-start" },
+                gap: { xs: 1.5, sm: 3 },
+                width: { xs: "100%", sm: 300, md: 300 },
+                height: { xs: 70, sm: 80, md: 100 },
+                minHeight: { xs: 70, sm: 80, md: 100 },
                 color: "#fff",
                 background: "transparent",
                 border: "1px solid rgba(255,255,255,0.2)",
-                borderTop: "4px solid  rgba(255, 255, 255, 1)",
+                borderTop: "4px solid rgba(255, 255, 255, 1)",
                 mx: "auto",
                 transition: "all 0.4s ease",
                 "&::before": {
@@ -47,10 +50,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, subtitle }) => {
                 "&:hover::before": {
                     top: 0,
                 },
-                "&:hover": {
-                    // transform: "translateY(-8px)",
-                    // boxShadow: "0 8px 25px rgba(255,255,255,0.2)",
-                },
                 "&:hover .text-content": {
                     color: "#000",
                 },
@@ -59,20 +58,41 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, subtitle }) => {
                 },
             }}
         >
-            <Box sx={{ position: "relative", zIndex: 1 }}>{icon}</Box>
+            {/* Icon */}
+            <Box
+                sx={{
+                    position: "relative",
+                    zIndex: 1,
+                    fontSize: { xs: 32, sm: 36, md: 40 },
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                {icon}
+            </Box>
+
+            {/* Text */}
             <Box sx={{ position: "relative", zIndex: 1 }}>
                 <Typography
                     variant="subtitle1"
                     fontWeight="bold"
                     className="text-content"
-                    sx={{ transition: "color 0.3s ease" }}
+                    sx={{
+                        transition: "color 0.3s ease",
+                        fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem" },
+                    }}
                 >
                     {title}
                 </Typography>
                 <Typography
                     variant="body2"
                     className="sub-text"
-                    sx={{ color: "rgba(255,255,255,0.8)", transition: "color 0.3s ease" }}
+                    sx={{
+                        color: "rgba(255,255,255,0.8)",
+                        transition: "color 0.3s ease",
+                        fontSize: { xs: "0.75rem", sm: "0.85rem", md: "0.9rem" },
+                    }}
                 >
                     {subtitle}
                 </Typography>

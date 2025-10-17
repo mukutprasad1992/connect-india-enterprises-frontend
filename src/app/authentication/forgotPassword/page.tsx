@@ -16,6 +16,8 @@ import {
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "../../(DashboardLayout)/components/layout/Logo";
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
+import Header from "@/app/(DashboardLayout)/components/landingPage/Header";
+import Footer from "@/app/(DashboardLayout)/components/landingPage/Footer";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState<string>("");
@@ -86,6 +88,7 @@ const ForgotPassword = () => {
 
   return (
     <PageContainer title="Forgot Password" description="Reset your password">
+      <Header />
       <Box
         sx={{
           position: "relative",
@@ -161,7 +164,7 @@ const ForgotPassword = () => {
           </Grid>
         </Grid>
       </Box>
-
+      <Footer />
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}

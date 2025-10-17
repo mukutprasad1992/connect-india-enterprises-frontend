@@ -16,19 +16,20 @@ const statsData: StatItem[] = [
     { value: 346, label: "Staff Members" },
 ];
 
+// Ease out function
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
 const StatsSection: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-    const [isVisible, setIsVisible] = useState(false);
     const [counts, setCounts] = useState<number[]>(statsData.map(() => 0));
     const ref = useRef<HTMLDivElement | null>(null);
 
-    // Detect when component is visible on screen
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries[0].isIntersecting) {
-                    setIsVisible(true);
+                    animateCounts();
                     observer.disconnect();
                 }
             },
@@ -38,27 +39,25 @@ const StatsSection: React.FC = () => {
         return () => observer.disconnect();
     }, []);
 
-    // Animate numbers when visible
-    useEffect(() => {
-        if (isVisible) {
-            statsData.forEach((stat, index) => {
-                let start = 0;
-                const end = stat.value;
-                const duration = 2000; // 2 seconds
-                const stepTime = Math.abs(Math.floor(duration / end));
+    const animateCounts = () => {
+        const duration = 1000; // total duration in ms (faster)
+        const startTime = performance.now();
 
-                const timer = setInterval(() => {
-                    start += 1;
-                    setCounts((prev) => {
-                        const newCounts = [...prev];
-                        newCounts[index] = start;
-                        return newCounts;
-                    });
-                    if (start >= end) clearInterval(timer);
-                }, stepTime);
-            });
-        }
-    }, [isVisible]);
+        const step = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOut(progress);
+
+            const newCounts = statsData.map((stat) =>
+                Math.floor(stat.value * easedProgress)
+            );
+            setCounts(newCounts);
+
+            if (progress < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+    };
 
     return (
         <Box
@@ -136,7 +135,6 @@ const StatsSection: React.FC = () => {
                             {stat.label}
                         </Typography>
 
-                        {/* Divider */}
                         {!isMobile && index < statsData.length - 1 && (
                             <Divider
                                 orientation="vertical"

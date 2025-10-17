@@ -34,14 +34,15 @@ const BlogCard: React.FC<BlogCardProps> = ({
     return (
         <Card
             sx={{
-                width: 390,
-                borderRadius: 1,
+                width: { xs: "100%", sm: 330, md: 360, lg: 390 },
+                borderRadius: 2,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                 overflow: "hidden",
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
                 cursor: "pointer",
+                mx: "auto",
                 "&:hover": {
-                    transform: "translateY(-5px)",
+                    transform: { sm: "translateY(-5px)" },
                     boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
                 },
             }}
@@ -53,7 +54,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
                     image={image}
                     alt={title}
                     sx={{
-                        height: 220,
+                        height: { xs: 180, sm: 200, md: 220 },
                         width: "100%",
                         objectFit: "cover",
                         transition: "transform 0.5s ease",
@@ -71,10 +72,10 @@ const BlogCard: React.FC<BlogCardProps> = ({
                         left: 12,
                         backgroundColor: "#1976d2",
                         color: "#fff",
-                        px: 1.5,
-                        py: 0.7,
+                        px: 1.3,
+                        py: 0.6,
                         borderRadius: 1,
-                        fontSize: "0.85rem",
+                        fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.85rem" },
                         fontWeight: 600,
                     }}
                 >
@@ -83,13 +84,17 @@ const BlogCard: React.FC<BlogCardProps> = ({
             </Box>
 
             {/* Content */}
-            <CardContent sx={{ p: 2.5 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 2.2, md: 2.5 } }}>
                 {/* Author and Category */}
                 <Stack
                     direction="row"
                     spacing={2}
                     alignItems="center"
-                    sx={{ color: "text.secondary", fontSize: "0.9rem", mb: 1 }}
+                    sx={{
+                        color: "text.secondary",
+                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                        mb: 1,
+                    }}
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                         <PersonOutlineIcon sx={{ fontSize: 18, color: "#1976d2" }} />
@@ -107,7 +112,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
                     variant="h6"
                     sx={{
                         fontWeight: 700,
-                        fontSize: "1.05rem",
+                        fontSize: { xs: "0.95rem", sm: "1rem", md: "1.05rem" },
                         color: "#0d1b2a",
                         mb: 2,
                     }}
@@ -132,6 +137,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
                             sx={{
                                 fontWeight: 500,
                                 color: "#1976d2",
+                                fontSize: { xs: "0.8rem", sm: "0.9rem" },
                                 "&:hover": { textDecoration: "underline" },
                             }}
                         >
@@ -141,7 +147,12 @@ const BlogCard: React.FC<BlogCardProps> = ({
 
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                         <ChatBubbleOutlineIcon sx={{ fontSize: 18, color: "#1976d2" }} />
-                        <Typography variant="body2">{comments} Comments</Typography>
+                        <Typography
+                            variant="body2"
+                            sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
+                        >
+                            {comments} Comments
+                        </Typography>
                     </Box>
                 </Stack>
             </CardContent>

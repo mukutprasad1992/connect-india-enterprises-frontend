@@ -70,19 +70,19 @@ const TestimonialCard = ({ name, role, text, image }: any) => (
         <Typography variant="body2" sx={{ color: "#666" }}>
             {role}
         </Typography>
-        <Typography
-            variant="h3"
+        <Box
+            component="img"
+            src="/images/landingPage/quote-50.png"
+            alt="Quote Icon"
             sx={{
-                color: "#ccc",
                 position: "absolute",
                 right: 20,
                 bottom: 40,
-                fontFamily: "serif",
+                width: 30,
+                height: 30,
+                opacity: 0.5, // 50% transparent
             }}
-        >
-            ”
-        </Typography>
-
+        />
         {/* Circular Avatar */}
         <Avatar
             src={image}

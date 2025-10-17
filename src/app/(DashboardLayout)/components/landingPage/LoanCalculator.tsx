@@ -9,32 +9,43 @@ import {
     Grid,
     Button,
 } from "@mui/material";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 const LoanCalculator: React.FC = () => {
-    const [amount, setAmount] = useState(1000);
-    const [months, setMonths] = useState(6);
-    const [interestRate, setInterestRate] = useState(5);
+    // States
+    const [loanAmount, setLoanAmount] = useState(100000); // Principal amount
+    const [months, setMonths] = useState(12); // Loan duration in months
+    const [annualRate, setAnnualRate] = useState(10); // Annual interest rate (%)
     const router = useRouter();
-    const totalPayback = Math.round(amount * (1 + interestRate / 100));
-    const monthlyPayment = Math.round(totalPayback / months);
 
-    const formatCurrency = (val: number) => `₹${val.toLocaleString("en-IN")}`;
+    // Loan EMI calculation formula
+    const calculateEMI = (principal: number, months: number, annualRate: number) => {
+        const monthlyRate = annualRate / 12 / 100;
+        if (monthlyRate === 0) return principal / months; // Handle 0% interest case
+        const emi =
+            (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+            (Math.pow(1 + monthlyRate, months) - 1);
+        return emi;
+    };
+
+    const emi = calculateEMI(loanAmount, months, annualRate);
+    const totalPayment = emi * months;
+    const totalInterest = totalPayment - loanAmount;
+
+    const formatCurrency = (val: number) =>
+        `₹${val.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
     return (
         <Paper
             elevation={6}
             sx={{
                 borderRadius: 2,
-                maxWidth: 455,
-                minWidth: 455,
-                width: "100%",
-                height: 600,
+                width: { xs: "100%", sm: 400, md: 455 },
+                height: { xs: "auto", sm: "auto", md: 600 },
                 mx: "auto",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                transition: "all 0.3s ease",
             }}
         >
             {/* Header */}
@@ -43,27 +54,31 @@ const LoanCalculator: React.FC = () => {
                     backgroundColor: "#1976d2",
                     color: "#fff",
                     textAlign: "center",
-                    py: 5.3,
+                    py: { xs: 3, md: 4.6 },
                     borderRadius: "8px 8px 0 0",
                     position: "relative",
-                    flexShrink: 0,
                 }}
             >
-                <Typography variant="h2" fontWeight="bold">
-                    How Much You Need
+                <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    sx={{ fontSize: { xs: "1.5rem", md: "2rem" } }}
+                >
+                    Loan Calculator
                 </Typography>
+
+                {/* Arrow at bottom */}
                 <Box
                     sx={{
-                        content: '""',
                         position: "absolute",
-                        bottom: -8,
+                        bottom: -10,
                         left: "50%",
                         transform: "translateX(-50%)",
                         width: 0,
                         height: 0,
-                        borderLeft: "20px solid transparent",
-                        borderRight: "20px solid transparent",
-                        borderTop: "8px solid #1976d2",
+                        borderLeft: "25px solid transparent",
+                        borderRight: "25px solid transparent",
+                        borderTop: "12px solid #1976d2",
                     }}
                 />
             </Box>
@@ -71,9 +86,7 @@ const LoanCalculator: React.FC = () => {
             {/* Body */}
             <Box
                 sx={{
-                    pl: 2,
-                    pr: 2,
-                    background: "#fff",
+                    px: 3,
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
@@ -82,148 +95,130 @@ const LoanCalculator: React.FC = () => {
             >
                 <Box>
                     {/* Loan Amount */}
-                    <Box display="flex" justifyContent="space-between" mb={1} sx={{ mt: 4 }}>
-                        <Typography variant="caption">{formatCurrency(1000)}</Typography>
-                        <Typography
-                            variant="body1"
-                            color="primary"
-                            sx={{
-                                fontVariantNumeric: "tabular-nums",
-                                minWidth: 160,
-                                textAlign: "center",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
-                            {formatCurrency(amount)}
+                    <Box display="flex" justifyContent="space-between" mb={1} mt={4}>
+                        <Typography variant="caption">₹10,000</Typography>
+                        <Typography variant="body1" color="primary">
+                            {formatCurrency(loanAmount)}
                         </Typography>
-                        <Typography variant="caption">{formatCurrency(4000000)}</Typography>
+                        <Typography variant="caption">₹1,00,00,000</Typography>
                     </Box>
                     <Slider
-                        value={amount}
-                        onChange={(e, val) => setAmount(val as number)}
-                        min={1000}
-                        max={4000000}
-                        step={500}
+                        value={loanAmount}
+                        onChange={(e, val) => setLoanAmount(val as number)}
+                        min={10000}
+                        max={10000000}
+                        step={10000}
                         valueLabelDisplay="auto"
-                        sx={{ mb: 1 }}
                     />
 
-                    {/* Loan Term */}
+                    {/* Duration (Months) */}
                     <Box display="flex" justifyContent="space-between" mb={1.5}>
                         <Typography variant="caption">1 Month</Typography>
-                        <Typography
-                            variant="body1"
-                            color="primary"
-                            sx={{
-                                fontVariantNumeric: "tabular-nums",
-                                minWidth: 90,
-                                textAlign: "center",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
-                            {months} {months === 1 ? "Month" : "Months"}
+                        <Typography variant="body1" color="primary">
+                            {months} Months
                         </Typography>
-                        <Typography variant="caption">60 Months</Typography>
+                        <Typography variant="caption">360 Months</Typography>
                     </Box>
                     <Slider
                         value={months}
                         onChange={(e, val) => setMonths(val as number)}
                         min={1}
-                        max={60}
+                        max={360}
                         step={1}
                         valueLabelDisplay="auto"
-                        sx={{ mb: 1.5 }}
                     />
 
                     {/* Interest Rate */}
                     <Box display="flex" justifyContent="space-between" mb={1.5}>
                         <Typography variant="caption">1%</Typography>
-                        <Typography
-                            variant="body1"
-                            color="primary"
-                            sx={{
-                                fontVariantNumeric: "tabular-nums",
-                                minWidth: 90,
-                                textAlign: "center",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
-                            {interestRate.toFixed(1)}%
+                        <Typography variant="body1" color="primary">
+                            {annualRate}%
                         </Typography>
                         <Typography variant="caption">25%</Typography>
                     </Box>
                     <Slider
-                        value={interestRate}
-                        onChange={(e, val) => setInterestRate(val as number)}
+                        value={annualRate}
+                        onChange={(e, val) => setAnnualRate(val as number)}
                         min={1}
                         max={25}
-                        step={0.5}
+                        step={0.1}
                         valueLabelDisplay="auto"
-                        sx={{ mb: .5 }}
                     />
 
                     {/* Results */}
                     <Grid container spacing={1}>
-                        <Grid item xs={12} sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography fontWeight="bold" variant="body2" color="text.secondary">
-                                Pay Monthly
-                            </Typography>
+                        <Grid
+                            item
+                            xs={12}
+                            display="flex"
+                            justifyContent="space-between"
+                        >
                             <Typography
+                                fontWeight="bold"
                                 variant="body2"
-                                color="primary"
-                                sx={{ fontVariantNumeric: "tabular-nums" }}
+                                color="text.secondary"
                             >
-                                {formatCurrency(monthlyPayment)}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Divider sx={{ my: 1 }} />
-                        </Grid>
-                        <Grid item xs={12} sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography fontWeight="bold" variant="body2" color="text.secondary">
-                                Total Payback
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                color="primary"
-                                sx={{ fontVariantNumeric: "tabular-nums" }}
-                            >
-                                {formatCurrency(totalPayback)}
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Divider sx={{ my: 1 }} />
-                        </Grid>
-                        <Grid item xs={12} sx={{ display: "flex", justifyContent: "space-between" }}>
-                            <Typography fontWeight="bold" variant="body2" color="text.secondary">
-                                Term of Use
+                                Monthly EMI
                             </Typography>
                             <Typography variant="body2" color="primary">
-                                {months} {months === 1 ? "Month" : "Months"}
+                                {formatCurrency(emi)}
+                            </Typography>
+                        </Grid>
+                        <Divider sx={{ my: 1, width: "100%" }} />
+
+                        <Grid
+                            item
+                            xs={12}
+                            display="flex"
+                            justifyContent="space-between"
+                        >
+                            <Typography
+                                fontWeight="bold"
+                                variant="body2"
+                                color="text.secondary"
+                            >
+                                Total Interest
+                            </Typography>
+                            <Typography variant="body2" color="primary">
+                                {formatCurrency(totalInterest)}
+                            </Typography>
+                        </Grid>
+                        <Divider sx={{ my: 1, width: "100%" }} />
+
+                        <Grid
+                            item
+                            xs={12}
+                            display="flex"
+                            justifyContent="space-between"
+                        >
+                            <Typography
+                                fontWeight="bold"
+                                variant="body2"
+                                color="text.secondary"
+                            >
+                                Total Payment
+                            </Typography>
+                            <Typography variant="body2" color="primary">
+                                {formatCurrency(totalPayment)}
                             </Typography>
                         </Grid>
                     </Grid>
                 </Box>
 
-                <Divider sx={{ my: 1 }} />
-
-                {/* Apply Button */}
                 <Button
                     fullWidth
                     sx={{
                         height: 44,
-                        mt: 2,
+                        mt: 3,
                         mb: 5,
                         backgroundColor: "#1976d2",
                         color: "#fff",
                         fontWeight: "bold",
-                        fontSize: 13,
-                        borderRadius: 1.5,
-                        "&:hover": { backgroundColor: "#1565c0" },
+                        "&:hover": { backgroundColor: "#1976d2" },
                     }}
                     onClick={() => router.push("/authentication/login")}
                 >
-                    Apply For Loan
+                    Apply for Loan
                 </Button>
             </Box>
         </Paper>

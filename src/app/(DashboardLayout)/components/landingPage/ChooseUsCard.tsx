@@ -1,36 +1,36 @@
 "use client";
 import React from "react";
 import { Box, Typography, Grid } from "@mui/material";
-import StarIcon from '@mui/icons-material/Star'; // Example icon, replace if needed
 
 const ChooseUsCard: React.FC = () => {
     return (
         <Box
             sx={{
-                width: 730,
-                ml: 0.5,
-                px: { xs: 2, md: .6 },
-                borderTopRightRadius: 4,
-                borderBottomRightRadius: 4,
+                width: { xs: "100%", sm: 600, md: 730 },
+                mx: "auto",
+                px: { xs: 2, sm: 3, md: 0.6 },
+                borderTopRightRadius: { xs: 2, md: 4 },
+                borderBottomRightRadius: { xs: 2, md: 4 },
                 backgroundColor: "#113e97ff",
                 textAlign: "start",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "end",
-                pt: 3.5,
+                alignItems: "flex-end",
+                pt: { xs: 3, md: 3.5 },
+                position: "relative",
             }}
         >
-            {/* Top Icon */}
-            <Grid container>
+            {/* Top Icon and Text */}
+            <Grid container alignItems="center">
                 <Grid
                     item
                     xs={3}
                     sx={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        pl: { xs: 2, md: 17 },
+                        justifyContent: { xs: "flex-start", md: "center" },
+                        pl: { xs: 0, md: 20 },
                     }}
                 >
                     <Box
@@ -38,42 +38,44 @@ const ChooseUsCard: React.FC = () => {
                         src="/images/landingPage/business-growth-1.png"
                         alt="Choose Us Icon"
                         sx={{
-                            width: 40,
-                            height: 40,
+                            width: { xs: 30, md: 40 },
+                            height: { xs: 30, md: 40 },
                             filter: "brightness(0) invert(1)",
-
                         }}
                     />
                 </Grid>
 
-                <Grid item xs={8} >
-                    {/* Text */}
+                <Grid item xs={9} sm={9} md={8}>
                     <Typography
                         variant="h4"
                         sx={{
                             color: "white",
-                            mb: 3,
-                            fontSize: { xs: 18, md: 26 }, // responsive
+                            mb: { xs: 0, md: 1 },
+                            fontSize: { xs: 16, sm: 20, md: 24 },
                             fontWeight: "bold",
+                            pt: { xs: 0, md: 2 },
+                            pl: { xs: 1, md: 2 },
                         }}
                     >
                         26 years of working experience
                     </Typography>
-                </Grid></Grid>
+                </Grid>
+            </Grid>
+
             {/* Image below text */}
             <Box
                 component="img"
                 src="/images/landingPage/DSC_7789.jpg"
                 alt="Choose Us"
                 sx={{
-                    width: 570,
-                    height: 570,
-                    mt: 2,
-                    bottom: 0,
-                    right: 0
+                    width: { xs: "80%", sm: 400, md: 570 },
+                    height: "auto",
+                    mt: { xs: 2, md: 2 },
+                    alignSelf: "flex-end",
+                    borderRadius: { xs: 2, md: 0 },
                 }}
             />
-        </Box >
+        </Box>
     );
 };
 

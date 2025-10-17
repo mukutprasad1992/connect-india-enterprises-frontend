@@ -14,6 +14,7 @@ import {
     Slider,
     Divider,
 } from "@mui/material";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckIcon from '@mui/icons-material/Check';
@@ -22,8 +23,7 @@ import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
 import EastOutlinedIcon from "@mui/icons-material/EastOutlined";
 import KeyboardBackspaceOutlinedIcon from "@mui/icons-material/KeyboardBackspaceOutlined";
 import Header from "../(DashboardLayout)/components/landingPage/Header";
-import FeatureCard from "../(DashboardLayout)/components/landingPage/FeatureCard";
-import LoanCalculator from "../(DashboardLayout)/components/landingPage/LoanCalculator";
+import FeatureCard from "../(DashboardLayout)/components/landingPage/FeatureCard"
 import PaymentIcon from "@mui/icons-material/Payment";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import StarIcon from "@mui/icons-material/Star";
@@ -44,17 +44,18 @@ import Collaborators from "../(DashboardLayout)/components/landingPage/Collabora
 import LoanApplySection from "../(DashboardLayout)/components/landingPage/LoanApplySection";
 import Footer from "../(DashboardLayout)/components/landingPage/Footer";
 import { useRouter } from 'next/navigation';
+import AutoRotateCalculators from "../(DashboardLayout)/components/landingPage/AutoRotateCalculators";
 
 const slides = [
     {
         image: "images/landingPage/IMG20250224152939.jpg",
-        title: "Connecting Your Loan Needs",
+        title: "Connect with Your Financial Growth",
         subtitle: "Simple & Secure Payment Process",
         buttonText: "Apply for Loan",
     },
     {
         image: "images/landingPage/DSC_7964.jpg",
-        title: "Connecting Your Loan Needs",
+        title: "Connect with Your Financial Growth",
         subtitle: "Simple & Secure Payment Process",
         buttonText: "Apply for Loan",
     },
@@ -126,18 +127,25 @@ const Home: NextPage = () => {
                         animate={{ scale: 1.15 }}
                         transition={{ duration: 5, ease: "easeInOut" }}
                         style={{
-                            backgroundImage: `url(${slide.image})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            width: "100%",
-                            height: "100%",
                             position: "absolute",
                             top: 0,
                             left: 0,
+                            width: "100%",
+                            height: "100%",
+                            overflow: "hidden",
                             zIndex: 1,
                         }}
                     >
-                        {/* Smooth Gradient Overlay */}
+                        {/* Next.js Image */}
+                        <Image
+                            src={slide.image}
+                            alt="Slide Image"
+                            fill
+                            style={{ objectFit: "cover" }}
+                            priority // ensures the image loads immediately
+                        />
+
+                        {/* Gradient Overlay */}
                         <div
                             style={{
                                 position: "absolute",
@@ -145,11 +153,13 @@ const Home: NextPage = () => {
                                 left: 0,
                                 width: "100%",
                                 height: "100%",
-                                background: "linear-gradient(to right, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)",
+                                background:
+                                    "linear-gradient(to right, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0) 55%)",
                                 zIndex: 2,
                             }}
-                        ></div>
+                        />
                     </motion.div>
+
                     {/* Slide Content */}
                     <Fade in timeout={600}>
                         <Box
@@ -246,9 +256,9 @@ const Home: NextPage = () => {
                     <Box
                         sx={{
                             position: "absolute",
-                            bottom: -1,
-                            left: { xs: -10, sm: 40, md: 80 },
-                            zIndex: 10, // ensure above calculator
+                            bottom: { xs: -1, md: -1 },
+                            left: { xs: 20, sm: 40, md: 120 },
+                            zIndex: 10,
                             display: "flex",
                             flexDirection: { xs: "column", sm: "row" },
                             gap: 2,
@@ -266,18 +276,8 @@ const Home: NextPage = () => {
                     </Box>
                 </Box>
 
-                {/* Loan Calculator - right side */}
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: { xs: "auto", md: "129.8%" },
-                        right: { xs: 20, md: 80 },
-                        transform: { md: "translateY(-50%)" },
-                        zIndex: 8,
-                        pointerEvents: "auto",
-                    }}
-                >
-                    <LoanCalculator />
+                <Box>
+                    <AutoRotateCalculators />
                 </Box>
             </Box>
             <Grid
@@ -287,37 +287,82 @@ const Home: NextPage = () => {
                     backgroundColor: 'white'
                 }}
             >
-                <Grid item xs={12} md={8}>
-                    <Box display="flex" alignItems="center" mb={2} sx={{ pb: 2, pt: 2 }}>
+                <Grid
+                    item
+                    xs={12}
+                    md={8}
+                    sx={{
+                        mt: { xs: 8, sm: 4, md: 0 },
+                        px: { xs: 2, md: 0 },
+                    }}
+                >
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        mb={2}
+                        sx={{
+                            pb: { xs: 1, md: 2 },
+                            pt: { xs: 1, md: 2 },
+                            flexDirection: { xs: "column", sm: "row" },
+                            alignItems: { xs: "flex-start", sm: "center" },
+                        }}
+                    >
                         <Typography
                             variant="h6"
-                            sx={{ fontWeight: "bold", mr: 1 }}
+                            sx={{
+                                fontWeight: "bold",
+                                mr: { xs: 0, sm: 1 },
+                                mb: { xs: 1, sm: 0 },
+                                fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
+                            }}
                         >
                             Company Introductions
                         </Typography>
                         <Box
                             sx={{
                                 border: "2px solid blue",
-                                width: 40,
+                                width: { xs: 30, sm: 35, md: 40 },
                                 height: 2,
                             }}
                         />
                     </Box>
-                    <Typography sx={{ fontSize: 45, pb: 4.5 }}>
-                        Our Loans will Fill Your Dreams
+
+                    {/* Main Heading */}
+                    <Typography
+                        sx={{
+                            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
+                            lineHeight: 1.2,
+                            pb: { xs: 1.5, sm: 3, md: 4.5 },
+                        }}
+                    >
+                        Your Dreams, Our Support —
                     </Typography>
-                    <Typography sx={{ fontSize: 45, pb: 4.5 }}>
-                        Come True
+
+                    <Typography
+                        sx={{
+                            fontSize: { xs: "1rem", sm: "1.2rem", md: "1.5rem" },
+                            lineHeight: 1.2,
+                            pb: { xs: 1.5, sm: 3, md: 4.5 },
+                        }}
+                    >
+                        Loans, Investments, Policies & Insurance That Empower You
                     </Typography>
-                    <Grid item xs={10}>
-                        <Typography sx={{ fontSize: 19, fontFamily: '"Rajdhani", serif' }}>
-                            There are many variations of passages of lorem ipsum available the majority have suffered
-                            alteration in some form by injected humour. Duis aute irure dolor lipsum is simply free
-                            text available in the local markets in reprehenderit.Nam aliquam sem et tortor consequat
-                            mattis pellentesque semper tailored for specific uses and specific market segment.
+
+                    {/* Paragraph */}
+                    <Grid item xs={12} md={10}>
+                        <Typography
+                            sx={{
+                                fontSize: { xs: 12, sm: 16, md: 19 },
+                                fontFamily: '"Rajdhani", serif',
+                                lineHeight: 1.6,
+                            }}
+                        >
+                            Manage your finances with confidence — from quick loans to smart investments,
+                            reliable insurance, and flexible policies, all in one trusted platform
+                            designed to simplify your financial journey, help you make informed
+                            decisions, and achieve your life goals effortlessly.
                         </Typography>
                     </Grid>
-
                 </Grid>
                 <Grid item xs={8}>
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -362,25 +407,31 @@ const Home: NextPage = () => {
                     pb: 2
                 }}
             >
-                All Loans Services
+                All financial Services
             </Typography>
             <Box display="flex" gap={3} flexWrap="wrap" sx={{ justifyContent: 'center', backgroundColor: 'white' }}>
                 <SimpleCard
                     image="images/landingPage/main-slider2.jpg"
                     title="Personal Loan"
-                    description="There are many variations of passages of lorem ipsum available the majority have some."
+                    description="Take control of your finances with a personal loan designed for you.
+                     Whether its managing expenses, funding education, or planning a vacation, enjoy 
+                     quick approvals, affordable EMIs, and complete transparency every step of the way."
                     buttonImage="images/landingPage/loan-1.png"
                 />
                 <SimpleCard
                     image="images/landingPage/main-slider2.jpg"
-                    title="Business Loan"
-                    description="There are many variations of passages of lorem ipsum available the majority have some."
+                    title="Term Life Insurance"
+                    description="Secure your loved ones financial future with our term life 
+                     plans. Enjoy high coverage at low premiums, easy claim settlement, and complete 
+                     peace of mind for you and your family."
                     buttonImage="images/landingPage/insurance-1.png"
                 />
                 <SimpleCard
                     image="images/landingPage/main-slider1.jpg"
-                    title="Education Loan"
-                    description="There are many variations of passages of lorem ipsum available the majority have some."
+                    title="SIP and Mutual Funds"
+                    description="Invest smarter with our SIP and Mutual Fund options designed for 
+                     goal. Enjoy flexible investments, professional fund management, and the power 
+                      compounding to build long-term wealth with confidence."
                     buttonImage="images/landingPage/investment-1.png"
                 />
             </Box>
@@ -645,7 +696,7 @@ const Home: NextPage = () => {
                 <Box
                     sx={{
                         position: "absolute",
-                        top: "68.9%",
+                        top: "70.2%",
                         right: "25%",
                         transform: "translate(-50%, -50%)",
                         zIndex: 10,
@@ -818,8 +869,15 @@ const Home: NextPage = () => {
                 >
                     News & Articles
                 </Typography>
-                <Grid container spacing={0} sx={{ pb: 10 }}>
-                    <Grid item xs={4} md={4}>
+                <Grid
+                    container
+                    spacing={3}
+                    sx={{
+                        pb: 10,
+                        justifyContent: { xs: "center", sm: "flex-start" }, // center on mobile
+                    }}
+                >
+                    <Grid item xs={12} sm={6} md={4} display="flex" justifyContent="center">
                         <BlogCard
                             image="/images/landingPage/blog-1-1.png"
                             date="20 Sep, 2023"
@@ -829,8 +887,8 @@ const Home: NextPage = () => {
                             comments={0}
                         />
                     </Grid>
-                    <Grid item xs={4} md={4}>
 
+                    <Grid item xs={12} sm={6} md={4} display="flex" justifyContent="center">
                         <BlogCard
                             image="/images/landingPage/blog-1-2.png"
                             date="20 Sep, 2023"
@@ -840,7 +898,8 @@ const Home: NextPage = () => {
                             comments={0}
                         />
                     </Grid>
-                    <Grid item xs={4} md={4}>
+
+                    <Grid item xs={12} sm={6} md={4} display="flex" justifyContent="center">
                         <BlogCard
                             image="/images/landingPage/blog-1-3.png"
                             date="20 Sep, 2023"
@@ -851,6 +910,7 @@ const Home: NextPage = () => {
                         />
                     </Grid>
                 </Grid>
+
             </Box>
             <Grid container >
                 <Grid item xs={12} >

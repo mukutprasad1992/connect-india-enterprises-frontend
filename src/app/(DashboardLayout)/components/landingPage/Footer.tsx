@@ -17,10 +17,9 @@ import {
     Instagram,
     Call,
 } from "@mui/icons-material";
-import Logo from "../layout/Logo";
+import WhiteLogo from "../layout/WhiteLogo";
 
 const Footer = () => {
-
     const socialLinks = [
         { icon: Facebook, url: "https://www.facebook.com/profile.php?id=61572651477067" },
         { icon: Twitter, url: "https://x.com/ConnectIndia95" },
@@ -34,20 +33,18 @@ const Footer = () => {
             sx={{
                 backgroundColor: "#0b2447",
                 color: "#fff",
-                pt: 10,
-                pb: 4,
+                pt: { xs: 6, md: 10 },
+                pb: { xs: 4, md: 6 },
             }}
         >
             <Container maxWidth="lg">
-                <Grid container spacing={4}>
+                <Grid container spacing={{ xs: 3, md: 4 }}>
                     {/* ===== Left Section ===== */}
                     <Grid item xs={12} md={3}>
-                        <Typography variant="h5" fontWeight="bold" mb={2}>
-                            <Grid item>
-                                <Logo />
-                            </Grid>
-                        </Typography>
-                        <Typography variant="body2" color="grey.300" mb={2}>
+                        <Box mb={2}>
+                            <WhiteLogo />
+                        </Box>
+                        <Typography variant="body2" color="grey.300" mb={2} sx={{ fontSize: { xs: 13, md: 14 } }}>
                             Simplify your financial journey with Connect India Enterprises. From Insurance and Loans to Investments and Policies — we make it easy, transparent, and stress-free. Let our experts guide you toward a smarter, more secure financial future.
                         </Typography>
 
@@ -57,29 +54,25 @@ const Footer = () => {
                                 <Typography variant="caption" color="grey.400">
                                     CALL ANYTIME
                                 </Typography>
-                                <Typography fontWeight="bold">+91 -7898191919</Typography>
+                                <Typography fontWeight="bold" sx={{ fontSize: { xs: 14, md: 16 } }}>
+                                    +91 -7898191919
+                                </Typography>
                             </Box>
                         </Box>
                     </Grid>
 
                     {/* ===== Explore Section ===== */}
-                    <Grid item xs={12} md={3}>
-                        <Typography variant="h6" fontWeight="bold" mb={2}>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Typography variant="h6" fontWeight="bold" mb={2} sx={{ fontSize: { xs: 16, md: 18 } }}>
                             Explore
                         </Typography>
-                        {[
-                            "About",
-                            "Our Services",
-                            "Latest News",
-                            "Testimonials",
-                            "Contact",
-                            "Loan Calculator",
-                        ].map((item) => (
+                        {["About", "Our Services", "Latest News", "Testimonials", "Contact", "Loan Calculator"].map((item) => (
                             <Typography
                                 key={item}
                                 variant="body2"
                                 sx={{
                                     mb: 1,
+                                    fontSize: { xs: 13, md: 14 },
                                     "&:hover": { color: "#4dd0e1", cursor: "pointer" },
                                 }}
                             >
@@ -89,8 +82,8 @@ const Footer = () => {
                     </Grid>
 
                     {/* ===== Latest News Section ===== */}
-                    <Grid item xs={12} md={3}>
-                        <Typography variant="h6" fontWeight="bold" mb={2}>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Typography variant="h6" fontWeight="bold" mb={2} sx={{ fontSize: { xs: 16, md: 18 } }}>
                             Latest News
                         </Typography>
 
@@ -118,14 +111,14 @@ const Footer = () => {
                                     alt="news"
                                     variant="rounded"
                                     sx={{
-                                        width: 56,
-                                        height: 56,
+                                        width: { xs: 48, md: 56 },
+                                        height: { xs: 48, md: 56 },
                                         mr: 2,
                                         border: "2px solid rgba(255,255,255,0.1)",
                                     }}
                                 />
                                 <Box>
-                                    <Typography variant="caption" color="#4dd0e1">
+                                    <Typography variant="caption" color="#4dd0e1" sx={{ fontSize: { xs: 11, md: 12 } }}>
                                         {news.date}
                                     </Typography>
                                     <Typography
@@ -134,6 +127,7 @@ const Footer = () => {
                                             color: "#fff",
                                             fontWeight: 500,
                                             lineHeight: 1.4,
+                                            fontSize: { xs: 13, md: 14 },
                                             "&:hover": { color: "#4dd0e1" },
                                         }}
                                     >
@@ -145,26 +139,28 @@ const Footer = () => {
                     </Grid>
 
                     {/* ===== Contact Section ===== */}
-                    <Grid item xs={12} md={3} sx={{ backgroundColor: '#0e0542ff' }}>
-                        <Typography variant="h6" fontWeight="bold" mb={2}>
+                    <Grid item xs={12} md={3} sx={{ backgroundColor: { xs: "transparent", md: '#0e0542' }, p: { xs: 0, md: 1.5 }, borderRadius: 1 }}>
+                        <Typography variant="h6" fontWeight="bold" mb={2} sx={{ fontSize: { xs: 16, md: 18 } }}>
                             Contact
                         </Typography>
 
-                        <Box display="flex" alignItems="center" mb={1}>
+                        <Box display="flex" alignItems="center" mb={1} flexWrap="wrap">
                             <Email sx={{ mr: 1, color: "#4dd0e1" }} />
-                            <Typography variant="body2">manoj@connectindiaenterprises.com support@connectindiaenterprises.com</Typography>
+                            <Typography variant="body2" sx={{ fontSize: { xs: 12, md: 14 } }}>
+                                manoj@connectindiaenterprises.com support@connectindiaenterprises.com
+                            </Typography>
                         </Box>
 
                         <Box display="flex" alignItems="center" mb={1}>
                             <AccessTime sx={{ mr: 1, color: "#4dd0e1" }} />
-                            <Typography variant="body2">
+                            <Typography variant="body2" sx={{ fontSize: { xs: 12, md: 14 } }}>
                                 Mon - Sat 10:00 AM - 7:00 PM
                             </Typography>
                         </Box>
 
                         <Box display="flex" alignItems="center">
                             <LocationOn sx={{ mr: 1, color: "#4dd0e1" }} />
-                            <Typography variant="body2">
+                            <Typography variant="body2" sx={{ fontSize: { xs: 12, md: 14 } }}>
                                 21, Zone, 2, GRP Colony, Zone-II, Maharana Pratap Nagar, Bhopal, Madhya Pradesh 462011
                             </Typography>
                         </Box>
@@ -179,13 +175,14 @@ const Footer = () => {
                     mt={6}
                     pt={3}
                     borderTop="1px solid rgba(255,255,255,0.1)"
-                    flexWrap="wrap"
+                    flexDirection={{ xs: "column", sm: "row" }}
+                    gap={2}
                 >
-                    <Typography variant="body2" color="grey.400">
+                    <Typography variant="body2" color="grey.400" sx={{ fontSize: { xs: 12, md: 14 } }}>
                         © Copyright 2025 by connectindiaenterprises.com
                     </Typography>
 
-                    <Box sx={{ display: "flex", gap: 1 }}>
+                    <Box sx={{ display: "flex", gap: { xs: 1, md: 2 } }}>
                         {socialLinks.map(({ icon: Icon, url }, i) => (
                             <IconButton
                                 key={i}
@@ -197,9 +194,10 @@ const Footer = () => {
                                     color: "#fff",
                                     "&:hover": { color: "#4dd0e1" },
                                     transition: "color 0.3s ease",
+                                    p: { xs: 0.5, md: 1 },
                                 }}
                             >
-                                <Icon />
+                                <Icon sx={{ fontSize: { xs: 18, md: 24 } }} />
                             </IconButton>
                         ))}
                     </Box>

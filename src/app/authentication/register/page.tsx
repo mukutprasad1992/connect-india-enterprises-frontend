@@ -17,6 +17,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
+import Header from "@/app/(DashboardLayout)/components/landingPage/Header";
+import Footer from "@/app/(DashboardLayout)/components/landingPage/Footer";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -145,6 +147,7 @@ const RegisterPage = () => {
 
   return (
     <PageContainer title="Register" description="this is Register page">
+      <Header />
       <Box
         sx={{
           position: "relative",
@@ -314,6 +317,7 @@ const RegisterPage = () => {
           </Alert>
         </Snackbar>
       </Box>
+      <Footer />
     </PageContainer>
   );
 };

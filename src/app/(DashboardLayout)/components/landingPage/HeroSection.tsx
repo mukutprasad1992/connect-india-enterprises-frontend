@@ -1,74 +1,58 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
     Box,
     Typography,
     Button,
     IconButton,
     Fade,
-    Grid,
+    useTheme,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import EastOutlinedIcon from "@mui/icons-material/EastOutlined";
 import KeyboardBackspaceOutlinedIcon from "@mui/icons-material/KeyboardBackspaceOutlined";
-import FeatureCard from "./FeatureCard";
-import PaymentIcon from "@mui/icons-material/Payment";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import LoanCalculator from "./LoanCalculator";
+import EastOutlinedIcon from "@mui/icons-material/EastOutlined";
+import FeatureCard from "./FeatureCard"; // Your responsive FeatureCard component
 
-const slides = [
-    {
-        image: "images/landingPage/main-slider1.jpg",
-        title: "Connecting Your Loan Needs",
-        subtitle: "Simple & Secure Payment Process",
-        buttonText: "Apply for Loan",
-    },
-    {
-        image: "images/landingPage/main-slider2.jpg",
-        title: "Connecting Your Loan Needs",
-        subtitle: "Simple & Secure Payment Process",
-        buttonText: "Apply for Loan",
-    },
-];
+interface SlideProps {
+    image: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+}
 
-const HeroSection: React.FC = () => {
-    const [currentSlide, setCurrentSlide] = useState(0);
+interface HeroSectionProps {
+    slide: SlideProps;
+    handleApplyLoan: () => void;
+    handlePrev: () => void;
+    handleNext: () => void;
+    features: {
+        icon: React.ReactNode;
+        title: string;
+        subtitle: string;
+    }[];
+}
 
-    const handleNext = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
-    };
-
-    const handlePrev = () => {
-        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-    };
-
-    const slide = slides[currentSlide];
-
-    const features = [
-        {
-            icon: <PaymentIcon sx={{ fontSize: 56, color: "#0d6efd" }} />,
-            title: "Quick Payment",
-            subtitle: "Process",
-        },
-        {
-            icon: <ReceiptLongIcon sx={{ fontSize: 56, color: "#0d6efd" }} />,
-            title: "No Prepayment",
-            subtitle: "Fees",
-        },
-    ];
+const HeroSection: React.FC<HeroSectionProps> = ({
+    slide,
+    handleApplyLoan,
+    handlePrev,
+    handleNext,
+    features,
+}) => {
+    const theme = useTheme();
 
     return (
-        <>
-            {/* ===== HERO SECTION (TOP BANNER) ===== */}
+        <Box sx={{ position: "relative", width: "100%", pb: { xs: 10, md: 14 } }}>
+            {/* HERO SECTION */}
             <Box
                 sx={{
                     position: "relative",
-                    height: { xs: 500, md: 600 },
+                    height: { xs: 480, sm: 520, md: 600, lg: 650 },
                     width: "100%",
                     overflow: "hidden",
                 }}
             >
-                {/* Animated Background */}
+                {/* Background Image */}
                 <motion.div
                     key={slide.image}
                     initial={{ scale: 1 }}
@@ -83,75 +67,54 @@ const HeroSection: React.FC = () => {
                         position: "absolute",
                         top: 0,
                         left: 0,
-                    }}
-                />
-
-                {/* Overlay */}
-                <Box
-                    sx={{
-                        position: "absolute",
-                        inset: 0,
-                        backgroundColor: "rgba(0,0,0,0.3)",
-                    }}
-                />
-
-                {/* Navigation Arrows */}
-                <IconButton
-                    onClick={handlePrev}
-                    sx={{
-                        position: "absolute",
-                        top: "45%",
-                        right: 30,
-                        transform: "translateY(-50%)",
-                        color: "#fff",
-                        border: "2px solid #fff",
-                        borderRadius: "50%",
-                        width: 50,
-                        height: 50,
-                        "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
-                        zIndex: 3,
+                        zIndex: 1,
                     }}
                 >
-                    <KeyboardBackspaceOutlinedIcon sx={{ fontSize: 20 }} />
-                </IconButton>
+                    {/* Gradient Overlay */}
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            background:
+                                "linear-gradient(to right, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%)",
+                            zIndex: 2,
+                        }}
+                    />
+                </motion.div>
 
-                <IconButton
-                    onClick={handleNext}
-                    sx={{
-                        position: "absolute",
-                        top: "55%",
-                        right: 30,
-                        transform: "translateY(-50%)",
-                        color: "#fff",
-                        border: "2px solid #fff",
-                        borderRadius: "50%",
-                        width: 50,
-                        height: 50,
-                        "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
-                        zIndex: 3,
-                    }}
-                >
-                    <EastOutlinedIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-
-                {/* Slide Text */}
-                <Fade in timeout={800}>
+                {/* Slide Content */}
+                <Fade in timeout={600}>
                     <Box
                         sx={{
                             position: "relative",
-                            zIndex: 2,
-                            height: "100%",
+                            zIndex: 3,
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            px: { xs: 3, sm: 6, md: 10 },
-                            textAlign: "left",
+                            flexDirection: { xs: "column", md: "row" },
+                            alignItems: { xs: "flex-start", md: "center" },
+                            justifyContent: { xs: "flex-start", md: "flex-start" },
+                            height: { xs: "auto", md: "100%" },
+                            px: { xs: 2, sm: 4, md: 8, lg: 12 },
+                            pt: { xs: 6, sm: 0 },
+                            textAlign: { xs: "center", md: "left" },
                         }}
                     >
-                        <Box sx={{ maxWidth: "600px", color: "#fff" }}>
+                        <Box
+                            sx={{
+                                maxWidth: { xs: "100%", sm: "85%", md: "600px" },
+                                color: "#fff",
+                                mx: { xs: "auto", md: 0 },
+                            }}
+                        >
                             <Typography
                                 variant="subtitle1"
-                                sx={{ mb: 2, color: "#d3d3d3", fontSize: "1rem" }}
+                                sx={{
+                                    mb: 2,
+                                    color: "#d3d3d3",
+                                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                                }}
                             >
                                 {slide.subtitle}
                             </Typography>
@@ -162,7 +125,12 @@ const HeroSection: React.FC = () => {
                                     mb: 3,
                                     fontWeight: "bold",
                                     lineHeight: 1.2,
-                                    fontSize: { xs: "2rem", md: "3rem" },
+                                    fontSize: {
+                                        xs: "1.8rem",
+                                        sm: "2.4rem",
+                                        md: "3rem",
+                                        lg: "3.5rem",
+                                    },
                                 }}
                             >
                                 {slide.title}
@@ -174,54 +142,89 @@ const HeroSection: React.FC = () => {
                                     backgroundColor: "#1976d2",
                                     textTransform: "none",
                                     fontWeight: "bold",
-                                    px: 3,
-                                    py: 1.2,
+                                    px: { xs: 2.5, sm: 3 },
+                                    py: { xs: 1, sm: 1.2 },
                                     borderRadius: "8px",
+                                    fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
                                     "&:hover": { backgroundColor: "#1565c0" },
                                 }}
+                                onClick={handleApplyLoan}
                             >
                                 {slide.buttonText}
                             </Button>
                         </Box>
                     </Box>
                 </Fade>
-                <Box
+
+                {/* Navigation Arrows */}
+                <IconButton
+                    onClick={handlePrev}
                     sx={{
                         position: "absolute",
-                        bottom: 0,
-                        left: { xs: 20, sm: 40, md: 80 },
+                        top: "42%",
+                        right: { xs: 10, sm: 30, md: 50 },
+                        transform: "translateY(-50%)",
+                        color: "#fff",
+                        border: "2px solid #fff",
+                        borderRadius: "50%",
+                        width: { xs: 36, sm: 50, md: 60 },
+                        height: { xs: 36, sm: 50, md: 60 },
+                        "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
                         zIndex: 4,
-                        display: "flex",
-                        flexDirection: { xs: "column", sm: "row" },
-                        gap: 2,
                     }}
                 >
-                    {features.map((feature, index) => (
-                        <FeatureCard
-                            key={index}
-                            icon={feature.icon}
-                            title={feature.title}
-                            subtitle={feature.subtitle}
-                        />
-                    ))}
-                </Box>
-                <Box
+                    <KeyboardBackspaceOutlinedIcon
+                        sx={{ fontSize: { xs: 16, sm: 20 } }}
+                    />
+                </IconButton>
+
+                <IconButton
+                    onClick={handleNext}
                     sx={{
                         position: "absolute",
-                        bottom: -635,
-                        left: { xs: "50%", md: "50%" },
-                        zIndex: 10,
-                        px: 4,
-                        py: 2,
+                        top: "58%",
+                        right: { xs: 10, sm: 30, md: 50 },
+                        transform: "translateY(-50%)",
+                        color: "#fff",
+                        border: "2px solid #fff",
+                        borderRadius: "50%",
+                        width: { xs: 36, sm: 50, md: 60 },
+                        height: { xs: 36, sm: 50, md: 60 },
+                        "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+                        zIndex: 4,
                     }}
                 >
-                    <LoanCalculator />
-                </Box>
+                    <EastOutlinedIcon sx={{ fontSize: { xs: 16, sm: 20 } }} />
+                </IconButton>
             </Box>
-            <Grid>
-                Hello
-            </Grid>
-        </>
+
+            {/* ✅ Floating Feature Cards Section */}
+            <Box
+                sx={{
+                    position: "absolute",
+                    bottom: { xs: -80, sm: -90, md: -100 },
+                    left: 0,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    gap: { xs: 2, sm: 3 },
+                    px: { xs: 2, sm: 4, md: 8 },
+                    zIndex: 5,
+                }}
+            >
+                {features.map((feature) => (
+                    <FeatureCard
+                        key={feature.title}
+                        icon={feature.icon}
+                        title={feature.title}
+                        subtitle={feature.subtitle}
+                    />
+                ))}
+            </Box>
+        </Box>
     );
 };
 

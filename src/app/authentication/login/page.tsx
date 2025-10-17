@@ -24,6 +24,8 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import axios from "axios";
 import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
+import Header from "@/app/(DashboardLayout)/components/landingPage/Header";
+import Footer from "@/app/(DashboardLayout)/components/landingPage/Footer";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -176,6 +178,7 @@ export default function LoginPage() {
 
   return (
     <PageContainer title="Login" description="this is Login page">
+      <Header />
       <Box
         sx={{
           position: "relative",
@@ -390,6 +393,7 @@ export default function LoginPage() {
           </Alert>
         </Snackbar>
       </Box>
+      <Footer />
     </PageContainer >
   );
 }

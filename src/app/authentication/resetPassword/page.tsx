@@ -19,6 +19,8 @@ import {
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 import Logo from "../../(DashboardLayout)/components/layout/Logo";
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
+import Footer from "@/app/(DashboardLayout)/components/landingPage/Footer";
+import Header from "@/app/(DashboardLayout)/components/landingPage/Header";
 
 const ResetPassword = () => {
   const router = useRouter();
@@ -103,6 +105,7 @@ const ResetPassword = () => {
 
   return (
     <PageContainer title="Reset Password" description="Reset your password">
+      <Header />
       <Box
         sx={{
           position: "relative",
@@ -189,6 +192,7 @@ const ResetPassword = () => {
           </Grid>
         </Grid>
       </Box>
+      <Footer />
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
