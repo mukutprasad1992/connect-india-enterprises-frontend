@@ -6,9 +6,9 @@ const ChooseUsCard: React.FC = () => {
     return (
         <Box
             sx={{
-                width: { xs: "100%", sm: 600, md: 730 },
+                // width: { xs: "100%", sm: 600, md: 730 },s
                 mx: "auto",
-                px: { xs: 2, sm: 3, md: 0.6 },
+                // px: { xs: 2, sm: 3, md: 0.6 },
                 borderTopRightRadius: { xs: 2, md: 4 },
                 borderBottomRightRadius: { xs: 2, md: 4 },
                 backgroundColor: "#113e97ff",
@@ -22,15 +22,17 @@ const ChooseUsCard: React.FC = () => {
             }}
         >
             {/* Top Icon and Text */}
-            <Grid container alignItems="center">
+            <Grid container alignItems="center" justifyContent={{ xs: "center", md: "end" }}>
                 <Grid
                     item
                     xs={3}
+                    sm={3}
+                    md={4}
                     sx={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: { xs: "flex-start", md: "center" },
-                        pl: { xs: 0, md: 20 },
+                        alignItems: "end",
+                        justifyContent: { xs: "flex-end" },
+                        // pl: { xs: 0, md: 20 },
                     }}
                 >
                     <Box
@@ -51,7 +53,7 @@ const ChooseUsCard: React.FC = () => {
                         sx={{
                             color: "white",
                             mb: { xs: 0, md: 1 },
-                            fontSize: { xs: 16, sm: 20, md: 24 },
+                            fontSize: { xs: 16, sm: 20, lg: 24 },
                             fontWeight: "bold",
                             pt: { xs: 0, md: 2 },
                             pl: { xs: 1, md: 2 },
@@ -60,21 +62,22 @@ const ChooseUsCard: React.FC = () => {
                         26 years of working experience
                     </Typography>
                 </Grid>
+                {/* Image below text */}
+                <Box
+                    component="img"
+                    src="/images/landingPage/DSC_7789.jpg"
+                    alt="Choose Us"
+                    sx={{
+                        width: { xs: "80%", sm: 500, lg: 570 },
+                        height: "auto",
+                        mt: { xs: 2, md: 2 },
+                        alignSelf: "flex-end",
+                        borderRadius: { xs: 2, md: 0 },
+                    }}
+                />
             </Grid>
 
-            {/* Image below text */}
-            <Box
-                component="img"
-                src="/images/landingPage/DSC_7789.jpg"
-                alt="Choose Us"
-                sx={{
-                    width: { xs: "80%", sm: 400, md: 570 },
-                    height: "auto",
-                    mt: { xs: 2, md: 2 },
-                    alignSelf: "flex-end",
-                    borderRadius: { xs: 2, md: 0 },
-                }}
-            />
+
         </Box>
     );
 };

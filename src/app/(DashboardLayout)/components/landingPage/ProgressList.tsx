@@ -39,7 +39,7 @@ const ProgressList = () => {
     }, []);
 
     return (
-        <Box sx={{ width: "100%", mt: 5, ml: 4 }}>
+        <Box sx={{ width: "100%", mt: 5, ml: 4, mr: 4 }}>
             <Grid container spacing={3}>
                 {data.map((item, index) => (
                     <Grid item xs={12} key={index}>

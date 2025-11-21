@@ -18,15 +18,15 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, subtitle }) => {
             sx={{
                 position: "relative",
                 overflow: "hidden",
-                p: { xs: 2, sm: 3, md: 4 },
+                p: { xs: 2, sm: 3, md: 2, lg: 4 },
                 borderTopLeftRadius: 5,
                 borderTopRightRadius: 5,
                 cursor: "pointer",
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
+                // flexDirection: { xs: "column", sm: "row" },
                 alignItems: { xs: "flex-start", sm: "center" },
                 justifyContent: { xs: "center", sm: "flex-start" },
-                gap: { xs: 1.5, sm: 3 },
+                gap: { xs: 1, sm: 2 },
                 width: { xs: "100%", sm: 300, md: 300 },
                 height: { xs: 70, sm: 80, md: 100 },
                 minHeight: { xs: 70, sm: 80, md: 100 },
@@ -80,7 +80,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, subtitle }) => {
                     className="text-content"
                     sx={{
                         transition: "color 0.3s ease",
-                        fontSize: { xs: "0.95rem", sm: "1rem", md: "1.1rem" },
+                        fontSize: { xs: "0.7rem", sm: "0.9em", lg: "1rem" },
                     }}
                 >
                     {title}
@@ -91,7 +91,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, subtitle }) => {
                     sx={{
                         color: "rgba(255,255,255,0.8)",
                         transition: "color 0.3s ease",
-                        fontSize: { xs: "0.75rem", sm: "0.85rem", md: "0.9rem" },
+                        fontSize: { xs: "0.6rem", sm: "0.7rem", lg: "0.8rem" },
                     }}
                 >
                     {subtitle}

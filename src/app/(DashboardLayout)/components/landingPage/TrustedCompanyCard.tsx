@@ -14,8 +14,8 @@ const TrustedCompanyCard: React.FC = () => {
     return (
         <Box
             sx={{
-                width: 700,
-                ml: 1,
+                width: { xs: "100%", sm: "100%", md: 500, lg: 600 },
+                ml: { md: 1 },
                 px: { xs: 2, md: 2 },
                 pt: { xs: 3, md: 12 },
                 pb: { xs: 3, md: 4 },
@@ -33,7 +33,7 @@ const TrustedCompanyCard: React.FC = () => {
                 alignItems="start"
             >
                 {steps.map((step) => (
-                    <Grid item xs={12} sm={10} md={10} key={step.number}>
+                    <Grid item xs={12} sm={12} md={10} key={step.number} sx={{ display: "flex", justifyContent: "center" }}>
                         <StepCard number={step.number} text={step.text} />
                     </Grid>
                 ))}

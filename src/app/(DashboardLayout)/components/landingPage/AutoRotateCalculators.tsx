@@ -41,12 +41,12 @@ const AutoRotateCalculators: React.FC = () => {
         <Box
             sx={{
                 position: { xs: "relative", md: "absolute" },
-                right: { xs: 'auto', sm: 20, md: 140 },
+                right: { xs: 'auto', sm: 20, md: 70, lg: 120 },
                 zIndex: 8,
                 top: { xs: 'auto', md: 500 },
                 pointerEvents: "auto",
                 mb: { xs: 4, md: 0 },
-                width: { xs: "100%", md: 460 },
+                width: { xs: "100%", md: 400, lg: 460 },
             }}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}

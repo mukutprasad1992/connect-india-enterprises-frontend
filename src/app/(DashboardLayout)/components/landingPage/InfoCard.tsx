@@ -12,11 +12,11 @@ const InfoCard: FC<HorizontalCardProps> = ({ icon, title, description }) => {
     return (
         <Grid
             sx={{
-                maxWidth: 330,
+                maxWidth: { xs: 800, md: 330 },
                 display: "flex",
                 alignItems: "center",
-                p: 3,
-
+                pt: 3,
+                pl: { xs: 2, md: 0 },
             }}
         >
             {/* Left Icon */}

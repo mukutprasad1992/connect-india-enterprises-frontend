@@ -16,11 +16,12 @@ const PromoCard: FC<PromoCardProps> = ({ icon, description }) => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "white",
+                // backgroundColor: "white",
                 p: 3,
                 borderBottom: "3px solid transparent",
                 transition: "all 0.3s ease",
                 borderRadius: 2,
+                backgroundColor: "#deecfaff",
                 cursor: "pointer",
                 ":hover": {
                     borderBottom: "3px solid #1976d2", // blue underline on hover

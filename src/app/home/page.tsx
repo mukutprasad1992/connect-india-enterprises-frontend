@@ -90,12 +90,12 @@ const Home: NextPage = () => {
 
     const features = [
         {
-            icon: <PaymentIcon sx={{ fontSize: 56, color: "#0d6efd" }} />,
+            icon: <PaymentIcon sx={{ fontSize: { xs: 30, sm: 40, lg: 56 }, color: "#0d6efd" }} />,
             title: "Quick Payment",
             subtitle: "Process",
         },
         {
-            icon: <ReceiptLongIcon sx={{ fontSize: 56, color: "#0d6efd" }} />,
+            icon: <ReceiptLongIcon sx={{ fontSize: { xs: 30, sm: 40, lg: 56 }, color: "#0d6efd" }} />,
             title: "No Prepayment",
             subtitle: "Fees",
         },
@@ -177,7 +177,17 @@ const Home: NextPage = () => {
                             <Box sx={{ maxWidth: "600px", color: "#fff" }}>
                                 <Typography
                                     variant="subtitle1"
-                                    sx={{ mb: 2, color: "#d3d3d3", fontSize: "1rem" }}
+                                    // sx={{ mb: 2, color: "#d3d3d3", fontSize: "1rem" }}
+                                    sx={{
+                                        mb: 2,
+                                        color: "#fcfcfcff",
+                                        fontSize: { xs: "0.95rem", md: "1.1rem" },
+                                        letterSpacing: "0.5px",
+                                        fontWeight: 400,
+                                        textShadow: "0 2px 4px rgba(0, 0, 0, 0.7)",
+                                        opacity: 0.95,
+                                        lineHeight: 1.6,
+                                    }}
                                 >
                                     {slide.subtitle}
                                 </Typography>
@@ -189,6 +199,12 @@ const Home: NextPage = () => {
                                         fontWeight: "bold",
                                         lineHeight: 1.2,
                                         fontSize: { xs: "2rem", md: "3rem" },
+                                        textShadow: `
+                                                    3px 3px 8px rgba(0, 0, 0, 0.7),
+                                                    0 0 15px rgba(0, 0, 0, 0.8),
+                                                    0 0 30px rgba(0, 0, 0, 0.9),
+                                                    0 0 45px rgba(0, 136, 204, 1)`,
+
                                     }}
                                 >
                                     {slide.title}
@@ -256,13 +272,15 @@ const Home: NextPage = () => {
                     <Box
                         sx={{
                             position: "absolute",
-                            bottom: { xs: -1, md: -1 },
-                            left: { xs: 20, sm: 40, md: 120 },
+                            bottom: { xs: 5, md: -1 },
+                            left: { xs: 20, sm: 40, md: 60, lg: 120 },
                             zIndex: 10,
                             display: "flex",
-                            flexDirection: { xs: "column", sm: "row" },
+                            // flexDirection: { xs: "column", sm: "row" },
                             gap: 2,
                             pointerEvents: "auto", // allow hover/click
+                            width: { xs: "90%", sm: "90%", md: "40%" },
+                            right: { xs: 20 }
                         }}
                     >
                         {features.map((feature) => (
@@ -283,8 +301,8 @@ const Home: NextPage = () => {
             <Grid
                 container
                 sx={{
-                    px: { xs: 3, sm: 6, md: 10 },
-                    backgroundColor: 'white'
+                    px: { xs: 3, sm: 6, md: 8 },
+                    pr: { md: 35 }
                 }}
             >
                 <Grid
@@ -292,7 +310,7 @@ const Home: NextPage = () => {
                     xs={12}
                     md={8}
                     sx={{
-                        mt: { xs: 8, sm: 4, md: 0 },
+                        mt: { xs: 8, sm: 4, md: 2 },
                         px: { xs: 2, md: 0 },
                     }}
                 >
@@ -313,7 +331,7 @@ const Home: NextPage = () => {
                                 fontWeight: "bold",
                                 mr: { xs: 0, sm: 1 },
                                 mb: { xs: 1, sm: 0 },
-                                fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
+                                fontSize: { xs: "1rem", md: "1.25rem", lg: "1.5rem" },
                             }}
                         >
                             Company Introductions
@@ -330,9 +348,9 @@ const Home: NextPage = () => {
                     {/* Main Heading */}
                     <Typography
                         sx={{
-                            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
+                            fontSize: { xs: "1.5rem", sm: "2rem", md: "2rem", lg: "2.5rem" },
                             lineHeight: 1.2,
-                            pb: { xs: 1.5, sm: 3, md: 4.5 },
+                            pb: { xs: 1.5, sm: 3, lg: 4.5 },
                         }}
                     >
                         Your Dreams, Our Support —
@@ -340,9 +358,9 @@ const Home: NextPage = () => {
 
                     <Typography
                         sx={{
-                            fontSize: { xs: "1rem", sm: "1.2rem", md: "1.5rem" },
+                            fontSize: { xs: "1rem", sm: "1.2rem", lg: "1.5rem" },
                             lineHeight: 1.2,
-                            pb: { xs: 1.5, sm: 3, md: 4.5 },
+                            pb: { xs: 1.5, sm: 3, lg: 4.5 },
                         }}
                     >
                         Loans, Investments, Policies & Insurance That Empower You
@@ -354,7 +372,8 @@ const Home: NextPage = () => {
                             sx={{
                                 fontSize: { xs: 12, sm: 16, md: 19 },
                                 fontFamily: '"Rajdhani", serif',
-                                lineHeight: 1.6,
+                                lineHeight: 1.2,
+                                textAlign: "justify",
                             }}
                         >
                             Manage your finances with confidence — from quick loans to smart investments,
@@ -364,8 +383,8 @@ const Home: NextPage = () => {
                         </Typography>
                     </Grid>
                 </Grid>
-                <Grid item xs={8}>
-                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <Grid item xs={8} sm={6} md={5}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap" }}>
                         <InfoCard
                             icon={<StarIcon />}
                             title="Premium Quality"
@@ -382,7 +401,7 @@ const Home: NextPage = () => {
 
                 </Grid>
             </Grid>
-            <Box display="flex" alignItems="center" justifyContent={'center'} sx={{ pt: 10, backgroundColor: 'white', }}>
+            <Box display="flex" alignItems="center" justifyContent={'center'} sx={{ pt: { xs: 5, md: 10 }, backgroundColor: 'white', }}>
                 <Typography
                     variant="h6"
                     sx={{ mr: 1 }}
@@ -551,10 +570,10 @@ const Home: NextPage = () => {
                 </Grid>
                 <Box
                     sx={{
-                        position: "absolute",
-                        top: "60%",
-                        left: "75%",
-                        transform: "translate(-50%, -50%)",
+                        position: { xs: "static", md: "absolute" },
+                        top: { md: "60%" },
+                        left: { md: "80%", lg: "75%" },
+                        transform: { md: "translate(-50%, -50%)" },
                         zIndex: 10,
                     }}
                 >
@@ -574,7 +593,7 @@ const Home: NextPage = () => {
                         px: { xs: 3, md: 8 },
                         alignItems: "center",
                         pt: 10,
-                        mt: 13,
+                        mt: 10,
                         pb: 10,
                     }}
                 >
@@ -598,6 +617,7 @@ const Home: NextPage = () => {
                                 fontWeight: "bold",
                                 mb: 2,
                                 lineHeight: 1.4,
+                                fontSize: { xs: "1.8rem", sm: "1.8rem", md: "1.5rem", lg: "2rem" }
                             }}
                         >
                             Most of the People Trust on Us For Fast Services
@@ -605,21 +625,22 @@ const Home: NextPage = () => {
                         <Grid container sx={{
                             mt: 5
                         }}>
-                            <Grid item xs={4} >
+                            <Grid item xs={4}>
                                 <Box
                                     component="img"
                                     src="/images/landingPage/trust-1-1.png"
                                     alt="Trusted Company"
                                     sx={{
-                                        width: 180,
+                                        width: "100%",
                                         borderRadius: 2,
                                         mb: 2,
                                         boxShadow: 3,
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={8}>
-                                <Typography variant="body1" sx={{ opacity: 0.8, mb: 3, maxWidth: 360 }}>
+                            <Grid item xs={.5}></Grid>
+                            <Grid item xs={7.5}>
+                                <Typography variant="body1" sx={{ opacity: 0.8, mb: 3, mr: { xs: 4, md: 0, lg: 2 }, textAlign: 'justify' }}>
                                     There are many variations of passages of lorem ipsum available,
                                     the majority have suffered alteration in some form by injected humour.
                                     Duis aute irure dolor in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
@@ -693,7 +714,7 @@ const Home: NextPage = () => {
                 >
                     <CustomersTestimonials />
                 </Grid>
-                <Box
+                {/* <Box
                     sx={{
                         position: "absolute",
                         top: "70.2%",
@@ -703,7 +724,7 @@ const Home: NextPage = () => {
                     }}
                 >
                     <ChooseUsCard />
-                </Box>
+                </Box> */}
                 <Grid
                     container
                     spacing={0}
@@ -712,7 +733,7 @@ const Home: NextPage = () => {
                         position: "relative",
                         color: "#000000ff",
                         backgroundColor: "#ffffffff",
-                        px: { xs: 3, md: 8 },
+                        // px: { xs: 3, md: 0 },
                         alignItems: "center",
                         pt: 10,
                         mt: 12,
@@ -745,7 +766,7 @@ const Home: NextPage = () => {
                         },
                     }}
                 >
-                    <Grid item xs={12} md={6}></Grid>
+                    <Grid item xs={12} md={6}><ChooseUsCard /></Grid>
                     <Grid item xs={12} md={6}>
                         <Box display="flex" alignItems="center" justifyContent={'start'} sx={{ pl: 3 }} >
                             <Typography
@@ -756,6 +777,7 @@ const Home: NextPage = () => {
                                     letterSpacing: 1,
                                     fontWeight: 600,
                                     mb: .5,
+                                    mt: { xs: 2, md: 0 }
                                 }}
                             >
                                 Our Benfits
@@ -766,7 +788,8 @@ const Home: NextPage = () => {
                                     width: 40,
                                     height: 2,
                                     mb: 1,
-                                    ml: 1
+                                    ml: 1,
+                                    mt: { xs: 2, md: 0 }
                                 }}
                             />
                         </Box>
@@ -918,7 +941,7 @@ const Home: NextPage = () => {
                 </Grid>
 
             </Grid>
-            <Box sx={{ p: 4, pl: 10, pr: 10, backgroundColor: "#eef2f7", }}>
+            <Box sx={{ p: 4, pl: { xs: 5, md: 10 }, pr: { xs: 5, md: 10 }, backgroundColor: "#eef2f7", }}>
                 <Typography variant="h5" sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', mb: 2 }}>
                     Our Collaborators
                 </Typography>

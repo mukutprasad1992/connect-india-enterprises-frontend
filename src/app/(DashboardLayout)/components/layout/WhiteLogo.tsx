@@ -9,7 +9,7 @@ const WhiteLogo = () => {
             <Grid item>
                 <Box
                     component="img"
-                    src="images/logos/smallWhiteLogo.png"
+                    src="/images/logos/smallWhiteLogo.png"
                     alt="App Logo"
                     sx={{ height: 60, width: "auto", transition: "all 0.3s" }}
                 />
