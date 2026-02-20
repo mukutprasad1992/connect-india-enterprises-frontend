@@ -175,6 +175,7 @@ const ProfilePage: React.FC = () => {
             if (res.data.status === true) {
                 setSnackbarOpen(true);
                 const imageUrl = res.data.result.url;
+                console.log('Uploaded image res.data.result.key:', res.data.result.key);
                 const profileImageKey = res.data.result.key
                 setProfileImageURL(imageUrl)
                 setValue('profileImageURL', imageUrl);

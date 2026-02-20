@@ -49,14 +49,14 @@ const ResetPassword = () => {
   };
 
   const validatePassword = (password: string, confirmPassword: string): boolean => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d@$#!%*?&]{8,}$/;
 
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match.");
       return false;
     }
     if (!passwordRegex.test(password)) {
-      setPasswordError("Password must be at least 6 characters long, contain one special character, and one alphanumeric.");
+      setPasswordError("Password must contain upper, lower, number & special char (min 8 chars)..");
       return false;
     }
     return true;

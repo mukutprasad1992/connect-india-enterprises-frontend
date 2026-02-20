@@ -26,7 +26,7 @@ import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
+console.log("LoginPage BASE_URL:", BASE_URL);
 type FieldName = "email" | "password";
 
 interface FormState {
@@ -66,7 +66,7 @@ function LoginPageContent() {
     if (name === "password") {
       if (!value.trim()) return "Password is required.";
       const passwordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d@#$!%*?&]{8,}$/;
       if (!passwordRegex.test(value))
         return "Must contain upper, lower, number & special char (min 8 chars).";
     }
@@ -115,8 +115,8 @@ function LoginPageContent() {
       setSnackbarMessage("Login successful!");
       setSnackbarOpen(true);
 
-      if (data.roleId === 2) router.replace("/utilities/customer");
-      else router.replace("/dashboard");
+
+      router.replace("/dashboard");
     } catch (err: any) {
       setSnackbarSeverity("error");
       setSnackbarMessage(err.response?.data?.message || "Login failed.");
@@ -128,45 +128,54 @@ function LoginPageContent() {
 
   const handleGoogleLogin = () => {
     window.location.href = `${BASE_URL}/auth/google`;
+
   };
 
   const handleFacebookLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/facebook`;
   };
 
+
   useEffect(() => {
     const token = searchParams?.get("token");
+
     if (!token) return;
 
-    const fetchUserData = async () => {
-      setLoadingOAuth(true);
+    const authenticateUser = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = res.data.data;
+        setLoadingOAuth(true);
 
         localStorage.setItem("accessToken", token);
-        localStorage.setItem("user", JSON.stringify(data));
-        localStorage.setItem("roleId", data.roleId);
 
-        if (data.roleId === 2) router.replace("/utilities/customer");
-        else router.replace("/dashboard");
+        const res = await axios.get(`${BASE_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        const cleanUrl = window.location.origin + window.location.pathname;
+        const userData = res.data.data;
+
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("roleId", userData.roleId);
+
+        const cleanUrl =
+          window.location.origin + window.location.pathname;
         window.history.replaceState({}, "", cleanUrl);
-      } catch (err) {
+
+        router.replace("/dashboard");
+
+      } catch (error) {
+        console.error("Google auth error:", error);
         setSnackbarSeverity("error");
-        setSnackbarMessage("Google login failed. Try again.");
+        setSnackbarMessage("Google login failed.");
         setSnackbarOpen(true);
       } finally {
         setLoadingOAuth(false);
       }
     };
 
-    fetchUserData();
-  }, [searchParams, router]);
+    authenticateUser();
+  }, [searchParams]);
 
   return (
     <PageContainer title="Login" description="this is Login page">

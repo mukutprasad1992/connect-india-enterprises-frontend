@@ -52,8 +52,8 @@ const RegisterPage = () => {
       tempErrors.mobileNo = "Invalid Mobile number";
 
     if (!form.password) tempErrors.password = "Password is required";
-    else if (form.password.length < 8)
-      tempErrors.password = "Password must be at least 8 characters";
+    else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(form.password))
+      tempErrors.password = "Must contain upper, lower, number & special char (min 8 chars).";
 
     if (!form.confirmPassword)
       tempErrors.confirmPassword = "Confirm password is required";
@@ -89,8 +89,8 @@ const RegisterPage = () => {
         break;
       case "password":
         if (!value) tempErrors.password = "Password is required";
-        else if (value.length < 8)
-          tempErrors.password = "Password must be at least 8 characters";
+        else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d@#$!%*?&]{8,}$/.test(value))
+          tempErrors.password = "Must contain upper, lower, number & special char (min 8 chars).";
         else tempErrors.password = "";
         break;
       case "confirmPassword":

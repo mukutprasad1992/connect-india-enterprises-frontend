@@ -45,7 +45,10 @@ import LoanApplySection from "../(DashboardLayout)/components/landingPage/LoanAp
 import Footer from "../(DashboardLayout)/components/landingPage/Footer";
 import { useRouter } from 'next/navigation';
 import AutoRotateCalculators from "../(DashboardLayout)/components/landingPage/AutoRotateCalculators";
-
+import RocketLaunchRoundedIcon from '@mui/icons-material/RocketLaunchRounded';
+import LockIcon from '@mui/icons-material/Lock';
+import InfoCardSlider from "../(DashboardLayout)/components/landingPage/InfoCardSlider";
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 const slides = [
     {
         image: "images/landingPage/IMG20250224152939.jpg",
@@ -58,6 +61,24 @@ const slides = [
         title: "Connect with Your Financial Growth",
         subtitle: "Simple & Secure Payment Process",
         buttonText: "Apply for Loan",
+    },
+];
+const cards = [
+    {
+        icon: <LightbulbOutlinedIcon sx={{ fontSize: { xs: 30, sm: 40, lg: 56 }, }} />,
+        title: "Expert Guidance",
+        description: "Our professionals help you make the best choices.",
+    },
+
+    {
+        icon: <RocketLaunchRoundedIcon sx={{ fontSize: { xs: 30, sm: 40, lg: 56 }, }} />,
+        title: "Quick & Easy Process",
+        description: "No more complex paperwork or long approval."
+    },
+    {
+        icon: <LockIcon sx={{ fontSize: { xs: 30, sm: 40, lg: 56 }, }} />,
+        title: "Secure & Trusted",
+        description: "Your data and transactions are 100% safe with us.",
     },
 ];
 const collaborators = [
@@ -77,6 +98,7 @@ const collaborators = [
 
 const Home: NextPage = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [whyChooseUs, setwhyChooseUs] = useState(0);
     const router = useRouter()
         ; const handleNext = () => {
             setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -353,7 +375,7 @@ const Home: NextPage = () => {
                             pb: { xs: 1.5, sm: 3, lg: 4.5 },
                         }}
                     >
-                        Your Dreams, Our Support —
+                        {/* Your Dreams, Our Support — */}
                     </Typography>
 
                     <Typography
@@ -809,9 +831,7 @@ const Home: NextPage = () => {
                         }}>
                             <Grid item xs={12}>
                                 <Typography variant="body1" sx={{ mb: 3, ml: 3 }}>
-                                    There are many variations of passages of lorem ipsum available,
-                                    the majority have suffered alteration in some form by injected humour.
-                                    Duis aute irure dolor in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                                    At Connect India Enterprises, we believe financial success starts with the right guidance and tailored solutions. As a trusted financial service provider, we bridge the gap between your financial needs and the best available options. Whether it’s loans, investments, insurance, or customized policies, we ensure that individuals and businesses have access to the right financial strategies for long-term security and growth.
                                 </Typography>
                             </Grid>
                             {/* Image */}
@@ -821,40 +841,8 @@ const Home: NextPage = () => {
                             container
                             spacing={1}
                         >
-                            <Grid item xs={6}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        gap: 1,
-                                        ml: 2
-                                    }}
-                                >
-                                    <PlayArrowIcon sx={{ color: "blue" }} />
-                                    <Typography sx={{ fontWeight: 600, fontSize: 20, lineHeight: 1 }}>
-                                        Professional Team
-                                    </Typography>
-                                </Box>
-                                <Typography sx={{ pl: 3, pt: 3 }}>
-                                    Lorem ipsum dolor sit is amet, consectetur notted.
-                                </Typography>
-                            </Grid>
 
-                            <Grid item xs={6}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        gap: 1,
-                                    }}
-                                >
-                                    <PlayArrowIcon sx={{ color: "blue" }} />
-                                    <Typography sx={{ fontWeight: 600, fontSize: 20, lineHeight: 1 }}>
-                                        Quick Payments
-                                    </Typography>
-                                </Box>
-                                <Typography sx={{ pt: 3, ml: 1 }}>
-                                    Lorem ipsum dolor sit is amet, consectetur notted.
-                                </Typography>
-                            </Grid>
+                            <InfoCardSlider cards={cards} />
                             <ProgressList />
                         </Grid>
                     </Grid>

@@ -24,15 +24,9 @@ export type RoleBasedMenu = {
 export const menuItems: RoleBasedMenu = {
     1: [
         { label: "Dashboard", icon: Dashboard, route: "/dashboard" },
-        { label: "Vendor", icon: Business, route: "/utilities/collaborator" },
-        { label: "Customer", icon: People, route: "/utilities/customer" },
         { label: "Inquiry", icon: HelpOutline, route: "/utilities/inquiry" },
-        { label: "Voucher", icon: CardGiftcard, route: "/utilities/coupon" },
     ],
-    2: [
-        { label: "Customer", icon: People, route: "/utilities/customer" },
-        { label: "Voucher", icon: CardGiftcard, route: "/utilities/coupon" },
-    ],
+
     3: [
         { label: "Dashboard", icon: Dashboard, route: "/dashboard" },
         { label: "Investment", icon: Business, route: "/utilities/investment" },

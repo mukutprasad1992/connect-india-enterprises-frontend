@@ -22,6 +22,7 @@ import {
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import Tooltip from '@mui/material/Tooltip';
 import {
   DataGrid,
@@ -1107,7 +1108,8 @@ const VoucherTable: React.FC = () => {
                         sx={{ color: "#465fff" }}
                         onClick={handleGenerateButton}
                       >
-                        <LocalOfferIcon />
+                        {/* <LocalOfferIcon /> */}
+                        <CardGiftcardIcon />
                       </IconButton>
                     )}
                     <IconButton onClick={() => exportToExcel(rows)}>

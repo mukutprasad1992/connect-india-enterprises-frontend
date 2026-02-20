@@ -33,15 +33,15 @@ const Footer = () => {
             sx={{
                 backgroundColor: "#0b2447",
                 color: "#fff",
-                pt: { xs: 6, md: 10 },
+                pt: { xs: 6, md: 15 },
                 pb: { xs: 4, md: 6 },
             }}
         >
             <Container maxWidth="lg">
-                <Grid container spacing={{ xs: 3, md: 4 }}>
+                <Grid container spacing={{ xs: 3, md: 5 }}>
                     {/* ===== Left Section ===== */}
-                    <Grid item xs={12} md={3}>
-                        <Box mb={2}>
+                    <Grid item xs={12} md={3} mt={-10}>
+                        <Box mb={2} >
                             <WhiteLogo />
                         </Box>
                         <Typography variant="body2" color="grey.300" mb={2} sx={{ fontSize: { xs: 13, md: 14 } }}>
@@ -62,8 +62,8 @@ const Footer = () => {
                     </Grid>
 
                     {/* ===== Explore Section ===== */}
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="h6" fontWeight="bold" mb={2} sx={{ fontSize: { xs: 16, md: 18 } }}>
+                    <Grid item xs={12} sm={6} md={3} >
+                        <Typography variant="h6" fontWeight="bold" mb={2} ml={5} sx={{ fontSize: { xs: 16, md: 18 } }}>
                             Explore
                         </Typography>
                         {["About", "Our Services", "Latest News", "Testimonials", "Contact", "Loan Calculator"].map((item) => (
@@ -74,6 +74,7 @@ const Footer = () => {
                                     mb: 1,
                                     fontSize: { xs: 13, md: 14 },
                                     "&:hover": { color: "#4dd0e1", cursor: "pointer" },
+                                    ml: 5,
                                 }}
                             >
                                 → {item}
@@ -105,6 +106,7 @@ const Footer = () => {
                                 alignItems="center"
                                 mb={2}
                                 sx={{ cursor: "pointer" }}
+                                mr={2}
                             >
                                 <Avatar
                                     src={news.img}
@@ -139,14 +141,14 @@ const Footer = () => {
                     </Grid>
 
                     {/* ===== Contact Section ===== */}
-                    <Grid item xs={12} md={3} sx={{ backgroundColor: { xs: "transparent", md: '#0e0542' }, p: { xs: 0, md: 1.5 }, borderRadius: 1 }}>
+                    <Grid item xs={12} md={3} sx={{ backgroundColor: { xs: "transparent" }, p: { xs: 0, md: 1.5 }, borderRadius: 1 }}>
                         <Typography variant="h6" fontWeight="bold" mb={2} sx={{ fontSize: { xs: 16, md: 18 } }}>
                             Contact
                         </Typography>
 
-                        <Box display="flex" alignItems="center" mb={1} flexWrap="wrap">
+                        <Box display="flex" alignItems="center" mb={1}>
                             <Email sx={{ mr: 1, color: "#4dd0e1" }} />
-                            <Typography variant="body2" sx={{ fontSize: { xs: 12, md: 14 } }}>
+                            <Typography variant="body2" sx={{ fontSize: { xs: 12, md: 14 }, lineHeight: 1.5 }}>
                                 manoj@connectindiaenterprises.com support@connectindiaenterprises.com
                             </Typography>
                         </Box>
@@ -182,7 +184,7 @@ const Footer = () => {
                         © Copyright 2025 by connectindiaenterprises.com
                     </Typography>
 
-                    <Box sx={{ display: "flex", gap: { xs: 1, md: 2 } }}>
+                    <Box sx={{ display: "flex", gap: { xs: 1, md: '1px' } }}>
                         {socialLinks.map(({ icon: Icon, url }, i) => (
                             <IconButton
                                 key={i}
@@ -197,7 +199,7 @@ const Footer = () => {
                                     p: { xs: 0.5, md: 1 },
                                 }}
                             >
-                                <Icon sx={{ fontSize: { xs: 18, md: 24 } }} />
+                                <Icon sx={{ fontSize: { xs: 16, md: '20px' } }} />
                             </IconButton>
                         ))}
                     </Box>

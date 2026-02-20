@@ -4,7 +4,8 @@ import Sidebar from "./components/layout/sidebar";
 import Header from "./components/layout/header";
 import { Box } from "@mui/material";
 import '../styles/common.css';
-
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 export default function RootLayout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
