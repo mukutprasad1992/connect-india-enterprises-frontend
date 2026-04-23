@@ -40,7 +40,7 @@ const SimpleCard: React.FC<SimpleCardProps> = ({ image, title, description, butt
                 borderRadius: 2,
                 overflow: "hidden",
                 position: "relative",
-                transition: "all 0.4s ease",
+                // transition: "all 0.4s ease",
                 ":hover": { boxShadow: 6 },
             }}
         >
@@ -54,8 +54,8 @@ const SimpleCard: React.FC<SimpleCardProps> = ({ image, title, description, butt
                     alt={title}
                     sx={{
                         objectFit: "cover",
-                        transition: "transform 0.5s ease",
-                        transform: hover ? "scale(1.1)" : "scale(1)",
+                        // transition: "transform 0.5s ease",
+                        // transform: hover ? "scale(1.1)" : "scale(1)",
                     }}
                 />
                 {/* Arrow Button — moves to center on hover */}
@@ -67,12 +67,12 @@ const SimpleCard: React.FC<SimpleCardProps> = ({ image, title, description, butt
                         width: 80,
                         height: 80,
                         position: "absolute",
-                        bottom: hover ? "50%" : 15,
-                        right: hover ? "50%" : 15,
-                        transform: hover
-                            ? "translate(50%, 50%) scale(1.1)"
-                            : "translate(0, 0) scale(1)",
-                        transition: "all 0.5s ease",
+                        bottom: 15,
+                        right: 15,
+                        // transform: hover
+                        //     ? "translate(50%, 50%) scale(1.1)"
+                        //     : "translate(0, 0) scale(1)",
+                        // transition: "all 0.5s ease",
                         // "&:hover": {
                         //     backgroundColor: "rgba(28, 101, 170, 0.91)",
                         // },

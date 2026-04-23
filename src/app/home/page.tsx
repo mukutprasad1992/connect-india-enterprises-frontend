@@ -368,24 +368,27 @@ const Home: NextPage = () => {
                     </Box>
 
                     {/* Main Heading */}
-                    <Typography
+                    {/* <Typography
                         sx={{
                             fontSize: { xs: "1.5rem", sm: "2rem", md: "2rem", lg: "2.5rem" },
                             lineHeight: 1.2,
                             pb: { xs: 1.5, sm: 3, lg: 4.5 },
                         }}
                     >
-                        {/* Your Dreams, Our Support — */}
-                    </Typography>
+                        Secure Today. Strengthen Tomorrow.
+
+                    </Typography> */}
 
                     <Typography
                         sx={{
-                            fontSize: { xs: "1rem", sm: "1.2rem", lg: "1.5rem" },
+                            fontSize: { xs: "1rem", sm: "1.8rem", lg: "2rem" },
                             lineHeight: 1.2,
                             pb: { xs: 1.5, sm: 3, lg: 4.5 },
+
                         }}
+                        variant="h1"
                     >
-                        Loans, Investments, Policies & Insurance That Empower You
+                        Secure Today. Strengthen Tomorrow.
                     </Typography>
 
                     {/* Paragraph */}
@@ -393,16 +396,12 @@ const Home: NextPage = () => {
                         <Typography
                             sx={{
                                 fontSize: { xs: 12, sm: 16, md: 19 },
-                                fontFamily: '"Rajdhani", serif',
-                                lineHeight: 1.2,
-                                textAlign: "justify",
+                                fontFamily: 'sans-serif',
+                                lineHeight: 1.8,
+                                // textAlign: "justify",
                             }}
                         >
-                            Manage your finances with confidence — from quick loans to smart investments,
-                            reliable insurance, and flexible policies, all in one trusted platform
-                            designed to simplify your financial journey, help you make informed
-                            decisions, and achieve your life goals effortlessly.
-                        </Typography>
+                            Professional financial advisory services in loans, investments, insurance, and policy planning — helping you protect, grow, and manage your wealth with confidence.                        </Typography>
                     </Grid>
                 </Grid>
                 <Grid item xs={8} sm={6} md={5}>
@@ -528,13 +527,12 @@ const Home: NextPage = () => {
                     </Typography>
                 </Grid>
 
-                <Grid item xs={5}>
-                    Turpis cursus in hac habitasse platea dictumst quisque. Aenean euismod
-                    elementum nisi quis eleifend quam adipiscing vitae proin. There of
-                    available but the majority have suffered alteration in some form, by
-                    injected humour or randomised words which don’t look even slightly
-                    believable. Nam aliquam sem et tortor consequat at urna mattis
-                    pellentesque...
+                <Grid item xs={5} sx={{ ml: 2, mt: 2 }} >
+                    Get fast approvals, competitive rates, and hassle-free processing tailored to your business needs.
+                    Fuel your growth with financing you can rely on.
+                    Access working capital, expand operations, and seize new opportunities with ease.
+                    Simple documentation, transparent terms, and quick disbursal.
+
                 </Grid>
             </Grid>
             <Box sx={{ position: "relative" }}>
@@ -663,9 +661,11 @@ const Home: NextPage = () => {
                             <Grid item xs={.5}></Grid>
                             <Grid item xs={7.5}>
                                 <Typography variant="body1" sx={{ opacity: 0.8, mb: 3, mr: { xs: 4, md: 0, lg: 2 }, textAlign: 'justify' }}>
-                                    There are many variations of passages of lorem ipsum available,
-                                    the majority have suffered alteration in some form by injected humour.
-                                    Duis aute irure dolor in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                                    There are many financial service providers,
+                                    but our commitment to speed, transparency, and
+                                    client satisfaction sets us apart. We deliver timely solutions
+                                    with complete clarity, ensuring every client experiences seamless
+                                    and dependable service.
                                 </Typography>
                             </Grid>
                             {/* Image */}

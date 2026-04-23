@@ -160,7 +160,47 @@ const Loan = () => {
   const userObj = user ? JSON.parse(user) : null;
   console.log(userObj?.firstName);
   const userName = `${userObj?.firstName}  ${userObj?.lastName}`
+  //redict to profile page if user details are incomplete
+  const fetchProfile = async () => {
+    if (!token) {
+      localStorage.clear();
+      router.push('/authentication/login');
+      return;
+    }
 
+    try {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.clear();
+        router.push("/authentication/login");
+        return;
+      }
+
+      const res = await axios.get(`${BASE_URL}/profile/getProfileById`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const firstName = res?.data?.result?.firstName?.trim();
+      const lastName = res?.data?.result?.lastName?.trim();
+      if (firstName && lastName) {
+        setOpenLoanFormDialog(true)
+      } else {
+        router.push("/utilities/profile?showSnackbar=completeProfile");
+      }
+
+    } catch (error: any) {
+      console.error("Error fetching profile:", error);
+
+      if (axios.isAxiosError(error)) {
+        alert(`Failed to fetch profile: ${error.response?.data?.message || error.message}`);
+      } else {
+        alert("Unexpected error occurred.");
+      }
+    }
+  };
+  const handleAddLoan = () => {
+    fetchProfile();
+  };
   useEffect(() => {
     if (!token && !roleId) {
       localStorage.clear();
@@ -674,7 +714,7 @@ const Loan = () => {
                       <IconButton
                         size="small"
                         sx={{ textTransform: "none", color: "#465fff", p: 0.2 }}
-                        onClick={() => setOpenLoanFormDialog(true)}
+                        onClick={handleAddLoan}
                       >
                         <AddCircleOutlineIcon />
                       </IconButton>

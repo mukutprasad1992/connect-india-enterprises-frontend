@@ -52,7 +52,7 @@ const Profile = () => {
       try {
         const user = JSON.parse(userString);
         profileImageURL = user?.profileImageURL;
-        console.log(profileImageURL);
+
       } catch (error) {
         console.error('Error parsing user from localStorage', error);
       }

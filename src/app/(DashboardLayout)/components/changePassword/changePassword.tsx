@@ -36,9 +36,6 @@ const ChangePasswordDialog: React.FC<Props> = ({ open, onClose }) => {
         setShowPassword(false);
         onClose();
     };
-    useEffect(() => {
-        handleClose();
-    }, [handleClose]);
 
 
     const handleSnackbarClose = () => setSnackbarOpen(false);
