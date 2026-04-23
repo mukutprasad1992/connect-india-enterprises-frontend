@@ -261,15 +261,15 @@ const InquiryPage = () => {
     let getStatusColor = (status: any) => {
         switch (status) {
             case "Pending":
-                return "#8b8a3fff";
+                return "#FFC107"; // Amber
             case "In Progress":
-                return "orange";
+                return "#2196F3"; // Blue
             case "Approved":
-                return "#6ad392ff";
+                return "#0adf11"; // Green
             case "Rejected":
-                return "#ff8780";
+                return "#F44336"; // Red
             default:
-                return "#8b8a3fff";
+                return "#9E9E9E"; // Grey
         }
     };
     const columns = [
@@ -372,7 +372,7 @@ const InquiryPage = () => {
                                         sx={{ color: "unset !important", p: 0.1 }}
                                     >
                                         <Pending
-                                            htmlColor={status === "Pending" ? "#8b8a3fff" : "orange"}
+                                            htmlColor={status === "Pending" ? "#FFC107" : "#2196F3"}
                                             fontSize='small' sx={{ fontSize: 14 }}
                                         />
                                     </IconButton>
@@ -391,26 +391,46 @@ const InquiryPage = () => {
         }
     ];
 
-    const getActionText = (actionType: string | null, currentStatus?: string) => {
+    const getDialogContent = (
+        actionType: string | null,
+        currentStatus?: string
+    ) => {
+        if (actionType === "approve") {
+            return {
+                title: "Confirm Approval",
+                message: "Are you sure you want to approve this inquiry?",
+            };
+        }
+
+        if (actionType === "reject") {
+            return {
+                title: "Confirm Rejection",
+                message: "Are you sure you want to reject this inquiry?",
+            };
+        }
+
         if (actionType === "in progress") {
             if (currentStatus === "In Progress") {
-                return "Move back to Pending";
+                return {
+                    title: "Move to Pending",
+                    message:
+                        "Are you sure you want to move this inquiry back to Pending?",
+                };
             } else {
-                return "Mark as In Progress";
+                return {
+                    title: "Confirm In Progress",
+                    message:
+                        "Are you sure you want to mark this inquiry as In Progress?",
+                };
             }
         }
-        switch (actionType) {
-            case "approve":
-                return "Approval";
-            case "reject":
-                return "Rejection";
-            case "Pending":
-                return "Pending";
-            default:
-                return "";
-        }
-    };
 
+        return { title: "", message: "" };
+    };
+    const dialogContent = getDialogContent(
+        actionType,
+        selectedInquiry?.status
+    );
     const exportToPDF = async (inquiries: any[], userName: string) => {
         const doc = new jsPDF({ orientation: "landscape" });
 
@@ -534,12 +554,11 @@ const InquiryPage = () => {
         const statusColors: Record<string, string> = {
             Complete: "green",
             'In Complete': "gray",
-            Pending: "#8b8a3fff",
-            "In Progress": "orange",
-            Approved: "#6ad392ff",
-            Rejected: "#ff8780",
+            Pending: "#FFC107",
+            "In Progress": "#2196F3",
+            Approved: "#0adf11",
+            Rejected: "#F44336",
         };
-
         if (key === "submit") {
             const displayValue = value === 1 ? "Complete" : "In Complete";
             return (
@@ -682,28 +701,96 @@ const InquiryPage = () => {
                     </Grid>
                 </Box >
             </PageContainer >
-            <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-                <DialogTitle>
-                    {`Confirm ${getActionText(actionType, selectedInquiry?.status)}`}
+            <Dialog
+                open={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        minWidth: 400,
+                        p: 1,
+                    },
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        fontWeight: 600,
+                        textAlign: "center",
+                        pb: 1,
+                        color:
+                            actionType === "approve"
+                                ? "#4CAF50"
+                                : actionType === "reject"
+                                    ? "#F44336"
+                                    : actionType === "in progress"
+                                        ? "#2196F3"
+                                        : "#333",
+                    }}
+                >
+                    {dialogContent.title}
                 </DialogTitle>
 
-                <DialogContent>
-                    Are you sure you want to {getActionText(actionType, selectedInquiry?.status)} this inquiry?
+                <DialogContent sx={{ textAlign: "center", py: 2 }}>
+                    <Typography variant="body1" sx={{ fontSize: 14 }}>
+                        {dialogContent.message}
+                    </Typography>
                 </DialogContent>
 
-                <DialogActions>
-                    <Button onClick={() => setIsDialogOpen(false)} color="secondary">
+                <DialogActions
+                    sx={{
+                        justifyContent: "center",
+                        gap: 2,
+                        pb: 2,
+                    }}
+                >
+                    <Button
+                        variant="outlined"
+                        onClick={() => setIsDialogOpen(false)}
+                        sx={{
+                            borderRadius: 2,
+                            px: 3,
+                        }}
+                    >
                         Cancel
                     </Button>
+
                     <Button
+                        variant="contained"
                         onClick={() => {
-                            if (actionType && selectedInquiryId !== null && selectedInquiryServiceId !== null) {
-                                const selectedInquiryItem = inquiries.find(inq => inq.id === selectedInquiryId);
-                                updateInquiryStatus(actionType, selectedInquiryId, selectedInquiryServiceId, selectedInquiryItem?.status || "");
+                            if (
+                                actionType &&
+                                selectedInquiryId !== null &&
+                                selectedInquiryServiceId !== null
+                            ) {
+                                const selectedInquiryItem = inquiries.find(
+                                    (inq) => inq.id === selectedInquiryId
+                                );
+
+                                updateInquiryStatus(
+                                    actionType,
+                                    selectedInquiryId,
+                                    selectedInquiryServiceId,
+                                    selectedInquiryItem?.status || ""
+                                );
+
                                 setIsDialogOpen(false);
                             }
                         }}
-                        color="primary"
+                        sx={{
+                            borderRadius: 2,
+                            px: 3,
+                            backgroundColor:
+                                actionType === "approve"
+                                    ? "#4CAF50"
+                                    : actionType === "reject"
+                                        ? "#F44336"
+                                        : actionType === "in progress"
+                                            ? "#2196F3"
+                                            : "#1976d2",
+                            "&:hover": {
+                                opacity: 0.9,
+                            },
+                        }}
                     >
                         Confirm
                     </Button>

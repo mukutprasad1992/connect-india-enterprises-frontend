@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import {
     Avatar,
     Box,
@@ -26,6 +26,7 @@ import axios from 'axios';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
 
 interface ProfileData {
     email: string;
@@ -75,6 +76,16 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
         setMounted(true);
     }, []);
+    const searchParams = useSearchParams();
+    const showSnackbar = searchParams.get("showSnackbar");
+    useEffect(() => {
+        if (showSnackbar === "completeProfile") {
+            setSnackbarMessage("Please complete your profile details.");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+            router.replace("/utilities/profile");
+        }
+    }, [searchParams, router]);
     const fetchProfile = async () => {
         if (!token) {
             localStorage.clear();
@@ -249,11 +260,8 @@ const ProfilePage: React.FC = () => {
             if (response.data.status === true) {
                 setSnackbarOpen(true);
                 setSnackbarMessage(response.data.message);
-                if (roleId === 2) {
-                    setTimeout(() => router.push('/utilities/customer'), 3000);
-                } else {
-                    setTimeout(() => router.push('/'), 3000);
-                }
+                setSnackbarSeverity('success');
+                setTimeout(() => router.push('/dashboard'), 3000);
             }
         } catch (error: any) {
             setSnackbarMessage(error?.data?.message || 'Update failed');
@@ -306,7 +314,7 @@ const ProfilePage: React.FC = () => {
                                         />
                                     )}
                                 />
-                                <Grid container spacing={1} justifyContent="center" sx={{ mt: 1 }}>
+                                <Grid container justifyContent="center" sx={{ mt: '1px' }}>
                                     <Grid item>
                                         <Tooltip title="Upload Image">
                                             <IconButton color="primary" component="label" sx={{ fontSize: 12 }}>
@@ -446,90 +454,7 @@ const ProfilePage: React.FC = () => {
                                         )}
                                     />
                                 </Grid>
-                                {mounted && roleId === 2 && (
-                                    <>
-                                        <Grid item xs={12} sm={6}>
-                                            <Controller
-                                                name="businessName"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <TextField
-                                                        {...field}
-                                                        fullWidth
-                                                        label='Business Name'
-                                                        disabled
-                                                        InputLabelProps={{
-                                                            shrink: Boolean(field?.value), sx: {
-                                                                marginLeft: field?.value ? '0px' : '32px'
-                                                            }
-                                                        }}
-                                                        InputProps={{
-                                                            startAdornment: (
-                                                                <InputAdornment position="start">
-                                                                    <Business sx={{ color: 'brown' }} />
-                                                                </InputAdornment>
-                                                            ),
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </Grid>
 
-                                        <Grid item xs={12} sm={6}>
-                                            <Controller
-                                                name="businessRepresentative"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <TextField
-                                                        {...field}
-                                                        fullWidth
-                                                        label='Business Representative'
-                                                        disabled
-                                                        InputProps={{
-                                                            startAdornment: (
-                                                                <InputAdornment position="start">
-                                                                    <Badge sx={{ color: 'brown' }} />
-                                                                </InputAdornment>
-                                                            ),
-                                                        }}
-                                                        InputLabelProps={{
-                                                            shrink: Boolean(field?.value), sx: {
-                                                                marginLeft: field?.value ? '0px' : '32px'
-                                                            }
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </Grid>
-
-                                        <Grid item xs={12} sm={6}>
-                                            <Controller
-                                                name="vendorCode"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <TextField
-                                                        {...field}
-                                                        fullWidth
-                                                        label='Vendor Code'
-                                                        disabled
-                                                        InputProps={{
-                                                            startAdornment: (
-                                                                <InputAdornment position="start">
-                                                                    <Code sx={{ color: 'brown' }} />
-                                                                </InputAdornment>
-                                                            ),
-                                                        }}
-                                                        InputLabelProps={{
-                                                            shrink: Boolean(field.value), sx: {
-                                                                marginLeft: field?.value ? '0px' : '32px'
-                                                            }
-                                                        }}
-                                                    />
-                                                )}
-                                            />
-                                        </Grid>
-                                    </>
-                                )}
                                 <Grid item xs={12} sm={6}>
                                     <Controller
                                         name="address"
@@ -593,6 +518,7 @@ const ProfilePage: React.FC = () => {
                                                         marginLeft: field?.value ? '0px' : '32px'
                                                     }
                                                 }}
+                                                inputProps={{ maxLength: 6 }}
                                                 error={!!errors.pinCode}
                                                 helperText={errors.pinCode}
                                                 // onBlur={() => {
@@ -605,10 +531,10 @@ const ProfilePage: React.FC = () => {
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    // setErrors(prev => ({
-                                                    //     ...prev,
-                                                    //     pinCode: val ? '' : 'Pin code  name is required',
-                                                    // }));
+                                                    setErrors(prev => ({
+                                                        ...prev,
+                                                        pinCode: val ? '' : 'Pin code  name is required',
+                                                    }));
                                                 }}
                                             />
                                         )}
@@ -676,22 +602,23 @@ const ProfilePage: React.FC = () => {
                                                         </InputAdornment>
                                                     ),
                                                 }}
+                                                inputProps={{ maxLength: 10 }}
                                                 error={!!errors.mobileNo}
                                                 helperText={errors.mobileNo}
-                                                // onBlur={() => {
-                                                //     if (!field.value) {
-                                                //         setErrors(prev => ({ ...prev, mobileNo: 'Mobile no. name is required' }));
-                                                //     } else {
-                                                //         setErrors(prev => ({ ...prev, mobileNo: '' }));
-                                                //     }
-                                                // }}
+                                                onBlur={() => {
+                                                    if (!field.value) {
+                                                        setErrors(prev => ({ ...prev, mobileNo: 'Mobile no. is required' }));
+                                                    } else if (!/^\d{10}$/.test(field.value)) {
+                                                        setErrors(prev => ({ ...prev, mobileNo: 'Enter valid number' }));
+                                                    }
+                                                }}
                                                 onChange={(e) => {
                                                     field.onChange(e);
                                                     const val = e.target.value;
-                                                    // setErrors(prev => ({
-                                                    //     ...prev,
-                                                    //     mobileNo: val ? '' : 'Mobile no. is required',
-                                                    // }));
+                                                    setErrors(prev => ({
+                                                        ...prev,
+                                                        mobileNo: val && !/^\d{10}$/.test(val) ? 'Enter valid number' : '',
+                                                    }));
                                                 }}
                                             />
                                         )}
@@ -702,50 +629,153 @@ const ProfilePage: React.FC = () => {
                         <Grid item xs={12}>
                             <Box display={"flex"} justifyContent="space-between" alignItems="center">
                                 <Tooltip title="Back">
-                                    <Button variant="outlined" color="secondary" onClick={() => router.back()} disabled={loading}>
+                                    <Button color="secondary" onClick={() => router.back()} disabled={loading}>
                                         <ArrowBackIcon sx={{ mr: 1 }} />
                                     </Button>
                                 </Tooltip>
-                                <Button variant="contained" color="primary" type="submit" disabled={loading}>
-                                    Update Profile
+                                <Button
+                                    variant="contained"
+                                    type="submit"
+                                    disabled={loading}
+                                    sx={{
+                                        borderRadius: 2,
+                                        px: 4,
+                                        py: 1,
+                                        fontWeight: 600,
+                                        textTransform: "none",
+                                        boxShadow: "0px 4px 12px rgba(25, 118, 210, 0.3)",
+                                        "&:hover": {
+                                            boxShadow: "0px 6px 18px rgba(25, 118, 210, 0.4)",
+                                        },
+                                    }}
+                                >
+                                    {loading ? "Updating..." : "Update"}
                                 </Button>
                             </Box>
                         </Grid>
                     </Grid>
                 </form>
             </Card>
-            <Dialog open={confirmOpen} onClose={() => !loading && setConfirmOpen(false)}>
-                <DialogTitle>Confirm Update</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
+            <Dialog
+                open={confirmOpen}
+                onClose={() => !loading && setConfirmOpen(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        minWidth: 380,
+                        p: 1,
+                    },
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        textAlign: "center",
+                        fontWeight: 600,
+                        pb: 1,
+                        color: "#1976d2",
+                    }}
+                >
+                    Confirm Update
+                </DialogTitle>
+
+                <DialogContent sx={{ textAlign: "center" }}>
+                    <DialogContentText sx={{ fontSize: 14 }}>
                         Are you sure you want to update your profile?
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setConfirmOpen(false)} disabled={loading}>
+
+                <DialogActions
+                    sx={{
+                        justifyContent: "center",
+                        gap: 2,
+                        pb: 2,
+                    }}
+                >
+                    <Button
+                        onClick={() => setConfirmOpen(false)}
+                        disabled={loading}
+                        variant="outlined"
+                        sx={{ borderRadius: 2, px: 3 }}
+                    >
                         Cancel
                     </Button>
+
                     <Button
                         onClick={handleConfirmUpdate}
-                        color="primary"
                         variant="contained"
                         disabled={loading}
-                        startIcon={loading ? <CircularProgress size={20} /> : null}
+                        sx={{
+                            borderRadius: 2,
+                            px: 4,
+                            fontWeight: 600,
+                            textTransform: "none",
+                        }}
                     >
-                        {loading ? <CircularProgress size={20} /> : 'confirm'}
+                        {loading ? (
+                            <CircularProgress size={20} sx={{ color: "white" }} />
+                        ) : (
+                            "Confirm"
+                        )}
                     </Button>
                 </DialogActions>
             </Dialog>
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                <DialogTitle>Delete Profile Image</DialogTitle>
-                <DialogContent>
-                    Are you sure you want to delete the profile image?
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        minWidth: 380,
+                        p: 1,
+                    },
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        textAlign: "center",
+                        fontWeight: 600,
+                        color: "#F44336",
+                    }}
+                >
+                    Delete Profile Image
+                </DialogTitle>
+
+                <DialogContent sx={{ textAlign: "center" }}>
+                    <DialogContentText sx={{ fontSize: 14 }}>
+                        Are you sure you want to delete the profile image?
+                        This action cannot be undone.
+                    </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDialog(false)} color="inherit">
+
+                <DialogActions
+                    sx={{
+                        justifyContent: "center",
+                        gap: 2,
+                        pb: 2,
+                    }}
+                >
+                    <Button
+                        onClick={() => setOpenDialog(false)}
+                        variant="outlined"
+                        sx={{ borderRadius: 2, px: 3 }}
+                    >
                         Cancel
                     </Button>
-                    <Button onClick={handleDelete} color="error" variant="contained">
+
+                    <Button
+                        onClick={handleDelete}
+                        variant="contained"
+                        sx={{
+                            borderRadius: 2,
+                            px: 4,
+                            fontWeight: 600,
+                            textTransform: "none",
+                            backgroundColor: "#F44336",
+                            "&:hover": {
+                                backgroundColor: "#d32f2f",
+                            },
+                        }}
+                    >
                         Confirm
                     </Button>
                 </DialogActions>

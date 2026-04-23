@@ -21,6 +21,7 @@ interface ServiceStats {
 }
 
 import { AttachMoney, Policy, Security, AccountBalance } from "@mui/icons-material";
+import { Console } from "console";
 
 const ICONS: Record<ServiceType, React.ReactNode> = {
   Investment: <AttachMoney />,
@@ -130,13 +131,17 @@ const Dashboard = () => {
 
     setIsAuthenticated(true);
     fetchData(token);
+    console.log("<------------Role ID---------->", token, " : ", roleId);
   }, []);
+
   const fetchData = async (token: string) => {
     try {
       const response = await axios.get(
         `${BASE_URL}/serviceType/getTotalAmountAndServiecsByUserIdServiceType`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      console.log("<------------API Response---------->", response.data);
 
       if (response.data.status) {
         const data = response.data.data;

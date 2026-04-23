@@ -1,12 +1,32 @@
 import { createTheme } from "@mui/material/styles";
 import { Plus_Jakarta_Sans } from "next/font/google";
-
-export const plus = Plus_Jakarta_Sans({
-  weight: ["300", "400", "500", "600", "700"],
+import { Inter } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
+import { Lato } from "next/font/google";
+import { Open_Sans } from "next/font/google";
+export const plus = Open_Sans({
+  weight: ['300', "400", "700"],
   subsets: ["latin"],
   display: "swap",
-  fallback: ["Helvetica", "Arial", "sans-serif"],
 });
+// export const plus = IBM_Plex_Sans({
+//   weight: ["400", "500", "600", "700"],
+//   subsets: ["latin"],
+//   display: "swap",
+// });
+// export const plus = Inter({
+//   weight: ["400", "500", "600", "700"],
+//   subsets: ["latin"],
+//   display: "swap",
+// });
+// export const plus = Plus_Jakarta_Sans({
+//   weight: ["300", "400", "500", "600", "700"],
+//   subsets: ["latin"],
+//   display: "swap",
+//   fallback: ["Helvetica", "Arial", "sans-serif"],
+// });
+
+
 
 const baselightTheme = createTheme({
   direction: "ltr",
@@ -22,7 +42,7 @@ const baselightTheme = createTheme({
       dark: "#23afdb",
     },
     success: {
-      main: "#13DEB9",
+      main: "#0adf11",
       light: "#E6FFFA",
       dark: "#02b3a9",
       contrastText: "#ffffff",

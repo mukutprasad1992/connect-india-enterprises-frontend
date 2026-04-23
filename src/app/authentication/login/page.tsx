@@ -26,7 +26,6 @@ import Logo from "@/app/(DashboardLayout)/components/layout/Logo";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-console.log("LoginPage BASE_URL:", BASE_URL);
 type FieldName = "email" | "password";
 
 interface FormState {
@@ -106,7 +105,7 @@ function LoginPageContent() {
     try {
       const response = await axios.post(`${BASE_URL}/auth/login`, values);
       const data = response.data.data;
-
+      console.log("<------------Response---------->", data);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data));
       localStorage.setItem("roleId", data.roleId);
