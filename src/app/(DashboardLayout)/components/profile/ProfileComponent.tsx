@@ -48,7 +48,6 @@ const ProfileComponent = () => {
             >
                 <Box p={1}>
                     <Typography variant="subtitle1" textAlign="center" mb={1}>
-                        Hi, Anil
                     </Typography>
                     <List>
                         <ListItem button>

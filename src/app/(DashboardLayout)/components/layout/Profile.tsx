@@ -22,6 +22,8 @@ import { Person, VpnKey } from "@mui/icons-material";
 import axios from "axios";
 import ChangePasswordDialog from "../../components/changePassword/changePassword";
 import { jwtDecode } from "jwt-decode";
+import CloseConfirmDialog from "../CloseConfirmDialog";
+import LogOutConfirmDialog from "../LogOutConfirmDialog";
 
 interface ProfileData {
   firstName: string;
@@ -42,7 +44,20 @@ const Profile = () => {
   const router = useRouter();
   const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  let profileImageURL: string | undefined;
 
+  if (typeof window !== 'undefined') {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        profileImageURL = user?.profileImageURL;
+
+      } catch (error) {
+        console.error('Error parsing user from localStorage', error);
+      }
+    }
+  }
   const handleClick = (event: any) => {
     fetchProfile();
     setAnchorEl(event.currentTarget);
@@ -60,7 +75,7 @@ const Profile = () => {
   const handleLogoutConfirm = () => {
     localStorage.clear();
     setOpenLogoutDialog(false);
-    router.push("/authentication/login");
+    router.push("/");
   };
 
   const handleLogoutCancel = () => {
@@ -162,20 +177,11 @@ const Profile = () => {
           </Box>
         </Menu>
         <ChangePasswordDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-        <Dialog open={openLogoutDialog} onClose={handleLogoutCancel}>
-          <DialogTitle>Confirm Logout</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to logout?</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleLogoutCancel} variant="outlined" color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleLogoutConfirm} variant="contained" color="error">
-              Exit
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <LogOutConfirmDialog
+          open={openLogoutDialog}
+          handleCancelClose={handleLogoutCancel}
+          handleConfirmClose={handleLogoutConfirm}
+        />
       </Box>
     </>
   );

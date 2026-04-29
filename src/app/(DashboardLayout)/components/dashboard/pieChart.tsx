@@ -25,7 +25,11 @@ const PieChartPage = () => {
 
     const router = useRouter();
     const theme = useTheme();
+
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+    const isLaptop = useMediaQuery(theme.breakpoints.up("md"))
+
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
     const [stats, setStats] = useState<{
@@ -148,21 +152,25 @@ const PieChartPage = () => {
         .filter((item) => item.value > 0)
         .slice(0, itemNb);
 
+    const chartSize = isMobile ? 220 : isTablet ? 280 : 350;
+    const dynamicRadius = isMobile ? radius * 0.7 : isTablet ? radius * 0.9 : radius;
+
     const renderPieOrMessage = (title: string, data: any[]) => {
         return (
             <Paper
-                elevation={3}
+                elevation={4}
                 sx={{
-                    p: 3,
+                    p: { xs: 2, sm: 3 },
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    borderRadius: 3,
+                    justifyContent: "center",
+                    borderRadius: 4,
                     height: "100%",
                 }}
             >
                 <Typography
-                    variant="h6"
+                    variant={isMobile ? "subtitle1" : "h6"}
                     sx={{ mb: 2, fontWeight: 600, textAlign: "center" }}
                 >
                     {title}
@@ -170,30 +178,28 @@ const PieChartPage = () => {
 
                 {data.length > 0 ? (
                     <PieChart
-                        height={isMobile ? 220 : 300}
-                        width={isMobile ? 220 : 300}
+                        height={chartSize}
+                        width={chartSize}
                         series={[
                             {
                                 data,
-                                innerRadius: radius,
+                                innerRadius: dynamicRadius,
                                 arcLabel: (params) => `${params.label}`,
                                 arcLabelMinAngle: 20,
-                                highlightScope: {
-                                    fade: "global",
-                                },
+                                highlightScope: { fade: "global" },
                             },
                         ]}
                         skipAnimation={skipAnimation}
                     />
                 ) : (
                     <Box
-                        height={isMobile ? 220 : 300}
-                        width={isMobile ? 220 : 300}
+                        height={chartSize}
+                        width={chartSize}
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
                         border="1px dashed #ccc"
-                        borderRadius={2}
+                        borderRadius={3}
                         color="gray"
                     >
                         <Typography variant="body2">No data available</Typography>
@@ -204,16 +210,23 @@ const PieChartPage = () => {
     };
 
     return (
-        <Box sx={{ width: "100%", p: { xs: 2, sm: 4 }, mt: 3 }}>
+        <Box sx={{ width: "100%", p: { xs: 2, sm: 4 }, mt: 2 }}>
+            {/* Page Title */}
             <Typography
-                variant="h4"
+                variant={isMobile ? "h5" : isTablet ? "h4" : "h3"}
                 gutterBottom
-                sx={{ textAlign: "center", fontWeight: 700, mb: 6 }}
+                sx={{ textAlign: "center", fontWeight: 700, mb: { xs: 3, sm: 6 } }}
             >
                 Pie Chart Overview
             </Typography>
 
-            <Grid container spacing={4} justifyContent="center">
+            {/* Charts Grid */}
+            <Grid
+                container
+                spacing={3}
+                justifyContent="center"
+                alignItems="stretch"
+            >
                 <Grid item xs={12} md={6}>
                     {renderPieOrMessage("Total Amount by Category", amountData)}
                 </Grid>
@@ -222,9 +235,14 @@ const PieChartPage = () => {
                 </Grid>
             </Grid>
 
+            {/* Sliders Section */}
             <Paper
-                elevation={2}
-                sx={{ mt: 5, p: { xs: 2, sm: 4 }, borderRadius: 3 }}
+                elevation={3}
+                sx={{
+                    mt: { xs: 3, sm: 5 },
+                    p: { xs: 2, sm: 4 },
+                    borderRadius: 4,
+                }}
             >
                 <Stack spacing={4}>
                     {(stats.Investment.totalAmount > 0 ||
@@ -232,7 +250,11 @@ const PieChartPage = () => {
                         stats.Loan.totalAmount > 0 ||
                         stats.Insurance.totalAmount > 0) && (
                             <Box>
-                                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight={600}
+                                    gutterBottom
+                                >
                                     Number of Items
                                 </Typography>
                                 <Slider
@@ -253,7 +275,11 @@ const PieChartPage = () => {
                         )}
 
                     <Box>
-                        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                        <Typography
+                            variant="subtitle1"
+                            fontWeight={600}
+                            gutterBottom
+                        >
                             Radius
                         </Typography>
                         <Slider

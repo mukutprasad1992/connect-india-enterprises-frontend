@@ -15,8 +15,13 @@ import {
     Alert,
     Avatar,
     Divider,
-    Tooltip
+    Tooltip,
+    Link,
+    Paper
 } from "@mui/material";
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import CloseIcon from "@mui/icons-material/Close";
 import { CheckCircle, Cancel, HourglassEmpty, Pending, Visibility } from "@mui/icons-material";
 import axios from "axios";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
@@ -24,30 +29,54 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRouter } from 'next/navigation';
-import { DataGrid, GridToolbarColumnsButton, GridToolbarContainer } from "@mui/x-data-grid";
+import { DataGrid, GridToolbarColumnsButton, GridToolbar, GridToolbarContainer } from "@mui/x-data-grid";
 import DashboardCard from "../../components/shared/DashboardCard";
 import { jwtDecode } from "jwt-decode";
-import theme from "@/utils/theme";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { formatDateTime } from "@/utils/utils";
+import React from "react";
+import { loadLayoutFromLocalStorage, saveLayoutToLocalStorage } from "@/app/utils/utils";
+import CustomToolbar from "../../components/CustomToolbar";
+
+const defaultColumnVisibility = {
+    id: false,
+    type: true,
+    aadharNumber: true,
+    email: false,
+    mobile: false,
+    placeOfBirth: false,
+    income: false,
+    occupation: false,
+    nomineeIdType: false,
+    nomineeId: false,
+    nomineeMobile: false,
+    nomineeRelation: false,
+    submit: false,
+    status: true,
+    activeSteps: true,
+    actions: true,
+}
 
 dayjs.extend(customParseFormat);
-
+const pageName = "inquiryPage";
 const InquiryPage = () => {
     const [inquiries, setInquiries] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [pagination, setPagination] = useState({ page: 0, pageSize: 10 });
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [actionType, setActionType] = useState<'approve' | 'reject' | 'in progress' | null>(null);
+    const [actionType, setActionType] = useState<'approve' | 'reject' | 'in progress' | 'pending' | null>(null);
     const [selectedInquiryId, setSelectedInquiryId] = useState<number | null>(null);
+    const [selectedInquiryServiceId, setSelectedInquiryServiceId] = useState<number | null>(null);
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
     const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [columnsVisibilityModel, setColumnsVisibilityModel] = useState<any>(defaultColumnVisibility);
     const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
+    const [filterModel, setFilterModel] = React.useState({ items: [] });
     const router = useRouter();
     const getToken = () => {
         if (typeof window !== "undefined") {
@@ -56,6 +85,32 @@ const InquiryPage = () => {
         }
     }
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+    const AWS_S3_BUCKET_URL = process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL;
+    const DOCUMENT_KEYS = [
+        'panCardFileKey',
+        'aadharCardFileKey',
+        'cancelledChequeFileKey',
+        'salarySlipsFileKey',
+        'bankStatementFileKey',
+        'itrDcumentsFileKey',
+        'photoFileKey',
+        'signatureFileKey',
+        'salarySlipsFileKey',
+        "itrDocumentsFileKey",
+        "bankProofFileKey",
+    ];
+
+    useEffect(() => {
+        const saved = loadLayoutFromLocalStorage(pageName);
+        if (saved) {
+            setColumnsVisibilityModel(saved);
+        }
+    }, []);
+
+    const handleSaveLayout = () => {
+        saveLayoutToLocalStorage(pageName, columnsVisibilityModel);
+    };
+
     const token = getToken();
     const getRoleId = () => {
         if (typeof window !== "undefined") {
@@ -73,7 +128,6 @@ const InquiryPage = () => {
     }
     const user = getUser();
     const userObj = user ? JSON.parse(user) : null;
-    console.log(userObj?.firstName);
     const userName = `${userObj?.firstName}  ${userObj?.lastName}`
 
     useEffect(() => {
@@ -108,26 +162,16 @@ const InquiryPage = () => {
             });
 
             if (response.data.status) {
-                // setSnackbarSeverity("success");
-                // setSnackbarMessage(response.data.message || "Data fetched successfully");
-                // setSnackbarOpen(true);
+                const formattedData = response.data.data.map((item: any) => {
+                    const formattedItem: Record<string, any> = {};
 
-                const formattedData = response.data.data.map((item: any) => ({
-                    id: item.id,
-                    firstName: item.firstName,
-                    lastName: item.lastName,
-                    email: item.email,
-                    mobileNo: item.mobileNo,
-                    type: item.serviceSubType,
-                    amount: item.amount,
-                    duration: item.duration,
-                    fromTime: item.fromTime,
-                    toTime: item.toTime,
-                    status: item.status,
-                    comment: item.comment,
-                    profileImageURL: item.profileImageURL
-                }));
+                    Object.keys(item).forEach(key => {
+                        const outputKey = key === 'serviceSubTypeName' ? 'type' : key;
+                        formattedItem[outputKey] = item[key];
+                    });
 
+                    return formattedItem;
+                });
                 setInquiries(formattedData);
             } else {
                 setSnackbarSeverity("error");
@@ -136,134 +180,137 @@ const InquiryPage = () => {
             }
         } catch (error: any) {
             setSnackbarSeverity("error");
-            setSnackbarMessage(error.response.data.message);
+            setSnackbarMessage(error?.response?.data?.message || "Something went wrong");
             setSnackbarOpen(true);
         } finally {
             setIsLoading(false);
         }
     };
+
     useEffect(() => {
         fetchInquiries();
     }, [token]);
-
-    const handleApproveClick = (id: number) => {
+    const handleApproveClick = (row: any) => {
         setActionType('approve');
-        setSelectedInquiryId(id);
+        setSelectedInquiryId(row.id);
+        setSelectedInquiryServiceId(row.serviceId)
+        setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
 
-    const handleInProgressClick = (id: number) => {
+    const handleInProgressClick = (row: any) => {
         setActionType('in progress');
-        setSelectedInquiryId(id);
+        setSelectedInquiryId(row.id);
+        setSelectedInquiryServiceId(row.serviceId)
+        setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
 
-    const handleRejectClick = (id: number) => {
+    const handleRejectClick = (row: any) => {
         setActionType('reject');
-        setSelectedInquiryId(id);
+        setSelectedInquiryId(row.id);
+        setSelectedInquiryServiceId(row.serviceId)
+        setSelectedInquiry(row);
         setIsDialogOpen(true);
     };
 
-    const updateInquiryStatus = async (action: 'approve' | 'reject' | 'in progress', id: number, currentStatus: string) => {
+    const updateInquiryStatus = async (
+        action: 'approve' | 'reject' | 'in progress' | 'pending',
+        id: number,
+        serviceId: number,
+        currentStatus: string
+    ) => {
         setIsLoading(true);
         try {
             let newStatus = "";
 
-            if (action === 'approve') {
-                newStatus = "Approved";
-            } else if (action === 'reject') {
-                newStatus = "Rejected";
-            } else if (action === 'in progress') {
+            if (action === "approve") newStatus = "Approved";
+            else if (action === "reject") newStatus = "Rejected";
+            else if (action === "in progress") newStatus = currentStatus === "In Progress" ? "Pending" : "In Progress";
 
-                if (currentStatus === "In Progress") {
-                    newStatus = "Pending";
-                } else {
-                    newStatus = "In Progress";
-                }
-            }
-            if (token) {
-                const decoded: any = jwtDecode(token);
-                if (decoded.exp * 1000 < Date.now()) {
-                    localStorage.clear();
-                    router.push("/authentication/login");
-                }
-            }
+            // ✅ update locally for instant UI response
+            // setInquiries((prev) =>
+            //     prev.map((inq) =>
+            //         inq.id === id ? { ...inq, status: newStatus } : inq
+            //     )
+            // );
+
             const response = await axios.put(
-                `${BASE_URL}/serviceType/updateStatus/${id}`,
+                `${BASE_URL}/serviceType/updateStatus/${id}/${serviceId}`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (response.data.status) {
-                setInquiries(prev => prev.map(inquiry =>
-                    inquiry.id === id ? { ...inquiry, status: newStatus } : inquiry
-                ));
+                await fetchInquiries();
+                setSnackbarSeverity("success");
+                setSnackbarMessage(response.data.message || "Status updated successfully");
+            } else {
+                setSnackbarSeverity("error");
+                setSnackbarMessage(response.data.message || "Failed to update status");
             }
-        } catch (error) {
-            console.error("Error updating status:", error);
+            setSnackbarOpen(true);
+        } catch (error: any) {
+            setSnackbarSeverity("error");
+            setSnackbarMessage(error?.response?.data?.message || "Something went wrong");
+            setSnackbarOpen(true);
         } finally {
             setIsLoading(false);
         }
     };
-
-    const formatTime = (time: string | null) => {
-        if (!time) return "N/A";
-        const [hours, minutes] = time.split(":");
-        let hourNum = parseInt(hours, 10);
-        const amPm = hourNum >= 12 ? "PM" : "AM";
-        hourNum = hourNum % 12 || 12;
-        return `${hourNum}:${minutes} ${amPm}`;
+    let getStatusColor = (status: any) => {
+        switch (status) {
+            case "Pending":
+                return "#FFC107"; // Amber
+            case "In Progress":
+                return "#2196F3"; // Blue
+            case "Approved":
+                return "#0adf11"; // Green
+            case "Rejected":
+                return "#F44336"; // Red
+            default:
+                return "#9E9E9E"; // Grey
+        }
     };
-
     const columns = [
-        { field: "id", headerName: "ID", flex: 0.02 },
-        { field: "firstName", headerName: "First Name", flex: 0.08 },
-        { field: "lastName", headerName: "Last Name", flex: 0.08 },
+        { field: "id", headerName: "ID", width: 100, flex: 0, maxWidth: 40 },
+        { field: "firstName", headerName: "First Name", flex: 0.1 },
+        { field: "lastName", headerName: "Last Name", flex: 0.1 },
         { field: "email", headerName: "Email", flex: 0.08 },
         { field: "mobileNo", headerName: "Mobile No", flex: 0.08 },
+        { field: "aadharNumber", headerName: "Aadhar Number", flex: 0.12 },
+        { field: "panNumber", headerName: "PAN Number", flex: 0.12 },
         { field: "type", headerName: "Type", flex: 0.12 },
-        { field: "amount", headerName: "Amount", flex: 0.12 },
+        { field: "nomineeIdType", headerName: "nominee Id Type", flex: 0.12 },
+        { field: "nomineeId", headerName: "nominee Id", flex: 0.12 },
+        { field: "nomineeMobile", headerName: "Nominee Mobile", flex: 0.12 },
+        { field: "nomineeRelation", headerName: "nominee Relation", flex: 0.12 },
+
+        { field: "activeSteps", headerName: "activeSteps", flex: 0.12 },
         {
-            field: "duration",
-            headerName: "Duration",
-            flex: 0.12,
-            renderCell: (params: any) => `${params.value} Months`,
-        },
-        {
-            field: "fromTime",
-            headerName: "Contact Timing",
-            flex: 0.12,
+            field: "submit",
+            headerName: "Form Status",
+            flex: 0.1,
             renderCell: (params: any) => {
-                const fromTime = formatTime(params.row.fromTime);
-                const toTime = formatTime(params.row.toTime);
-                return fromTime !== "N/A" && toTime !== "N/A" ? `${fromTime} - ${toTime}` : "N/A";
+                return params.row.isDetailsConfirmed ? "True" : "False";
             },
         },
         {
+            field: 'placeOfBirth',
+            headerName: 'Place of Birth',
+            width: 200,
+            valueGetter: (params: any) => {
+                return `${params?.city || ''}`.trim().replace(/^,|,$/, '') || 'N/A';
+            },
+        },
+
+        {
             field: "status",
             headerName: "Status",
-            flex: 0.12,
+            flex: 0,
             renderCell: (params: any) => {
                 const status = params.row.status;
-                let color = "#fbf774";
-
-                switch (status) {
-                    case "Pending":
-                        color = "#fbf774";
-                        break;
-                    case "In Progress":
-                        color = "#fbe06f";
-                        break;
-                    case "Approved":
-                        color = "#8df1b4";
-                        break;
-                    case "Rejected":
-                        color = "#ff8780";
-                        break;
-                    default:
-                        color = "#fbf774";
-                }
-
+                const color = getStatusColor(status);
                 return (
                     <Box
                         sx={{
@@ -271,100 +318,119 @@ const InquiryPage = () => {
                             alignItems: "center",
                             width: "100%",
                             height: "100%",
+                            fontFamily: "Verdana",
+                            fontSize: "10px",
                         }}
                     >
                         <Typography
-                            sx={{ color, textAlign: "start" }}
+                            variant="body1"
+                            sx={{ color, textAlign: "center", fontSize: "10px" }}
                         >
                             {status}
                         </Typography>
                     </Box>
                 );
             },
-        }
-        ,
+        },
         {
             field: "actions",
             headerName: "Actions",
-            flex: 0.8,
+            sortable: false,
+            filterable: false,
+            disableColumnMenu: true,
+            minWidth: 130,
+            flex: 0.12,
             renderCell: (params: any) => {
                 const status = params.row.status;
                 return (
-                    <>
+                    <Box sx={{ display: "flex", gap: 0.01, alignItems: "center", px: 0.5, width: "100%", height: "100%" }}>
                         <Tooltip title="View">
-                            <IconButton
+                            <IconButton sx={{ p: 0.1 }}
                                 color="info"
                                 onClick={() => {
                                     setSelectedInquiry(params.row);
                                     setIsViewDialogOpen(true);
                                 }}
                             >
-                                <Visibility />
+                                <Visibility fontSize='small' sx={{ fontSize: 14 }} />
                             </IconButton>
                         </Tooltip>
+
                         {status !== "Approved" && status !== "Rejected" && (
                             <>
                                 <Tooltip title="Approve">
-                                    <IconButton color="success" onClick={() => handleApproveClick(params.row.id)}>
-                                        <CheckCircle />
+                                    <IconButton sx={{ p: 0.1 }} color="success" onClick={() => handleApproveClick(params.row)}>
+                                        <CheckCircle fontSize='small' sx={{ fontSize: 14 }} />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title="Inprogress/Pending">
+
+                                <Tooltip title={status === "Pending" ? "Pending" : "In Progress"}>
                                     <IconButton
-                                        onClick={() => handleInProgressClick(params.row.id)}
-                                        sx={{
-                                            color:
-                                                params.row.status === "Pending"
-                                                    ? "#fbf774"
-                                                    : params.row.status === "In Progress"
-                                                        ? "#fbe06f"
-                                                        : "inherit",
-                                        }}
+                                        key={`${params.id}-${status}`}
+                                        color="inherit"
+                                        onClick={() => handleInProgressClick(params.row)}
+                                        sx={{ color: "unset !important", p: 0.1 }}
                                     >
-                                        <Pending />
+                                        <Pending
+                                            htmlColor={status === "Pending" ? "#FFC107" : "#2196F3"}
+                                            fontSize='small' sx={{ fontSize: 14 }}
+                                        />
                                     </IconButton>
                                 </Tooltip>
+
                                 <Tooltip title="Reject">
-                                    <IconButton color="error" onClick={() => handleRejectClick(params.row.id)}>
-                                        <Cancel />
+                                    <IconButton sx={{ p: 0.1 }} color="error" onClick={() => handleRejectClick(params.row)}>
+                                        <Cancel fontSize='small' sx={{ fontSize: 14 }} />
                                     </IconButton>
                                 </Tooltip>
                             </>
                         )}
-                    </>
+                    </Box>
                 );
             },
         }
-
     ];
 
-    const getActionText = (actionType: string | null, currentStatus?: string) => {
+    const getDialogContent = (
+        actionType: string | null,
+        currentStatus?: string
+    ) => {
+        if (actionType === "approve") {
+            return {
+                title: "Confirm Approval",
+                message: "Are you sure you want to approve this inquiry?",
+            };
+        }
+
+        if (actionType === "reject") {
+            return {
+                title: "Confirm Rejection",
+                message: "Are you sure you want to reject this inquiry?",
+            };
+        }
+
         if (actionType === "in progress") {
             if (currentStatus === "In Progress") {
-                return "Move back to Pending";
+                return {
+                    title: "Move to Pending",
+                    message:
+                        "Are you sure you want to move this inquiry back to Pending?",
+                };
             } else {
-                return "Mark as In Progress";
+                return {
+                    title: "Confirm In Progress",
+                    message:
+                        "Are you sure you want to mark this inquiry as In Progress?",
+                };
             }
         }
-        switch (actionType) {
-            case "approve":
-                return "Approval";
-            case "reject":
-                return "Rejection";
-            default:
-                return "";
-        }
+
+        return { title: "", message: "" };
     };
-
-
-    function CustomToolbar({ onButtonClick }: any) {
-        return (
-            <GridToolbarContainer>
-                <GridToolbarColumnsButton />
-            </GridToolbarContainer>
-        );
-    }
-
+    const dialogContent = getDialogContent(
+        actionType,
+        selectedInquiry?.status
+    );
     const exportToPDF = async (inquiries: any[], userName: string) => {
         const doc = new jsPDF({ orientation: "landscape" });
 
@@ -384,7 +450,7 @@ const InquiryPage = () => {
             startY: 50,
             head: [[
                 "ID", "First Name", "Last Name", "Email", "Mobile No", "Type",
-                "Amount", "Duration", "From Time", "To Time", "Status", "Comment"
+                "Service Id", "Email", "Aadhar Number", "Pan Number", "mobile", "Status"
             ]],
             body: (inquiries || []).map((row: any) => [
                 row.id,
@@ -393,12 +459,12 @@ const InquiryPage = () => {
                 row.email,
                 row.mobileNo,
                 row.type,
-                row.amount,
-                row.duration,
-                row.fromTime,
-                row.toTime,
+                row.serviceId,
+                row.email,
+                row.aadharNumber,
+                row.panNumber,
+                row.mobile,
                 row.status,
-                row.comment,
             ]),
             headStyles: {
                 fillColor: [165, 42, 42],
@@ -460,7 +526,66 @@ const InquiryPage = () => {
         const fileURL = URL.createObjectURL(blob);
         saveAs(blob, "Inquiry.xlsx");
     };
+    const formatKey = (key: any) => {
+        return key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, (str: any) => str.toUpperCase());
+    };
 
+    const renderValue = (key: any, value: any) => {
+        if (typeof value === "object" && value !== null) {
+            return Object.entries(value)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(", ");
+        }
+
+        if (DOCUMENT_KEYS.includes(key)) {
+            return value ? (
+                <Link
+                    href={`${AWS_S3_BUCKET_URL}/${value}`}
+                    target="_blank"
+                    color="primary"
+                    underline="hover"
+                >
+                    View Document
+                </Link>
+            ) : "N/A";
+        }
+        const statusColors: Record<string, string> = {
+            Complete: "green",
+            'In Complete': "gray",
+            Pending: "#FFC107",
+            "In Progress": "#2196F3",
+            Approved: "#0adf11",
+            Rejected: "#F44336",
+        };
+        if (key === "submit") {
+            const displayValue = value === 1 ? "Complete" : "In Complete";
+            return (
+                <span
+                    style={{
+                        color: statusColors[displayValue],
+                        // fontWeight: "bold",
+                    }}
+                >
+                    {displayValue}
+                </span>
+            );
+        }
+        if (key === "status") {
+            return (
+                <span
+                    style={{
+                        color: statusColors[value] || "inherit",
+                        fontWeight: "bold",
+                    }}
+                >
+                    {value || "N/A"}
+                </span>
+            );
+        }
+        return value ?? "N/A";
+    };
     return (
         <>
             {isLoading && (
@@ -477,181 +602,251 @@ const InquiryPage = () => {
                 </div>
             )}
             <PageContainer title="Inquiry" description="This is the inquiry page">
-                <Box>
+                <Box >
                     <Grid container spacing={1}>
-                        <Grid item xs={12} sx={{ mb: 2 }}>
-                            <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
-                                <Button variant="outlined" onClick={exportToExcel}>
-                                    Export to Excel
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    onClick={() => exportToPDF(inquiries, userName)}
-                                >
-                                    Export PDF
-                                </Button>
-                            </Box>
-                        </Grid>
                         <Grid item xs={12}>
-                            <DashboardCard >
-                                <Container>
-                                    <Grid
+                            <Paper >
+                                <Grid container >
+                                    <Grid item xs={12}
                                         container
                                         justifyContent="space-between"
                                         alignItems="center"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        <Typography variant="h4">Inquiry</Typography>
+
+                                    ><Grid sx={{ m: 2 }} >
+                                            <Typography variant="h4">Inquiry</Typography>
+                                        </Grid>
+                                        <Grid item xs={6} sx={{ mt: 1 }}>
+                                            <Box display="flex" justifyContent="flex-end" alignItems="center">
+                                                <Tooltip title="Export to Excel">
+                                                    <IconButton onClick={exportToExcel}>
+                                                        <GridOnIcon sx={{ color: "#465fff" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Export to PDF">
+                                                    <IconButton
+                                                        onClick={() => exportToPDF(inquiries, userName)}
+                                                    >
+                                                        <PictureAsPdfIcon sx={{ color: "#465fff" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        </Grid>
                                     </Grid>
-                                    <Box sx={{ flexGrow: 1, width: "100%", height: "auto", minHeight: "60vh", display: "flex" }}>
+                                    <Box
+                                        sx={{
+                                            flexGrow: 1,
+                                            width: "100%",
+                                            height: "74vh",
+                                            display: "flex",
+                                        }}
+                                    >
                                         <DataGrid
                                             rows={inquiries || []}
-                                            columns={columns.map((col) => ({ ...col, flex: 1, editable: false }))}
+                                            columns={columns.map((col: any) => {
+                                                if (col.field === "actions" || col.field === "activeSteps" || col.field === "status") {
+                                                    return { ...col, flex: 1, editable: false };
+                                                }
+                                                return {
+                                                    ...col,
+                                                    flex: 1,
+                                                    editable: false,
+                                                    renderCell: (params: any) =>
+                                                        params.value === null || params.value === undefined || params.value === ""
+                                                            ? "-"
+                                                            : params.value,
+                                                };
+                                            })}
                                             pageSizeOptions={[5, 10, 20, 50, 100]}
                                             paginationModel={pagination}
+                                            initialState={{
+                                                density: "compact",
+                                            }}
                                             onPaginationModelChange={setPagination}
                                             disableRowSelectionOnClick
-                                            autoHeight
                                             sortModel={[{ field: "id", sort: "desc" }]}
                                             slots={{
-                                                toolbar: () => <CustomToolbar />,
+                                                toolbar: () => <CustomToolbar onSave={handleSaveLayout} />
+                                            }}
+                                            columnVisibilityModel={columnsVisibilityModel}
+                                            onColumnVisibilityModelChange={(newModel) =>
+                                                setColumnsVisibilityModel(newModel)
+                                            }
+                                            slotProps={{
+                                                columnsPanel: {
+                                                    sx: {
+                                                        maxHeight: 365,
+                                                        overflowY: "auto"
+                                                    }
+                                                }
+                                            }}
+                                            sx={{
+                                                fontSize: "0.575rem",
+                                                "& .MuiDataGrid-columnHeaders": {
+                                                    fontSize: "0.575rem",
+                                                    fontWeight: 600
+                                                },
+                                                "& .MuiDataGrid-cell": {
+                                                    fontSize: "0.575rem"
+                                                },
+                                                "& .MuiDataGrid-toolbarContainer": {
+                                                    fontSize: "0.575rem"
+                                                }
                                             }}
                                         />
                                     </Box>
-                                </Container>
-                            </DashboardCard>
+                                </Grid>
+                            </Paper>
                         </Grid>
-                    </Grid>
-                </Box>
-            </PageContainer>
 
-            <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-                <DialogTitle>
-                    {`Confirm ${getActionText(actionType, selectedInquiry?.status)}`}
+                    </Grid>
+                </Box >
+            </PageContainer >
+            <Dialog
+                open={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        minWidth: 400,
+                        p: 1,
+                    },
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        fontWeight: 600,
+                        textAlign: "center",
+                        pb: 1,
+                        color:
+                            actionType === "approve"
+                                ? "#4CAF50"
+                                : actionType === "reject"
+                                    ? "#F44336"
+                                    : actionType === "in progress"
+                                        ? "#2196F3"
+                                        : "#333",
+                    }}
+                >
+                    {dialogContent.title}
                 </DialogTitle>
 
-                <DialogContent>
-                    Are you sure you want to {getActionText(actionType, selectedInquiry?.status)} this inquiry?
+                <DialogContent sx={{ textAlign: "center", py: 2 }}>
+                    <Typography variant="body1" sx={{ fontSize: 14 }}>
+                        {dialogContent.message}
+                    </Typography>
                 </DialogContent>
 
-                <DialogActions>
-                    <Button onClick={() => setIsDialogOpen(false)} color="secondary">
+                <DialogActions
+                    sx={{
+                        justifyContent: "center",
+                        gap: 2,
+                        pb: 2,
+                    }}
+                >
+                    <Button
+                        variant="outlined"
+                        onClick={() => setIsDialogOpen(false)}
+                        sx={{
+                            borderRadius: 2,
+                            px: 3,
+                        }}
+                    >
                         Cancel
                     </Button>
+
                     <Button
+                        variant="contained"
                         onClick={() => {
-                            if (actionType && selectedInquiryId !== null) {
-                                const selectedInquiryItem = inquiries.find(inq => inq.id === selectedInquiryId);
-                                const currentStatus = selectedInquiryItem?.status || '';
-                                updateInquiryStatus(actionType, selectedInquiryId, currentStatus);
+                            if (
+                                actionType &&
+                                selectedInquiryId !== null &&
+                                selectedInquiryServiceId !== null
+                            ) {
+                                const selectedInquiryItem = inquiries.find(
+                                    (inq) => inq.id === selectedInquiryId
+                                );
+
+                                updateInquiryStatus(
+                                    actionType,
+                                    selectedInquiryId,
+                                    selectedInquiryServiceId,
+                                    selectedInquiryItem?.status || ""
+                                );
+
+                                setIsDialogOpen(false);
                             }
-                            setIsDialogOpen(false);
                         }}
-                        color="primary"
+                        sx={{
+                            borderRadius: 2,
+                            px: 3,
+                            backgroundColor:
+                                actionType === "approve"
+                                    ? "#4CAF50"
+                                    : actionType === "reject"
+                                        ? "#F44336"
+                                        : actionType === "in progress"
+                                            ? "#2196F3"
+                                            : "#1976d2",
+                            "&:hover": {
+                                opacity: 0.9,
+                            },
+                        }}
                     >
                         Confirm
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Inquiry Details</DialogTitle>
+            <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="md" fullWidth>
+                <Grid container justifyContent="space-between" alignItems="center" sx={{ p: 2 }}>
+                    <Grid item>
+                        <Typography variant="h6">Inquiry Details</Typography>
+                    </Grid>
+                    <Grid item>
+                        <IconButton onClick={() => setIsViewDialogOpen(false)} size="small">
+                            <CloseIcon />
+                        </IconButton>
+                    </Grid>
+                </Grid>
                 <DialogContent>
                     {selectedInquiry && (
                         <>
                             <Box display="flex" justifyContent="center" mb={2}>
                                 <Avatar
-                                    src={selectedInquiry?.profileImageURL || '/images/profile/user-1.jpg'}
+                                    src={
+                                        selectedInquiry?.profileImageKey
+                                            ? `${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL}/${selectedInquiry.profileImageKey}`
+                                            : '/images/profile/user-1.jpg'
+                                    }
                                     alt="User"
                                     sx={{ width: 150, height: 150 }}
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = '/images/profile/user-1.jpg';
-                                    }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = '/images/profile/user-1.jpg'; }}
                                 />
                             </Box>
-                            <Divider sx={{ marginBottom: 2 }} />
+
+                            <Divider sx={{ mb: 2 }} />
+
                             <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    {Object.keys(selectedInquiry).filter(key => key !== 'profileImageURL').map((key, index) => {
-                                        if (index % 2 === 0) {
-                                            return (
-                                                <Typography
-                                                    variant="body1"
-                                                    key={key}
-                                                    sx={{ marginLeft: 2, marginBottom: 2 }}
-                                                >
-                                                    <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
-                                                    <span
-                                                        style={{
-                                                            color:
-                                                                key === "status"
-                                                                    ? selectedInquiry[key] === "Pending"
-                                                                        ? "#fbf774"
-                                                                        : selectedInquiry[key] === "In Progress"
-                                                                            ? "#fbe06f"
-                                                                            : selectedInquiry[key] === "Approved"
-                                                                                ? "#8df1b4"
-                                                                                : selectedInquiry[key] === "Rejected"
-                                                                                    ? "#ff8780"
-                                                                                    : "#fbf774"
-                                                                    : "inherit",
-                                                            fontWeight: key === "status" ? "normal" : "normal",
-                                                        }}
-                                                    >
-                                                        {selectedInquiry[key] || "N/A"}
-                                                    </span>
+                                {Object.entries(selectedInquiry)
+                                    .filter(([key]) => key !== 'profileImageKey')
+                                    .map(([key, value]) => (
+                                        <Grid container key={key}>
+                                            <Grid item xs={6} sx={{ pl: 3 }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 11 }}>
+                                                    {formatKey(key)}:
                                                 </Typography>
-                                            );
-                                        }
-                                        return null;
-                                    })}
-                                </Grid>
-                                <Grid item xs={6}>
-                                    {Object.keys(selectedInquiry).filter(key => key !== 'profileImageURL').map((key, index) => {
-                                        if (index % 2 !== 0) {
-                                            return (
-                                                <Typography
-                                                    variant="body1"
-                                                    key={key}
-                                                    sx={{ marginBottom: 2 }}
-                                                >
-                                                    <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
-                                                    <span
-                                                        style={{
-                                                            color:
-                                                                key === "status"
-                                                                    ? selectedInquiry[key] === "Pending"
-                                                                        ? theme.palette.warning.main
-                                                                        : selectedInquiry[key] === "In Progress"
-                                                                            ? theme.palette.info.main
-                                                                            : selectedInquiry[key] === "Approved"
-                                                                                ? theme.palette.success.main
-                                                                                : selectedInquiry[key] === "Rejected"
-                                                                                    ? theme.palette.error.main
-                                                                                    : "inherit"
-                                                                    : "inherit",
-                                                            fontWeight: key === "status" ? "bold" : "normal",
-                                                        }}
-                                                    >
-                                                        {selectedInquiry[key] || "N/A"}
-                                                    </span>
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                                <Typography variant="body1" sx={{ wordBreak: 'break-word', fontSize: 11 }}>
+                                                    {renderValue(key, value)}
                                                 </Typography>
-                                            );
-                                        }
-                                        return null;
-                                    })}
-                                </Grid>
+                                            </Grid>
+                                        </Grid>
+                                    ))}
                             </Grid>
                         </>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setIsViewDialogOpen(false)} color="secondary">
-                        Close
-                    </Button>
-                </DialogActions>
             </Dialog>
-
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={3000}
@@ -663,16 +858,24 @@ const InquiryPage = () => {
                     severity={snackbarSeverity}
                     sx={{
                         width: "100%",
-
+                        border: "1px solid",
+                        borderColor:
+                            snackbarSeverity === "error"
+                                ? "error.main"
+                                : snackbarSeverity === "success"
+                                    ? "success.main"
+                                    : snackbarSeverity === "warning"
+                                        ? "warning.main"
+                                        : "info.main",
                     }}
                 >
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
-
         </>
     );
 };
+
 export default InquiryPage;
 
 

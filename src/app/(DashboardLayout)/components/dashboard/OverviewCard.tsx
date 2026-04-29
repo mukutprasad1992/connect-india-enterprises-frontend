@@ -42,8 +42,6 @@ const OverviewCard: React.FC<Props> = ({
     const handleClick = () => {
         if (navigateTo) router.push(navigateTo);
     };
-
-    // Recharts requires an array of objects, not numbers
     const chartData =
         sparklineData?.map((val, idx) => ({ name: idx.toString(), value: val })) || [];
 

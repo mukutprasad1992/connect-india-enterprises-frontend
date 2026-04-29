@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Grid, Box, CircularProgress, Typography, Tabs, Tab } from "@mui/material";
-import PageContainer from "./components/container/PageContainer";
-import PieAnimationPage from "./components/dashboard/pieChart";
+import { Grid, Box, CircularProgress, Typography, Tabs, Tab, Paper, Button } from "@mui/material";
+import PageContainer from "../components/container/PageContainer";
+import PieAnimationPage from "../components/dashboard/pieChart";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import OverviewCard from "./components/dashboard/OverviewCard";
+import OverviewCard from "../components/dashboard/OverviewCard";
 
 type ServiceType = "Investment" | "Policy" | "Insurance" | "Loan";
 
@@ -21,6 +21,7 @@ interface ServiceStats {
 }
 
 import { AttachMoney, Policy, Security, AccountBalance } from "@mui/icons-material";
+import { Console } from "console";
 
 const ICONS: Record<ServiceType, React.ReactNode> = {
   Investment: <AttachMoney />,
@@ -30,10 +31,10 @@ const ICONS: Record<ServiceType, React.ReactNode> = {
 };
 
 const BG_COLORS: Record<ServiceType, string> = {
-  Investment: "#E3F2FD",
-  Policy: "#E8F5E9",
-  Insurance: "#F3E5F5",
-  Loan: "#FFEBEE",
+  Investment: "#c0dff4",
+  Policy: "#f1c8f7",
+  Insurance: "#cbface",
+  Loan: "#f9d3da",
 };
 
 const LINKS: Record<ServiceType, string> = {
@@ -51,6 +52,7 @@ const Dashboard = () => {
   const handleTabChange = (event: React.SyntheticEvent, newValue: "today" | "week" | "month") => {
     setFilter(newValue);
   };
+  const [open, setOpen] = useState(false);
   const [stats, setStats] = useState<Record<ServiceType, ServiceStats>>({
     Investment: {
       totalAmount: 0,
@@ -129,7 +131,9 @@ const Dashboard = () => {
 
     setIsAuthenticated(true);
     fetchData(token);
+    console.log("<------------Role ID---------->", token, " : ", roleId);
   }, []);
+
   const fetchData = async (token: string) => {
     try {
       const response = await axios.get(
@@ -137,12 +141,13 @@ const Dashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log("<------------API Response---------->", response.data);
+
       if (response.data.status) {
         const data = response.data.data;
-
         setStats({
           Investment: {
-            totalAmount: parseFloat(data.Investment?.totalAmount) || 0,
+            totalAmount: 12000,//parseFloat(data.Investment?.totalAmount) || 0,
             totalServices: parseInt(data.Investment?.totalServices) || 0,
             current: parseFloat(data.Investment?.current) || 0,
             previous: parseFloat(data.Investment?.previous) || 0,
@@ -158,7 +163,7 @@ const Dashboard = () => {
             percent: parseFloat(data.Policy?.percent) || 0,
           },
           Insurance: {
-            totalAmount: parseFloat(data.Insurance?.totalAmount) || 0,
+            totalAmount: parseFloat(data.Insurance?.totalAmount) || 34987,
             totalServices: parseInt(data.Insurance?.totalServices) || 0,
             current: parseFloat(data.Insurance?.current) || 0,
             previous: parseFloat(data.Insurance?.previous) || 0,
@@ -166,7 +171,7 @@ const Dashboard = () => {
             percent: parseFloat(data.Insurance?.percent) || 0,
           },
           Loan: {
-            totalAmount: parseFloat(data.Loan?.totalAmount) || 0,
+            totalAmount: parseFloat(data.Loan?.totalAmount) || 2400,
             totalServices: parseInt(data.Loan?.totalServices) || 0,
             current: parseFloat(data.Loan?.current) || 0,
             previous: parseFloat(data.Loan?.previous) || 0,
@@ -182,7 +187,7 @@ const Dashboard = () => {
       ) {
         setStats({
           Investment: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -190,7 +195,7 @@ const Dashboard = () => {
             percent: 0,
           },
           Policy: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -198,7 +203,7 @@ const Dashboard = () => {
             percent: 0,
           },
           Insurance: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -206,7 +211,7 @@ const Dashboard = () => {
             percent: 0,
           },
           Loan: {
-            totalAmount: 0,
+            totalAmount: 12009,
             totalServices: 0,
             current: 0,
             previous: 0,
@@ -253,45 +258,46 @@ const Dashboard = () => {
           <CircularProgress />
         </div>
       )}
-
-      <PageContainer title="Dashboard" description="This is Dashboard">
-        <Box>
-          <Typography variant="h6" sx={{ mb: 3 }}>
-            Dashboard
-          </Typography>
-          <Tabs
-            value={filter}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ mb: 2 }}
-          >
-            <Tab value="today" label="Today" />
-            <Tab value="week" label="This Week" />
-            <Tab value="month" label="This Month" />
-          </Tabs>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Grid container spacing={2}>
-                {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map((title) => (
-                  <Grid item xs={12} sm={6} md={3} key={title}>
-                    <OverviewCard
-                      title={title}
-                      value={Math.floor(stats[title].totalAmount)}
-                      icon={ICONS[title]}
-                      backgroundColor={BG_COLORS[title]}
-                      navigateTo={roleId === 3 ? LINKS[title] : undefined}
-                      progress={Math.abs(stats[title].percent)}
-                      tooltip={`Total Services: ${stats[title].totalServices}\nGrowth: ${stats[title].extra >= 0 ? "+" : "-"}₹${Math.abs(stats[title].extra)}`}
-                    />
-                  </Grid>
-                ))}
+      <Box >
+        <Paper sx={{ p: 1.5 }}>
+          <Box>
+            <Typography variant="h4" sx={{ ml: 1, mt: .5, mb: .5 }} >
+              Dashboard
+            </Typography>
+            <Tabs
+              value={filter}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ mb: 2 }}
+            >
+              <Tab value="today" label="Today" />
+              <Tab value="week" label="This Week" />
+              <Tab value="month" label="This Month" />
+            </Tabs>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  {(["Investment", "Policy", "Insurance", "Loan"] as ServiceType[]).map((title) => (
+                    <Grid item xs={12} sm={6} md={3} key={title}>
+                      <OverviewCard
+                        title={title}
+                        value={Math.floor(stats[title].totalServices)}
+                        icon={ICONS[title]}
+                        backgroundColor={BG_COLORS[title]}
+                        navigateTo={roleId === 3 ? LINKS[title] : undefined}
+                        progress={Math.abs(stats[title].percent)}
+                        tooltip={`Total Services: ${stats[title].totalServices}\nGrowth: ${stats[title].extra >= 0 ? "+" : "-"}₹${Math.abs(stats[title].extra)}`}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
-        </Box>
-        <PieAnimationPage />
-      </PageContainer>
+          </Box>
+          <PieAnimationPage />
+        </Paper>
+      </Box>
     </>
   );
 };

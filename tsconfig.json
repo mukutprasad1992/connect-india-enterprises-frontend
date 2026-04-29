@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
+    "ignoreDeprecations": "6.0",
     "lib": [
       "dom",
       "dom.iterable",
@@ -34,7 +35,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "build/types/**/*.ts"
+    "build/types/**/*.ts",
+    "src/app/landingPage"
   ],
   "exclude": [
     "node_modules"

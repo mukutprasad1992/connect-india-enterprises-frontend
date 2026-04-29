@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Box,
     Typography,
@@ -8,21 +8,27 @@ import {
     Divider,
     TextField,
     Button,
-    Paper,
     useMediaQuery,
     useTheme,
     Menu,
     MenuItem,
-    Dialog,
-    DialogTitle,
-    DialogContent,
     Avatar,
+    Fade,
+    Collapse,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface ChatPopupProps {
-    chat: { sender: string; message: string; email?: string; mobile?: string; image?: string };
+    chat: {
+        sender: string;
+        message: string;
+        email?: string;
+        mobile?: string;
+        image?: string;
+    };
     onClose: () => void;
 }
 
@@ -32,35 +38,28 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ chat, onClose }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [profileOpen, setProfileOpen] = useState(false);
     const [blocked, setBlocked] = useState(false);
+    const [minimized, setMinimized] = useState(false);
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-    const width = isMobile ? 280 : isTablet ? 360 : 400;
-    const defaultX = typeof window !== "undefined"
-        ? isMobile
-            ? (window.innerWidth - width) / 2
-            : window.innerWidth - width - 20
-        : 20;
-    const defaultY = typeof window !== "undefined"
-        ? window.innerHeight - 400
-        : 100;
-
-    const [position, setPosition] = useState({ x: defaultX, y: defaultY });
     const popupRef = useRef<HTMLDivElement>(null);
-    const isDragging = useRef(false);
-    const dragStart = useRef({ x: 0, y: 0 });
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const width = isMobile ? "95vw" : isTablet ? "80vw" : 300;
+    const fullHeight = isMobile ? "100vh" : 415;
 
     useEffect(() => {
         const stored = localStorage.getItem(`chat_${chat.sender}`);
-        if (stored) {
-            setMessages(JSON.parse(stored));
-        }
-
+        if (stored) setMessages(JSON.parse(stored));
         const isBlocked = localStorage.getItem(`blocked_${chat.sender}`);
         setBlocked(isBlocked === "true");
     }, [chat.sender]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const saveToLocalStorage = (updatedMessages: string[]) => {
         localStorage.setItem(`chat_${chat.sender}`, JSON.stringify(updatedMessages));
@@ -68,188 +67,250 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ chat, onClose }) => {
 
     const handleSend = () => {
         if (blocked || input.trim() === "") return;
-        const updated = [...messages, input];
+        const updated = [...messages, input.trim()];
         setMessages(updated);
         saveToLocalStorage(updated);
         setInput("");
     };
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (isMobile) return;
-        isDragging.current = true;
-        dragStart.current = {
-            x: e.clientX - position.x,
-            y: e.clientY - position.y,
-        };
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-        if (!isDragging.current) return;
-        setPosition({
-            x: e.clientX - dragStart.current.x,
-            y: e.clientY - dragStart.current.y,
-        });
-    };
-
-    const handleMouseUp = useCallback(() => {
-        isDragging.current = false;
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-    }, []);
-
-    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleMenuClose = () => setAnchorEl(null);
-
-    const handleViewProfile = () => {
-        setProfileOpen(true);
-        handleMenuClose();
-    };
-
-    const handleDeleteChat = () => {
+    const handleDeleteUser = () => {
         localStorage.removeItem(`chat_${chat.sender}`);
+        localStorage.removeItem(`blocked_${chat.sender}`);
         setMessages([]);
-        handleMenuClose();
+        setBlocked(false);
+        setProfileOpen(false);
+        setAnchorEl(null);
     };
 
     const handleBlockUser = () => {
         const newBlocked = !blocked;
         localStorage.setItem(`blocked_${chat.sender}`, String(newBlocked));
         setBlocked(newBlocked);
-        handleMenuClose();
+        setAnchorEl(null);
     };
 
-    useEffect(() => {
-        return () => handleMouseUp();
-    }, [handleMouseUp]);
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const toggleMinimize = () => setMinimized((prev) => !prev);
 
     return (
-        <div
+        <Box
             ref={popupRef}
-            style={{
+            sx={{
                 position: "fixed",
-                left: position.x,
-                top: position.y,
+                left: isMobile || isTablet ? 10 : 'calc(100vw - 655px)',
+                bottom: 0,
                 zIndex: 1300,
                 width,
-                maxWidth: "100vw",
+                height: minimized ? "auto" : fullHeight,
+                bgcolor: "background.paper",
+                borderRadius: 1,
+                boxShadow: 3,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
             }}
         >
+            {/* Header */}
             <Box
                 sx={{
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    boxShadow: 8,
-                    bgcolor: "white",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    px: 1,
+                    py: 0.5,
+                    bgcolor: "primary.main",
+                    color: "white",
+                    cursor: "pointer",
                 }}
+                onClick={toggleMinimize}
             >
-                {/* 🧑 Header */}
-                <Box
-                    onMouseDown={handleMouseDown}
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        px: 2,
-                        py: 1,
-                        backgroundColor: "#1976d2",
-                        color: "white",
-                        cursor: isMobile ? "default" : "move",
-                        userSelect: "none",
-                    }}
-                >
-                    <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar
-                            src={chat.image}
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: chat.image ? "transparent" : "#ffffff33",
-                                color: "white",
-                                fontWeight: "bold",
-                                textTransform: "uppercase",
-                            }}
-                        >
-                            {!chat.image && chat.sender[0]}
-                        </Avatar>
-                        <Typography fontWeight="bold">{chat.sender}</Typography>
-                    </Box>
-
-                    <Box display="flex" alignItems="center">
-                        <IconButton onClick={handleMenuClick} sx={{ color: "white" }}>
-                            <MoreVertIcon />
-                        </IconButton>
-                        <IconButton onClick={onClose} size="small" sx={{ color: "white" }}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-                </Box>
-
-                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                    <MenuItem onClick={handleViewProfile}>View Profile</MenuItem>
-                    <MenuItem onClick={handleBlockUser}>
-                        {blocked ? "Unblock User" : "Block User"}
-                    </MenuItem>
-                    <MenuItem onClick={handleDeleteChat}>Delete Chat</MenuItem>
-                </Menu>
-
-                <Divider sx={{ my: 1 }} />
-
-                <Box sx={{ p: 2 }}>
-                    <Paper
-                        variant="outlined"
-                        sx={{
-                            height: 200,
-                            overflowY: "auto",
-                            p: 1,
-                            mb: 2,
-                            bgcolor: "#f5f5f5",
-                        }}
+                <Box display="flex" alignItems="center" gap={1}>
+                    <Avatar
+                        src={chat.image}
+                        sx={{ width: 36, height: 36, bgcolor: chat.image ? "transparent" : "#ffffff33" }}
                     >
-                        <Typography variant="body2" color="text.secondary">
-                            {chat.message}
-                        </Typography>
-                        {messages.map((msg, i) => (
-                            <Typography key={i} sx={{ mt: 1, textAlign: "right" }}>
-                                {msg}
-                            </Typography>
-                        ))}
-                    </Paper>
-
-                    <Box display="flex" gap={1}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            placeholder={blocked ? "User is blocked" : "Type a message..."}
-                            value={input}
-                            disabled={blocked}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                        />
-                        <Button variant="contained" onClick={handleSend} disabled={blocked}>
-                            Send
-                        </Button>
-                    </Box>
+                        {!chat.image && chat.sender[0]?.toUpperCase()}
+                    </Avatar>
+                    <Typography fontWeight={600}>{chat.sender}</Typography>
+                </Box>
+                <Box>
+                    {!minimized && (
+                        <>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAnchorEl(e.currentTarget);
+                                }}
+                                sx={{ color: "white" }}
+                            >
+                                <MoreVertIcon />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onClose();
+                                }}
+                                sx={{ color: "white" }}
+                            >
+                                <CloseIcon />
+                            </IconButton>
+                        </>
+                    )}
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMinimize();
+                        }}
+                        sx={{ color: "white" }}
+                    >
+                        {minimized ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
                 </Box>
             </Box>
 
-            <Dialog open={profileOpen} onClose={() => setProfileOpen(false)}>
-                <DialogTitle>{chat.sender}&rsquo;s Profile</DialogTitle>
-                <DialogContent>
-                    <Typography><strong>Email:</strong> {chat.email || "N/A"}</Typography>
-                    <Typography><strong>Mobile:</strong> {chat.mobile || "N/A"}</Typography>
-                </DialogContent>
-            </Dialog>
-        </div>
+            {/* Menu */}
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+                TransitionComponent={Fade}
+            >
+                <MenuItem
+                    onClick={() => {
+                        setProfileOpen(true);
+                        setAnchorEl(null);
+                    }}
+                >
+                    View Profile
+                </MenuItem>
+                <MenuItem onClick={handleBlockUser}>
+                    {blocked ? "Unblock User" : "Block User"}
+                </MenuItem>
+                <MenuItem onClick={handleDeleteUser}>Delete User</MenuItem>
+            </Menu>
+
+            {/* Body */}
+            <Collapse in={!minimized} timeout="auto" unmountOnExit>
+                {profileOpen ? (
+                    <Box p={2} sx={{ flex: 1, overflowY: "auto" }}>
+                        <Box display="flex" alignItems="center" gap={2} mb={2}>
+                            <Avatar src={chat.image} sx={{ width: 60, height: 60, fontSize: 24 }}>
+                                {!chat.image && chat.sender[0]?.toUpperCase()}
+                            </Avatar>
+                            <Box sx={{ color: 'black' }}>
+                                <Typography variant="h6">{chat.sender}</Typography>
+                                <Typography variant="body2">{chat.email || "No email provided"}</Typography>
+                                <Typography variant="body2">{chat.mobile || "No mobile provided"}</Typography>
+                            </Box>
+                        </Box>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        <Button
+                            variant="outlined"
+                            color={blocked ? "success" : "warning"}
+                            onClick={handleBlockUser}
+                            fullWidth
+                            sx={{ mb: 1 }}
+                        >
+                            {blocked ? "Unblock User" : "Block User"}
+                        </Button>
+
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={handleDeleteUser}
+                            fullWidth
+                            sx={{ mb: 1 }}
+                        >
+                            Delete User
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            onClick={() => setProfileOpen(false)}
+                            fullWidth
+                        >
+                            Close Profile
+                        </Button>
+                    </Box>
+                ) : (
+                    <>
+                        <Divider />
+                        <Box
+                            sx={{
+                                height: 320,
+                                p: 2,
+                                overflowY: "auto",
+                                bgcolor: "#f9f9f9",
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    bgcolor: "#edebeb",
+                                    p: 1.2,
+                                    color: '#4d4c4c',
+                                    borderRadius: 2,
+                                    maxWidth: "70%",
+                                    mb: 1,
+                                    alignSelf: "flex-start",
+                                }}
+                            >
+                                <Typography variant="body2">{chat.message}</Typography>
+                            </Box>
+
+                            {messages.map((msg, i) => (
+                                <Box
+                                    key={i}
+                                    sx={{
+                                        bgcolor: "#a4d4f5",
+                                        color: "#4d4c4c",
+                                        p: 1.2,
+                                        borderRadius: 2,
+                                        maxWidth: "70%",
+                                        mb: 1,
+                                        alignSelf: "flex-end",
+                                    }}
+                                >
+                                    <Typography variant="body2">{msg}</Typography>
+                                </Box>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </Box>
+
+                        <Divider />
+
+                        <Box sx={{ p: 1, display: "flex", gap: 1 }}>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder={blocked ? "User is blocked" : "Type a message..."}
+                                value={input}
+                                disabled={blocked}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                            />
+                            <Button variant="contained" onClick={handleSend} disabled={blocked}>
+                                Send
+                            </Button>
+                        </Box>
+                    </>
+                )}
+            </Collapse>
+        </Box>
     );
 };
 

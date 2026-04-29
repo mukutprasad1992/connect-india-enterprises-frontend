@@ -1,29 +1,32 @@
 import Link from "next/link";
-import { Box, styled } from "@mui/material";
+import { Box, Grid, styled } from "@mui/material";
 import Image from "next/image";
 
 const Logo = () => {
   return (
-    <Link href="/" passHref>
-      <Box
-        component="div"
-        sx={{
-          width: 100,
-          height: 100,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Image
-          src="/images/logos/smallLogo.png"
-          alt="logo"
-          width={400}
-          height={130}
-          priority
+    <Grid container alignItems="center" spacing={1}>
+      {/* Logo */}
+      <Grid item>
+        <Box
+          component="img"
+          src="/logo-transparent-small-png.png"
+          alt="App Logo"
+          sx={{ height: 60, width: "auto", transition: "all 0.3s" }}
         />
-      </Box>
-    </Link>
+      </Grid>
+
+      {/* Text section */}
+      <Grid item>
+        <Grid container direction="column">
+          <Grid item sx={{ color: "black", fontFamily: "Corbel", fontSize: 22, fontWeight: 600 }}>
+            Connect India
+          </Grid>
+          <Grid item sx={{ fontFamily: "Corbel", fontSize: 16, color: "brown", fontWeight: 600 }}>
+            Enterprises
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
   );
 };
 
