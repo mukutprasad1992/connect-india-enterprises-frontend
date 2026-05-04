@@ -542,7 +542,8 @@ const InquiryPage = () => {
         if (DOCUMENT_KEYS.includes(key)) {
             return value ? (
                 <Link
-                    href={`${AWS_S3_BUCKET_URL}/${value}`}
+                    // href={`${AWS_S3_BUCKET_URL}/${value}`}
+                    href={`${value}`}
                     target="_blank"
                     color="primary"
                     underline="hover"
@@ -812,11 +813,12 @@ const InquiryPage = () => {
                         <>
                             <Box display="flex" justifyContent="center" mb={2}>
                                 <Avatar
-                                    src={
-                                        selectedInquiry?.profileImageKey
-                                            ? `${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL}/${selectedInquiry.profileImageKey}`
-                                            : '/images/profile/user-1.jpg'
-                                    }
+                                    // src={
+                                    //     selectedInquiry?.profileImageKey
+                                    //         ? `${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_URL}/${selectedInquiry.profileImageKey}`
+                                    //         : '/images/profile/user-1.jpg'
+                                    // }
+                                    src={selectedInquiry?.profileImageURL || '/images/profile/user-1.jpg'}
                                     alt="User"
                                     sx={{ width: 150, height: 150 }}
                                     onError={(e) => { (e.target as HTMLImageElement).src = '/images/profile/user-1.jpg'; }}

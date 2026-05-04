@@ -769,7 +769,8 @@ const Investment = () => {
                     <Grid item xs={6}>
                       {isDocumentKey && value ? (
                         <Link
-                          href={`${AWS_S3_BUCKET_URL}/${value}`}
+                          // href={`${AWS_S3_BUCKET_URL}/${value}`}
+                          href={`${value}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           sx={{

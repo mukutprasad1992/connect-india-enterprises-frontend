@@ -105,7 +105,6 @@ function LoginPageContent() {
     try {
       const response = await axios.post(`${BASE_URL}/auth/login`, values);
       const data = response.data.data;
-      console.log("<------------Response---------->", data);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data));
       localStorage.setItem("roleId", data.roleId);

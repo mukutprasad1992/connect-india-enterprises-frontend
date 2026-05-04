@@ -131,7 +131,6 @@ const Dashboard = () => {
 
     setIsAuthenticated(true);
     fetchData(token);
-    console.log("<------------Role ID---------->", token, " : ", roleId);
   }, []);
 
   const fetchData = async (token: string) => {
@@ -141,7 +140,6 @@ const Dashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("<------------API Response---------->", response.data);
 
       if (response.data.status) {
         const data = response.data.data;
