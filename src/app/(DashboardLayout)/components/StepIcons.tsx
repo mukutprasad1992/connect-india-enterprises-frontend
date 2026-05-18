@@ -1,0 +1,80 @@
+import { SvgIcon, SvgIconProps } from "@mui/material";
+import { useState } from "react";
+
+type LiquidFillProps = SvgIconProps & {
+    fillColor: string;
+    defaultFill: number;
+    children?: React.ReactNode;
+};
+
+function LiquidFillIcon({
+    children,
+    fillColor,
+    defaultFill,
+    ...props
+}: LiquidFillProps) {
+    const [fill, setFill] = useState(defaultFill);
+
+    const runAnimation = () => {
+        setFill(0);
+        setTimeout(() => {
+            setFill(defaultFill);
+        }, 600);
+    };
+
+    return (
+        <SvgIcon
+            {...props}
+            viewBox="0 0 24 24"
+            onMouseEnter={runAnimation}
+            style={{ cursor: "pointer" }}
+        >
+            <defs>
+                <clipPath id="clipCircle">
+                    <circle cx="8" cy="8" r="8" />
+                </clipPath>
+            </defs>
+            <circle
+                cx="8"
+                cy="8"
+                r="7"
+                stroke={fillColor}
+                strokeWidth="2"
+                fill="none"
+            />
+            <rect
+                x="0"
+                y={16 - fill}
+                width="16"
+                height={fill}
+                fill={fillColor}
+                clipPath="url(#clipCircle)"
+                style={{ transition: "all 0.6s ease-in-out" }}
+            />
+
+            {children}
+        </SvgIcon>
+    );
+}
+export function InProgressStepIcon(props: SvgIconProps) {
+    return <LiquidFillIcon {...props} fillColor="#4caf50" defaultFill={8} />;
+}
+
+export function CompleteStepIcon(props: SvgIconProps) {
+    return (
+        <LiquidFillIcon {...props} fillColor="#4caf50" defaultFill={16}>
+            <path
+                d="M4.5 8.5l3 3 6-6" // ✅ adjusted tick path
+                stroke="#ffffff"
+                strokeWidth="2"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </LiquidFillIcon>
+    );
+}
+
+export default function InCompleteStepIcon(props: SvgIconProps) {
+    return <LiquidFillIcon {...props} fillColor="#2196f3" defaultFill={16} />;
+}
